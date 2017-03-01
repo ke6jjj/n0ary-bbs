@@ -109,6 +109,13 @@ int alEvent_registerFd(int fd, int flags, alCallback cb,
 	alEventHandle *rhandle);
 
 /*
+ * alEvent_setFdEvents
+ *
+ * Change the events enabled for a previously registered file descriptor.
+ */
+int alEvent_setFdEvents(alEventHandle evh, int newflags);
+
+/*
  * alEvent_registerProc
  *
  * Registers a process identifier with the event system and a callback to
@@ -116,6 +123,13 @@ int alEvent_registerFd(int fd, int flags, alCallback cb,
  */
 int alEvent_registerProc(pid_t pid, int flags, alCallback cb,
 	alEventHandle *rhandle);
+
+/*
+ * alEvent_setProcEvents
+ *
+ * Change the events enabled for a previously registered process id.
+ */
+int alEvent_setProcEvents(alEventHandle evh, int newflags);
 
 /*
  * alEvent_deregister

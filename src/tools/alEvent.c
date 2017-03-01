@@ -102,6 +102,7 @@ typedef struct alEventDescriptorEntry {
   alCallback cb;
   int active;
   int pendingEventFlags; /* Events pending for this entry */
+  int enabledFlags;      /* Event types currently enabled */
   LIST_ENTRY(alEventDescriptorEntry) listEntry;
 } alEventDescriptorEntry;
 
@@ -248,8 +249,6 @@ int
 alEvent_registerFd(int fd, int flags, alCallback cb, alEventHandle *r)
 {
   alEventDescriptorEntry *entry;
-  struct kevent filters[2];
-  int kflags;
   
   /*
    * Do we already have an entry for this descriptor?
@@ -268,39 +267,27 @@ alEvent_registerFd(int fd, int flags, alCallback cb, alEventHandle *r)
   entry->cb = cb;
   entry->active = 1;
   entry->pendingEventFlags = 0;
+  entry->enabledFlags = 0;
   LIST_INSERT_HEAD(&alEventDescriptors, entry, listEntry);
   
   /*
    * Tell the kernel to create a read and/or write filter for this
    * descriptor.
    */
-  kflags = EV_ADD;
-  if (!(flags & ALFD_READ))
-    kflags |= EV_DISABLE;
-  EV_SET(&filters[0], fd, EVFILT_READ, kflags, 0, 0, entry);
-  kflags = EV_ADD;
-  if (!(flags & ALFD_WRITE))
-    kflags |= EV_DISABLE;
-  EV_SET(&filters[1], fd, EVFILT_WRITE, kflags, 0, 0, entry);
-
-  do {
-    if (kevent(alKQFd, filters, 2, NULL, 0, NULL) == 0)
-      break;
-    if (errno != EINTR)
-      goto failed_kqueue_add;
-  } while (1);
+  if (alEvent_setFdEvents(entry, flags) != 0)
+    goto failed_set_fd_flags;
   
   /*
    * Grow the kevent list to accomodate the kernel returning a descriptor READ
    * and WRITE event when safely possible to reallocate it.
    */
   alKeventListSizeChanges += 2;
-  
+
   *r = entry;
 
   return 0;
   
-failed_kqueue_add:
+failed_set_fd_flags:
   LIST_REMOVE(entry, listEntry);
   free(entry);
   return -1;
@@ -316,14 +303,6 @@ int
 alEvent_registerProc(pid_t pid, int flags, alCallback cb, alEventHandle *r)
 {
   alEventDescriptorEntry *entry;
-  struct kevent filter;
-  int kflags, fflags;
-  
-  /*
-   * We only support one type of event for processes at the moment.
-   */
-  if (flags != ALPROC_EXIT)
-    return -1;
 
   /*
    * Do we already have an entry for this process?
@@ -342,23 +321,11 @@ alEvent_registerProc(pid_t pid, int flags, alCallback cb, alEventHandle *r)
   entry->cb = cb;
   entry->active = 1;
   entry->pendingEventFlags = 0;
+  entry->enabledFlags = 0;
   LIST_INSERT_HEAD(&alEventDescriptors, entry, listEntry);
   
-  /*
-   * Tell the kernel to create a read and/or write filter for this
-   * descriptor.
-   */
-  kflags = EV_ADD;
-  fflags = NOTE_EXIT;
-    
-  EV_SET(&filter, pid, EVFILT_PROC, kflags, fflags, 0, entry);
-
-  do {
-    if (kevent(alKQFd, &filter, 1, NULL, 0, NULL) == 0)
-      break;
-    if (errno != EINTR)
-      goto failed_kqueue_add_proc;
-  } while (1);
+  if (alEvent_setProcEvents(entry, flags) != 0)
+    goto failed_set_proc_flags;
   
   /*
    * Grow the kevent list to accomodate the kernel returning a process
@@ -369,10 +336,123 @@ alEvent_registerProc(pid_t pid, int flags, alCallback cb, alEventHandle *r)
   *r = entry;
 
   return 0;
-  
-failed_kqueue_add_proc:
+
+failed_set_proc_flags:
   LIST_REMOVE(entry, listEntry);
   free(entry);
+  return -1;
+}
+
+/*
+ * alEvent_setFdEvents
+ *
+ * Change the events enabled for a previously registered file descriptor.
+ */
+int
+alEvent_setFdEvents(alEventHandle evp, int newflags)
+{
+  alEventDescriptorEntry *evh = (alEventDescriptorEntry *) evp;
+  struct kevent filters[2];
+  int kflags;
+  size_t i;
+  int fd;
+
+  if (evh->subjectType != AL_FILE_DESCRIPTOR)
+    return -1;
+
+  if (evh->enabledFlags == newflags)
+    /* No change */
+    return 0;
+
+  fd = evh->subject.fd;
+  i = 0;
+
+  if ((evh->enabledFlags ^ newflags) & ALFD_READ) {
+    kflags = EV_ADD;
+    if (!(newflags & ALFD_READ))
+      kflags |= EV_DISABLE;
+    EV_SET(&filters[i], fd, EVFILT_READ, kflags, 0, 0, evh);
+    i++;
+  }
+  if ((evh->enabledFlags ^ newflags) & ALFD_WRITE) {
+    kflags = EV_ADD;
+    if (!(newflags & ALFD_WRITE))
+      kflags |= EV_DISABLE;
+    EV_SET(&filters[i], fd, EVFILT_WRITE, kflags, 0, 0, evh);
+    i++;
+  }
+
+  assert(i != 0);
+
+  do {
+    if (kevent(alKQFd, filters, i, NULL, 0, NULL) == 0)
+      break;
+    if (errno != EINTR)
+      goto failed_kqueue_add_fd;
+  } while (1);
+
+  evh->enabledFlags = newflags;
+
+  return 0;
+
+failed_kqueue_add_fd:
+  return -1;
+}
+
+/*
+ * alEvent_setProcEvents
+ *
+ * Change the events enabled for a previously registered process id.
+ */
+int
+alEvent_setProcEvents(alEventHandle evp, int newflags)
+{
+  alEventDescriptorEntry *evh = (alEventDescriptorEntry *) evp;
+  struct kevent filter;
+  int kflags, fflags;
+  size_t i;
+  pid_t pid;
+  
+  if (evh->subjectType != AL_PROCESS)
+    return -1;
+
+  if (evh->enabledFlags == newflags)
+    /* No change */
+    return 0;
+
+  /*
+   * We only support one type of event for processes at the moment.
+   */
+  if ((~newflags & ALPROC_EXIT) != 0)
+    return -1;
+
+  pid = evh->subject.pid;
+  i = 0;
+
+  if ((evh->enabledFlags ^ newflags) & ALPROC_EXIT) {
+    kflags = EV_ADD;
+    fflags = NOTE_EXIT;
+    if (!(newflags & ALPROC_EXIT))
+      kflags |= EV_DISABLE;
+    
+    EV_SET(&filter, pid, EVFILT_PROC, kflags, fflags, 0, evh);
+    i++;
+  }
+
+  assert(i != 0);
+
+  do {
+    if (kevent(alKQFd, &filter, i, NULL, 0, NULL) == 0)
+      break;
+    if (errno != EINTR)
+      goto failed_kqueue_add_proc;
+  } while (1);
+
+  evh->enabledFlags = newflags;
+
+  return 0;
+  
+failed_kqueue_add_proc:
   return -1;
 }
 
@@ -588,12 +668,14 @@ alEvent_deregister(alEventHandle handle)
 {
   struct kevent ev[2];
   int inspect_failure;
-  size_t numchanges;
+  size_t i, sizechanges;
   
   alEventDescriptorEntry *entry = (alEventDescriptorEntry *) handle;
 
   if (entry->subjectType == AL_INVALID)
     return -1;
+
+  i = 0;
 
   if (entry->active) {
     LIST_REMOVE(entry, listEntry);
@@ -602,21 +684,27 @@ alEvent_deregister(alEventHandle handle)
     case AL_INVALID:
       assert(0); /* Shouldn't happen */
     case AL_FILE_DESCRIPTOR:
-      EV_SET(&ev[0], entry->subject.fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-      EV_SET(&ev[1], entry->subject.fd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+      if (entry->enabledFlags & ALFD_READ)
+        EV_SET(&ev[i++], entry->subject.fd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+      if (entry->enabledFlags & ALFD_WRITE)
+        EV_SET(&ev[i++], entry->subject.fd, EVFILT_WRITE, EV_DELETE, 0, 0,NULL);
       inspect_failure = 1;
-      numchanges = 2;
+      sizechanges = 2;
       break;
     case AL_PROCESS:
-      EV_SET(&ev[0], entry->subject.pid, EVFILT_PROC, EV_DELETE, 0, 0, NULL);
+      if (entry->enabledFlags & ALPROC_EXIT)
+        EV_SET(&ev[i++], entry->subject.pid, EVFILT_PROC, EV_DELETE, 0, 0,NULL);
       inspect_failure = 0; /* Process may have exited */
-      numchanges = 1;
+      sizechanges = 1;
       break;
     }
-    if (kevent(alKQFd, ev, numchanges, NULL, 0, NULL) != 0 && inspect_failure)
-      err(1, "kevent remove failed");
+
+    if (i > 0)
+      if (kevent(alKQFd, ev, i, NULL, 0, NULL) != 0 && inspect_failure)
+        err(1, "kevent remove failed");
+
     /* Request that the kevent list be shrunk when safely possible */
-    alKeventListSizeChanges -= numchanges;
+    alKeventListSizeChanges -= sizechanges;
     entry->active = 0;
     return 0;
   } else {
