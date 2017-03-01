@@ -65,6 +65,7 @@ include $(BBS_SRCDIR)/bbstool/bbstool.mk
 include $(BBS_SRCDIR)/bidd/bidd.mk
 # include $(BBS_SRCDIR)/calcload/calcload.mk
 include $(BBS_SRCDIR)/callbk/callbk.mk
+include $(BBS_SRCDIR)/callbk_uls/callbk_uls.mk
 include $(BBS_SRCDIR)/dectalk/dectalk.mk
 include $(BBS_SRCDIR)/dial/dial.mk
 include $(BBS_SRCDIR)/etc/etc.mk
