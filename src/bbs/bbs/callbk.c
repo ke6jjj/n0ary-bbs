@@ -686,7 +686,7 @@ callbk_date_cnvrt(char *str)
 	else
 		year = yr + 1990;
 	
-	leap = (year % 4) ? 0:1;
+	leap = (year % 4) ? 0:1; /* DOH! Good enough until 2100 -KE6JJJ */
 
 	for(mo=0; mo<11; mo++) {	
 		if(da < days[leap][mo])
