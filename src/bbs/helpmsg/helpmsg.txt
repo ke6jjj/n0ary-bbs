@@ -869,11 +869,11 @@
 1110 system commands. Your help level will determine how much you are told
 1110 about a command.
 1110
-1110 There is a manual available for operating this bbs. It is available and
-1110 can be obtained by sending $9.50 to cover duplication costs and postage.
-1110 Or you can borrow another users copy and copy it yourself. Type
-1110 INFO MANUAL for more information.
+1110 There is a manual available for operating this bbs. It can be found
+1110 on the Internet at:
 1110
+1110   http://www.ke6jjj.net/bbs/docs/N0ARY_BBS_UsersManual.pdf
+1110 
 1110 Now get started and give it a try. If you have problems send me a 
 1110 message by typing: 
 1110
