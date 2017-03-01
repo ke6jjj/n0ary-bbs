@@ -18,6 +18,8 @@ struct mboxsess{			/*mailbox session structure*/
 
 	int port;
 
+	int nagle_gate_down; /* whether to wait before sending small packet */
+	int nagle_timer_id; /* id of current small packet timer */
 	int sendable_count; /* number of bytes that can be enqueued now */
 	int byte_cnt; /* number of bytes in buf, waiting to be enqueued */
 	struct ax25_cb *axbbscb; /*axp associated with this structure*/
@@ -29,6 +31,9 @@ struct mboxsess{			/*mailbox session structure*/
 	char cmd_state;
 	struct mboxsess *next;	/*pointer to next session*/
 };
+
+#define MBOX_NAGLE_GATE_SIZE 50   /* characters to queue before sending */
+#define MBOX_NAGLE_TIMER     350 /* 350ms */
 
 #define NULLMBS  (struct mboxsess *)0
 #define NULLFWD  (struct ax25_cb *)0

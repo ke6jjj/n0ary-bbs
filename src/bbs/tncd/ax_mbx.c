@@ -36,6 +36,7 @@ static void mbx_handle_child_exit(void *obj, void *arg0, int arg1);
 static void mbx_notify_sendable(struct mboxsess *mbp, size_t amount, int q);
 static void mbx_sendable_changed(void *obj, void *arg0, int arg1);
 static void mbx_check_sendable(struct mboxsess *mbp);
+static void mbx_nagle_timer(void *obj, void *arg0, int arg1);
 
 static void
 	convrt2cr(char *data, int cnt),
@@ -235,6 +236,8 @@ initmbox(struct mboxsess *mbp)
 	mbp->pid = 0;	
 	mbp->spawned = FALSE;
 	mbp->sendable_count = 0;
+	mbp->nagle_timer_id = -1;
+	mbp->nagle_gate_down = 1;
 	mbp->byte_cnt = 0;
 	mbp->cmd_cnt = 0;
 	mbp->cmd_state = 1;
@@ -487,13 +490,13 @@ mbx_handle_network(void *obj, void *arg0, int arg1)
 		}
 	}
 
-	if(mbp->cmd_cnt)
+	if(mbp->cmd_cnt) {
 		if(command(mbp) == ERROR) {
 			shutdown_process(mbp, TRUE);
 			return;
 		}
+	}
 
-	
 	mbx_check_sendable(mbp);
 }
 
@@ -505,9 +508,46 @@ mbx_check_sendable(struct mboxsess *mbp)
 	char *cp;
 	int testsize,size;
 
+	if (mbp->nagle_timer_id != -1) {
+		/*
+		 * There's a Nagle timer in effect to keep short, useless
+		 * packets from being transmitted. See if it should be
+		 * cancelled on account of the amount of data queued.
+		 */
+		if (mbp->byte_cnt < MBOX_NAGLE_GATE_SIZE) {
+			/*
+			 * There's not enough data to override the timer,
+			 * wait until there's more data or the timer
+			 * goes off.
+			 */
+			return;
+		}
+
+		/*
+		 * We've got enough data to send now, cancel the
+		 * timer.
+		 */
+		alEvent_cancelTimer(mbp->nagle_timer_id);
+		mbp->nagle_timer_id = -1;
+		mbp->nagle_gate_down = 0;
+	} else if (mbp->byte_cnt < MBOX_NAGLE_GATE_SIZE &&
+		mbp->nagle_gate_down)
+	{
+		/*
+		 * We should wait a little bit until sending any
+		 * data.
+		 */
+		alCallback cb;
+		AL_CALLBACK(&cb, mbp, mbx_nagle_timer);
+		mbp->nagle_timer_id = alEvent_addTimer(MBOX_NAGLE_TIMER,
+			0, cb);
+		return;
+	}
+
 	while (mbp->byte_cnt && mbp->sendable_count) {
 		if(dbug_level & dbgVERBOSE)
-			printf("axchk: %s byte_cnt = %d\n", mbp->call, mbp->byte_cnt);
+			printf("axchk: %s byte_cnt = %d\n", mbp->call,
+				mbp->byte_cnt);
 		testsize = min(mbp->sendable_count, mbp->axbbscb->paclen+1);
 		size = min(testsize, mbp->byte_cnt) + 1;
 		bp = alloc_mbuf(size);			 
@@ -530,6 +570,9 @@ mbx_check_sendable(struct mboxsess *mbp)
 		convrt2cr(bp->data, bp->cnt);
 		send_ax25(mbp->axbbscb, bp);
 	}
+
+	if (mbp->byte_cnt == 0)
+		mbp->nagle_gate_down = 1;
 }
 
 static void
@@ -917,5 +960,19 @@ static void
 mbx_sendable_changed(void *mbpp, void *arg0, int arg1)
 {
 	struct mboxsess *mbp = mbpp;
+	mbx_check_sendable(mbp);
+}
+
+static void
+mbx_nagle_timer(void *obj, void *arg0, int arg1)
+{
+	struct mboxsess *mbp = obj;
+
+	assert(mbp->nagle_timer_id != -1);
+	assert(mbp->nagle_gate_down == 1);
+
+	mbp->nagle_timer_id = -1;
+	mbp->nagle_gate_down = 0;
+
 	mbx_check_sendable(mbp);
 }
