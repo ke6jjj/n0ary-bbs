@@ -91,7 +91,7 @@
 !50 WELCOME
 1110
 1110 Hello %F,
-1100 Welcome to the Sunnyvale area packet BBS
+1100 Welcome to the Bernal Heights, San Francisco packet BBS
 
 !51 NEW USER IN CALLBOOK
 1000 
@@ -1317,13 +1317,12 @@
 1110    WX Data
 1110    WX SET Temperature|Humidity|Barometer|Rain|Wind value
 1110
-1110 This bbs connects at various times with a weather station operated on
-1110 Mt. Umunhum by BAYCOM (WA6YCZ). The WX command will display a page of
+1110 This bbs connects at various times with a weather station operated in
+1110 Bernal Heights, San Francisco. The WX command will display a page of
 1110 of weather statistics and the time that it was downloaded. You can 
 1110 request a crude graph of historical data on any of the weather
 1110 parameters listed by supplying the individual parameter.
-1110 You can also use this command to set the weather. Please be aware that
-1110 the weather station is located atop Mt. Umunhum and it make take a
+1110 You can also use this command to set the weather. It make take a
 1110 while before your changes can be felt in your area. Also keep in mind
 1110 that there are people living up there. The INDOOR keyword refers to the
 1110 shack on the hill that houses the weather station, not your home.
@@ -2086,8 +2085,8 @@
 1110 your home bbs can corrupt your white pages entry. For those that have
 1110 tnc's with a personal mailbox don't put your tnc's call in this field.
 1110 Your home bbs has to be able to support bulletin and message forwarding.
-1110 If your are in the Sunnyvale area or this bbs is easy for you to connect
-1110 to your welcome to join us here, enter "HOME %B".
+1110 If your are in the San Francisco area, or this bbs is easy for you to
+1110 connect to, you're welcome to join us here, enter "HOME %B".
 
 !987 
 1110 LIST =====================================================================
