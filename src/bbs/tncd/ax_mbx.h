@@ -22,7 +22,7 @@ struct mboxsess{			/*mailbox session structure*/
 	int byte_cnt; /* number of bytes in buf, waiting to be enqueued */
 	struct ax25_cb *axbbscb; /*axp associated with this structure*/
 	struct ax25_addr *orig;
-	char *p, buf[1024];
+	char buf[1024];
 	char call[7];
 	char command[10][80];
 	char cmd_cnt;

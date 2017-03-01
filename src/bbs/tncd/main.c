@@ -138,7 +138,6 @@ main(int argc, char *argv[])
 	struct timeval now, nextexpire, waittime, *pwaittime;
 	alCallback cb;
 
-	alEvent_init();
 
 	parse_options(argc, argv, ConfigList,
 		"TNCD - Terminal Node Controller (KISS) Daemon");
@@ -147,10 +146,6 @@ main(int argc, char *argv[])
 		error_print_exit(0);
 
 	bbsd_sock = bbsd_socket();
-	AL_CALLBACK(&cb, NULL, chk_bbsd_callback);
-	int res = alEvent_registerFd(bbsd_sock, ALFD_READ, cb, &bbsd_ev);
-	if (res != 0)
-		error_print_exit(0);
 
 	error_clear();
 	bbsd_get_configuration(ConfigList);
@@ -168,6 +163,13 @@ main(int argc, char *argv[])
 		error_print_exit(0);
 
 	build_bbscall();
+
+	alEvent_init();
+
+	AL_CALLBACK(&cb, NULL, chk_bbsd_callback);
+	int res = alEvent_registerFd(bbsd_sock, ALFD_READ, cb, &bbsd_ev);
+	if (res != 0)
+		error_print_exit(0);
 
 	if(ax_control_init(Tncd_Control_Bind_Addr, Tncd_Control_Port) == ERROR)
 		return 1;

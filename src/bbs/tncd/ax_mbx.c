@@ -236,7 +236,6 @@ initmbox(struct mboxsess *mbp)
 	mbp->spawned = FALSE;
 	mbp->sendable_count = 0;
 	mbp->byte_cnt = 0;
-	mbp->p = mbp->buf;
 	mbp->cmd_cnt = 0;
 	mbp->cmd_state = 1;
 	mbp->orig = NULL;
@@ -410,7 +409,7 @@ mbx_handle_network(void *obj, void *arg0, int arg1)
 	
 #if 0
 	/* FUTURE: Awaiting alEvent ability to temporarily disable read cbs */
-	if (mbp->byte_cnt != 0) {
+	if (available == 0)
 		/*
 	 	* Oh oh. We're probably in a busy loop waiting for the
 	 	* send buffer to open up. In the future we should probably
@@ -424,8 +423,11 @@ mbx_handle_network(void *obj, void *arg0, int arg1)
 	 * have any data pending on this process then check to see
 	 * if the process has sent us something new.
 	 */
-	if(mbp->byte_cnt == 0) {
-		cnt = read(mbp->fd, buf, 1024);
+	size_t available = sizeof(mbp->buf) - mbp->byte_cnt - 1;
+
+	if(available > 0) {
+		size_t readamt = min(available, (sizeof(buf)-1));
+		cnt = read(mbp->fd, buf, readamt);
 		if (cnt <= 0) {
 			if(dbug_level & dbgVERBOSE)
 				printf("axchk: %s broken pipe\n", mbp->call);
@@ -434,7 +436,7 @@ mbx_handle_network(void *obj, void *arg0, int arg1)
 		}
 		int cmd_cnt = 0;
 		char *p = buf;
-		char *q = mbp->buf;
+		char *q = &mbp->buf[mbp->byte_cnt];
 
 		buf[cnt] = 0;
 		if(dbug_level & dbgVERBOSE)
@@ -483,7 +485,6 @@ mbx_handle_network(void *obj, void *arg0, int arg1)
 			} else
 				p++;
 		}
-		mbp->p = mbp->buf;
 	}
 
 	if(mbp->cmd_cnt)
@@ -504,22 +505,24 @@ mbx_check_sendable(struct mboxsess *mbp)
 	char *cp;
 	int testsize,size;
 
-	if(mbp->byte_cnt) {
+	while (mbp->byte_cnt && mbp->sendable_count) {
 		if(dbug_level & dbgVERBOSE)
 			printf("axchk: %s byte_cnt = %d\n", mbp->call, mbp->byte_cnt);
 		testsize = min(mbp->sendable_count, mbp->axbbscb->paclen+1);
 		size = min(testsize, mbp->byte_cnt) + 1;
 		bp = alloc_mbuf(size);			 
-		cp = bp->data;
+		bp->cnt = size;
 
+		cp = bp->data;
 		*cp++ = PID_FIRST | PID_LAST | PID_NO_L3;
-		bp->cnt =1;
+		size--;
 	
-		while(bp->cnt < size && mbp->byte_cnt){
-			*cp++ = *mbp->p++;
-			bp->cnt++;
-			mbp->byte_cnt--;
-		}
+		memcpy(cp, mbp->buf, size);
+		mbp->byte_cnt -= size;
+		mbp->sendable_count -= size;
+
+		if (mbp->byte_cnt > 0)
+			memmove(mbp->buf, &mbp->buf[size], mbp->byte_cnt);
 
 		if(dbug_level & dbgVERBOSE)
 			printf("[%s]\n", &(bp->data[1]));
