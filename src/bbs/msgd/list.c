@@ -486,12 +486,14 @@ build_list_text(struct msg_dir_entry *msg)
 	msg->flags &= ~MsgReadByMe;
 
 	if(msg->passwd[0])
-		sprintf(msg->list_text, "%ld %ld %ld !%s $%s %s@%s %s %d %ld %s\n",
+		sprintf(msg->list_text,
+			"%ld %ld %ld !%s $%s %s@%s %s %"PRTMd" %ld %s\n",
 			msg->number, msg->size, msg->flags, msg->passwd, msg->bid,
 			msg->to.name.str, msg->to.at.str, msg->from.name.str,
 			msg->cdate, msg->read_cnt, msg->sub);
 	else
-		sprintf(msg->list_text, "%ld %ld %ld $%s %s@%s %s %d %ld %s\n",
+		sprintf(msg->list_text,
+			"%ld %ld %ld $%s %s@%s %s %"PRTMd" %ld %s\n",
 			msg->number, msg->size, msg->flags, msg->bid,
 			msg->to.name.str, msg->to.at.str, msg->from.name.str,
 			msg->cdate, msg->read_cnt, msg->sub);
@@ -559,12 +561,14 @@ build_display(struct active_processes *ap, struct msg_dir_entry *msg)
 			sprintf(password, " !%s", msg->passwd);
 
 		if(ap->list_mode == SysopMode)
-			sprintf(buf, "%ld %ld %ld%s $%s %s@%s %s %d %ld %s\n",
+			sprintf(buf,
+				"%ld %ld %ld%s $%s %s@%s %s %"PRTMd" %ld %s\n",
 				msg->number, msg->size, msg->flags, password, msg->bid,
 				msg->to.name.str, msg->to.at.str, msg->from.name.str,
 				msg->cdate, msg->read_cnt, msg->sub);
 		else
-			sprintf(buf, "%ld %ld %ld%s $ %s@%s %s %d %ld %s\n",
+			sprintf(buf,
+				"%ld %ld %ld%s $ %s@%s %s %"PRTMd" %ld %s\n",
 				msg->number, msg->size, msg->flags, password, 
 				msg->to.name.str, msg->to.at.str, msg->from.name.str,
 				msg->cdate, msg->read_cnt, msg->sub);
