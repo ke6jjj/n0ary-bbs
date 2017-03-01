@@ -2,7 +2,14 @@ BBS_CONFIG_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 include $(BBS_CONFIG_SRCDIR)/site_config.mk
 
-BBS_CFLAGS := -O2 -Werror -I$(TOP_SRCDIR)/include -DBBS_DIR=\"$(BBS_DIR)\"
+ifdef BBS_DEBUG
+  BBS_CFLAGS += -g
+  BBS_LDFLAGS += -g
+else
+  BBS_CFLAGS += -O2
+endif
+
+BBS_CFLAGS += -Werror -I$(TOP_SRCDIR)/include -DBBS_DIR=\"$(BBS_DIR)\"
 
 ifneq ($(ENABLE_DECTALK),0)
   BBS_CFLAGS += -DDECTALK
