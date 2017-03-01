@@ -1,8 +1,9 @@
 #include <sys/time.h>
 #include <sys/queue.h>
 #include <sys/event.h>
-#include <stdlib.h>
 #include <err.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "alib.h"
 
@@ -116,6 +117,53 @@ alEvent_init(void)
 }
 
 /*
+ * alEvent_shutdown
+ *
+ * Shuts down the event system, freeing any resources it acquired.
+ */
+int
+alEvent_shutdown(void)
+{
+  alFileDescriptorEntry *fdEntry;
+  alQueuedCallbackEntry *cbEntry;
+  alTimerEntry *tmEntry;
+
+  while (!LIST_EMPTY(&alTimerQueue)) {
+    tmEntry = LIST_FIRST(&alTimerQueue);
+    LIST_REMOVE(tmEntry, listEntry);
+    free(tmEntry);
+  }
+
+  while (!LIST_EMPTY(&alFileDescriptors)) {
+    fdEntry = LIST_FIRST(&alFileDescriptors);
+    LIST_REMOVE(fdEntry, listEntry);
+    free(fdEntry);
+  }
+
+  while (!LIST_EMPTY(&alDestroyingFileDescriptors)) {
+    fdEntry = LIST_FIRST(&alDestroyingFileDescriptors);
+    LIST_REMOVE(fdEntry, listEntry);
+    free(fdEntry);
+  }
+
+  while (!SLIST_EMPTY(&alQueuedCallbacks)) {
+    cbEntry = SLIST_FIRST(&alQueuedCallbacks);
+    SLIST_REMOVE_HEAD(&alQueuedCallbacks, listEntry);
+    free(cbEntry);
+  }
+
+  if (alKeventList != NULL) {
+    free(alKeventList);
+    alKeventListSize = 0;
+  }
+
+  alKeventListSizeChanges = 0;
+
+  return close(alKQFd);
+}
+
+
+/*
  * alEvent_addFileDescriptorNotification
  *
  * Registers a file descriptor with the event system and a callback to call
@@ -215,6 +263,15 @@ alEvent_poll(void)
   }
   
   /*
+   * Free any file descriptor notifications that are pending deletion.
+   */
+  while (!LIST_EMPTY(&alDestroyingFileDescriptors)) {
+    fdEntry = LIST_FIRST(&alDestroyingFileDescriptors);
+    LIST_REMOVE(fdEntry, listEntry);
+    free(fdEntry);
+  }
+
+  /*
    * If there are any timers pending, compute how soon the earliest one
    * will go off.
    */
@@ -262,6 +319,8 @@ alEvent_poll(void)
    */
   for (i = 0; i < nevents; i++) {
     fdEntry = (alFileDescriptorEntry *) alKeventList[i].udata;
+    if (!fdEntry->active)
+      continue;
     flags = 0;
     if (alKeventList[i].filter == EVFILT_READ)
       flags |= ALEVENT_READ;
