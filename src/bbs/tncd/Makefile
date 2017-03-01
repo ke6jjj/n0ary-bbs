@@ -1,10 +1,10 @@
 THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-all: TNCD_APP
+all: TNC_APPS
 
 include $(THIS_SRCDIR)/../../top.mk
 
-TNCD_APP: $(TNCD_APP)
+TNC_APPS: $(TNCD_APP) $(TNCLOG_APP)
 
-clean: TNCD_APP_CLEAN
-install: TNCD_APP_INSTALL
+clean: TNCD_APP_CLEAN TNCLOG_APP_CLEAN
+install: TNCD_APP_INSTALL TNCLOG_APP_INSTALL

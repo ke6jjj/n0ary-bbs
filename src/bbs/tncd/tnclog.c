@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -64,7 +65,7 @@ main(int argc, char *argv[])
 		return 1;
 	}
 
-	while(cnt = read(log_sock, buf, 1024)) {
+	while((cnt = read(log_sock, buf, 1024)) > 0) {
 		write(fd, buf, cnt);
 	}
 	close(fd);
