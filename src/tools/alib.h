@@ -46,12 +46,12 @@ int alEvent_init(void);
 int alEvent_shutdown(void);
 
 /*
- * alEvent_addFileDescriptorNotification
+ * alEvent_addFdCallback
  *
  * Registers a file descriptor with the event system and a callback to call
  * when events occur on that descriptor.
  */
-alFileHandle alEvent_addFileDescriptorNotification(int fd, int flags, alCallback cb);
+alFileHandle alEvent_addFdCallback(int fd, int flags, alCallback cb);
 
 /*
  * alEvent_removeFdCallback
