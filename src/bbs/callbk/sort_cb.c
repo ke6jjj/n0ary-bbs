@@ -1,16 +1,26 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "config.h"
 #include "bbslib.h"
+#include "tools.h"
 
-int
-compare(struct callbook_index *a, struct callbook_index *b)
+static void display_indx(FILE *fp);
+static int compare(const void *x, const void *y);
+static void display_cb(FILE *fp);
+
+static int
+compare(const void *x, const void *y)
 {
+	const struct callbook_index *a = x, *b = y;
+
 	return strcmp(a->key, b->key);
 }
 
+int
 main(int argc, char *argv[])
 {
 	struct stat statbuf;
@@ -22,24 +32,24 @@ main(int argc, char *argv[])
 
 	if(argc < 1) {
 		printf("Enter callbook index file to sort: ");
-		gets(callbook);
+		safegets(callbook, sizeof(callbook));
 	} else
 		strcpy(callbook, argv[1]);
 
 	if(stat(callbook, &statbuf) == ERROR) {
 		printf("\n** Could not stat callbook index file: %s\n", callbook);
-		exit(1);
+		return 1;
 	}
 
 	nel = statbuf.st_size/sizeof(struct callbook_index);
-	printf("index file size = %d [%d/%d]\n", nel,
+	printf("index file size = %d [%ld/%zd]\n", nel,
 		statbuf.st_size, sizeof(struct callbook_index));
 
 	cb = (struct callbook_index *)malloc(statbuf.st_size);
 
 	if((fp = fopen(callbook, "r+")) == NULL) {
 		printf("\n** Could not open callbook index file: %s\n", callbook);
-		exit(1);
+		return 1;
 	}
 
 	fread(cb, statbuf.st_size, 1, fp);
@@ -47,9 +57,10 @@ main(int argc, char *argv[])
 	rewind(fp);
 	fwrite(cb, statbuf.st_size, 1, fp);
 	fclose(fp);
-	exit(0);
+	return 0;
 }
 
+static void
 display_indx(FILE *fp)
 {
 	char buf[256];
@@ -61,6 +72,7 @@ display_indx(FILE *fp)
 		printf("%6d: %s\t%c%c:%d\n", cnt++, cb.key, cb.area, cb.suffix, cb.loc);
 }
 
+static void
 display_cb(FILE *fp)
 {
 	char buf[256];

@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/time.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -133,7 +135,7 @@ build_version_strings(char *me)
 	strcpy(versionc, daemon_version(buf, Bbs_Call));
 }
 
-void
+int
 main(int argc, char *argv[])
 {
 	extern int optind;
@@ -155,7 +157,7 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgIGNOREHOST))
 		test_host(Tncd_Host);
 	if(!(dbug_level & dbgFOREGROUND))
-		daemon();
+		daemon(1, 1);
 
 	if(bbsd_port(Tncd_Monitor_Port))
 		error_print_exit(0);
@@ -163,7 +165,7 @@ main(int argc, char *argv[])
 	build_bbscall();
 
 	if(init_ax_control(Tncd_Control_Port, Tncd_Monitor_Port) == ERROR)
-		exit(1);
+		return 1;
 
 	tnc[0].inuse = FALSE;
 	asy_init(0, Tncd_Device);
@@ -187,4 +189,6 @@ main(int argc, char *argv[])
 		chk_bbsd();
 		wait3(NULL, WNOHANG, NULL);
 	}
+
+	return 0;
 }

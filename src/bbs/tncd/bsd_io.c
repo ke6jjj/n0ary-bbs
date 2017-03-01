@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #ifdef SUNOS
 #include <termio.h>
@@ -93,6 +95,13 @@ asy_init(int dev, char *ttydev)
 	}
  			/* get the stty structure and save it */
 
+#ifdef HAVE_TERMIOS
+	if (tcgetattr(tnc[dev].fd, &tt) < 0) {
+		if(dbug_level & dbgVERBOSE)
+			perror ("asy_init: tcgetattr failed on device");
+		return ERROR;
+	}
+#else
 #ifdef SUNOS
 	if(ioctl(tnc[dev].fd, TCGETS, &tt) < 0) {
 		if(dbug_level & dbgVERBOSE)
@@ -114,6 +123,7 @@ asy_init(int dev, char *ttydev)
 	}
 #endif
 #endif
+#endif
 
 	tt.c_iflag = 0;
 	tt.c_oflag = 0;
@@ -121,29 +131,38 @@ asy_init(int dev, char *ttydev)
 	tt.c_lflag = 0;
 
 
-#ifdef SUNOS
+#ifdef HAVE_TERMIOS
+	if (tcsetattr(tnc[dev].fd, TCSANOW, &tt) < 0) {
+		if(dbug_level & dbgVERBOSE)
+			perror("asy_init: could not set serial parameters");
+		logd_stamp("tncd", "asy_init: bad tcsetattr");
+		exit(1);
+	}
+#else
+#  ifdef SUNOS
 	if(ioctl(tnc[dev].fd, TCSETS, &tt)) {
 		if(dbug_level & dbgVERBOSE)
 			perror("asy_init: could not set serial parameters");
 		logd_stamp("tncd", "asy_init: bad ioctl (TCSETA)");
 		exit(1);
 	}
-#else
-#ifdef TCSETATTR
+#  else
+#    ifdef TCSETATTR
 	if(ioctl(tnc[dev].fd, TCSETATTR, &tt)) {
 		if(dbug_level & dbgVERBOSE)
 			perror("asy_init: could not set serial parameters");
 		logd_stamp("tncd", "asy_init: bad ioctl (TCSETATTR)");
 		exit(1);
 	}
-#else
+#    else
 	if(ioctl(tnc[dev].fd, TCSETA, &tt)) {
 		if(dbug_level & dbgVERBOSE)
 			perror("asy_init: could not set serial parameters");
 		logd_stamp("tncd", "asy_init: bad ioctl (TCSETA)");
 		exit(1);
 	}
-#endif
+#    endif
+#  endif
 #endif
 
 	tnc[dev].inuse = TRUE;

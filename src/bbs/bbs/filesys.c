@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -13,11 +14,15 @@
 #include "message.h"
 #include "vars.h"
 #include "body.h"
+#include "bbscommon.h"
+#include "msg_gen.h"
+#include "msg_read.h"
 
 int Filecnt;
 char File[20][80];
 char CurDir[80];
 
+int
 signature(void)
 {
 	struct TOKEN *t = TokenList;
@@ -39,6 +44,7 @@ signature(void)
 	return OK;
 }
 
+void
 kill_signature(void)
 {
 	char buf[81];
@@ -47,6 +53,7 @@ kill_signature(void)
 	user_clr_flag(uSIGNATURE);
 }
 
+int
 make_signature(void)
 {
 	FILE *fp;
@@ -89,6 +96,7 @@ make_signature(void)
 	return OK;
 }
 
+int
 show_signature(void)
 {
 	FILE *fp;
@@ -109,6 +117,7 @@ show_signature(void)
 	return OK;
 }
 
+int
 vacation(void)
 {
 	struct TOKEN *t = TokenList;
@@ -130,6 +139,7 @@ vacation(void)
 	return OK;
 }
 
+void
 kill_vacation(void)
 {
 	char buf[81];
@@ -138,6 +148,7 @@ kill_vacation(void)
 	user_clr_flag(uVACATION);
 }
 
+int
 make_vacation(void)
 {
 	FILE *fp;
@@ -180,6 +191,7 @@ make_vacation(void)
 	return OK;
 }
 
+int
 show_vacation(void)
 {
 	FILE *fp;
@@ -224,6 +236,7 @@ signature_file_exists(void)
 	return TRUE;
 }
 
+int
 filesys(void)
 {
 	struct TOKEN *t = TokenList;
@@ -253,6 +266,7 @@ filesys(void)
 	return OK;
 }
 
+void
 file_init(void)
 {
 	chdir(Bbs_FileSys_Path);	
@@ -288,6 +302,7 @@ file_cd(struct TOKEN *t)
 	return OK;
 }
 
+int
 file_ls(struct TOKEN *t)
 {
 	char buf[80];
@@ -312,6 +327,7 @@ file_ls(struct TOKEN *t)
 	return OK;
 }
 
+int
 file_approve(struct TOKEN *t)
 {
 	char newname[80], filename[80];
@@ -337,6 +353,7 @@ file_approve(struct TOKEN *t)
 	return OK;
 }
 
+int
 information(void)
 {
 	struct TOKEN *t = TokenList;
@@ -372,6 +389,7 @@ information(void)
 	return OK;
 }
 
+int
 file_write_t(struct TOKEN *t)
 {
 	char filename[80];
@@ -452,6 +470,7 @@ file_write_t(struct TOKEN *t)
 }
 
 
+int
 file_read_t(struct TOKEN *t)
 {
 	FILE *fp;
@@ -507,6 +526,7 @@ illegal_directory(char *str)
 	return OK;
 }
 
+int
 get_file_body(FILE *fp)
 {
 	struct text_line *tl = NULL, *t;
@@ -526,6 +546,7 @@ get_file_body(FILE *fp)
 }
 
 #ifdef NOMSGD
+void
 filesys_server(int msg_num, char *path)
 {
 	char msgname[80];
@@ -538,6 +559,7 @@ filesys_server(int msg_num, char *path)
 }
 #endif
 
+int
 filesys_write_msg(int msgnum, char *path)
 {
 	FILE *fpw;

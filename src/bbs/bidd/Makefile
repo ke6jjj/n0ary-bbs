@@ -1,10 +1,8 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = b_bidd
-OBJS =	main.o read.o hash.o date.o parse.o write.o edit.o
-CFILES =	main.c read.c hash.c date.c parse.c write.c edit.c
-HDRS = bid.h
-SUPPORT = Makefile
+all: BIDD_APP
+clean: BIDD_APP_CLEAN
 
-include ../common.mk
+include $(THIS_SRCDIR)/../../top.mk
+
+BIDD_APP: $(BIDD_APP)

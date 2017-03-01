@@ -7,11 +7,11 @@
 #include <netdb.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <ctype.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "tools.h"
-
-extern char *sys_errlist[];
 
 static int socket_watch = ERROR;
 
@@ -24,7 +24,7 @@ socket_watcher(int sock_fd)
 static void
 socket_print(char c, char *s)
 {
-	printf("%c(%d):", c, strlen(s));
+	printf("%c(%zu):", c, strlen(s));
 	while(*s) {
 		if(isprint(*s))
 			putchar(*s);
@@ -85,7 +85,7 @@ int
 socket_listen(int *port)
 {
 	struct sockaddr_in server;
-	int length = sizeof(server);
+	socklen_t length = sizeof(server);
 	int sock = ERROR;
 	int linger = 0;
 
@@ -142,7 +142,7 @@ socket_open(char *host, int port)
 	server.sin_family = AF_INET;
 
 	if(host == NULL) {
-		if(gethostname(&hostname, 80) < 0)
+		if(gethostname(hostname, 80) < 0)
 			return error_log("socket_open.gethostname: %s", sys_errlist[errno]);
 		host = hostname;
 	}

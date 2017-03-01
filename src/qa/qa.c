@@ -5,11 +5,13 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <fcntl.h>
-#include <sys/termios.h>
+#include <termios.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <errno.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 #include "c_cmmn.h"
 #include "tools.h"
@@ -82,6 +84,7 @@ struct script_cmds {
 	{ "VERBOSE",	verbose },
 	{ NULL,		NULL }};
 
+int
 read_script_file(char *fn)
 {
 	char buf[1024];
@@ -133,7 +136,7 @@ read_script_file(char *fn)
 				if(cmd->func(p) != OK) {
 					textline_free(PendCmd);
 					PendCmd = pending_list;
-					return;	
+					return ERROR;	
 				}
 				break;
 			}
@@ -162,7 +165,7 @@ read_script_file(char *fn)
 	return OK;
 }
 
-int
+void
 execute_pending(char *p)
 {
 	char *s;
@@ -183,6 +186,7 @@ execute_pending(char *p)
 	}
 }
 
+int
 main(int argc, char *argv[])
 {
 	int c;
@@ -214,7 +218,7 @@ main(int argc, char *argv[])
 	textline_free(PendCmd);
 
 	fclose(log_fp);
-	exit(0);
+	return 0;
 }
 
 int
@@ -291,7 +295,7 @@ stamp(char *s)
 		minutes = delta / 60;
 		seconds = delta % 60;
 
-		sprintf(buf, "%s  delta= %d:%02d:%02d",
+		sprintf(buf, "%s  delta= %ld:%02ld:%02ld",
 			now, hours, minutes, seconds);
 	} else {
 		time_base = t;

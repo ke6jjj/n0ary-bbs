@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 #include "c_cmmn.h"
 #include "tools.h"
@@ -129,7 +130,7 @@ get_hexnum(char **str)
     if(buf[0] == 0)
         return ERROR;
 
-    sscanf(buf, "%x", &num);
+    sscanf(buf, "%lx", &num);
     return num;
 }
 
@@ -153,7 +154,7 @@ get_number(char **str)
     if(buf[0] == 0)
         return ERROR;
 
-    sscanf(buf, "%d", &num);
+    sscanf(buf, "%ld", &num);
 
 	if(neg)
 		num *= -1;

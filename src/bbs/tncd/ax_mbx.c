@@ -5,6 +5,9 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/wait.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <signal.h>
 
 #include "c_cmmn.h"
 #include "config.h"

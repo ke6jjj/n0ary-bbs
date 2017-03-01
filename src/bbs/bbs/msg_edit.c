@@ -10,6 +10,10 @@
 #include "user.h"
 #include "message.h"
 #include "vars.h"
+#include "msg_edit.h"
+#include "parse.h"
+
+static int msg_edit_prompt(struct msg_dir_entry *m);
 
 #define CHECK_STATE {\
 	if(operand_pending) {\
@@ -37,6 +41,7 @@ struct msg_list {
 	int num;
 } *Msg_List = NULL;
 
+int
 msg_edit(void)
 {
 	struct TOKEN *t = TokenList;
@@ -280,7 +285,7 @@ msg_edit(void)
 	return OK;
 }
 
-int
+static int
 msg_edit_prompt(struct msg_dir_entry *m)
 {
 	struct msg_dir_entry msg;

@@ -362,9 +362,7 @@ extern char
 extern int
 	dump(void);
 
-extern int
-	get_user(struct user_information *u, char *call),
-	logout_user(void);
+extern int get_user(struct user_information *u, char *call);
 
 extern char
 	*cnvrt_usrnum_call(int num);
@@ -405,4 +403,4 @@ extern int
 #define AlterUserAllowed(u,m,s) if(s==SET) SetUserAllowed(u,m); else ClrUserAllowed(u,m)
 #define AlterUserEcho(u,s) if(s==SET) SetUserEcho(u); else ClrUserEcho(u)
 
-
+int logout_user(void);

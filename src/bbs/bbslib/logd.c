@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -17,11 +18,11 @@ logd_read(void)
 {
 	static char buf[80];
 
-	switch(socket_read_line(logd_sock, buf, 1023, 60)) {
+	switch(socket_read_line(logd_sock, buf, 80, 60)) {
 	case sockOK:
 		break;
 	case sockMAXLEN:
-		buf[1023] = 0;
+		buf[79] = 0;
 		break;
 	case sockTIMEOUT:
 	case sockERROR:

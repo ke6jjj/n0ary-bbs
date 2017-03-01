@@ -1,18 +1,13 @@
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PRODUCTS = dtmf
+all: DECTALK_APP
+clean: DECTALK_APP_CLEAN
 
-SRCS = dtmf.c Makefile
+include $(THIS_SRCDIR)/../../top.mk
 
-dtmf: dtmf.c
-	$(CC) $(CFLAGS) -o dtmf dtmf.c $(LIBTOOLS)
-
-tar:
-	tar cf ../dtmf.tar $(SRCS)
-
-install:	$(INS)/dtmf
-
-$(INS)/dtmf:	dtmf
-	cp dtmf $(INS)
-
-include ../common.mk
+ifneq ($(ENABLE_DECTALK),0)
+  DECTALK_APP: $(DECTALK_APP)
+else
+  DECTALK_APP:
+	$(error "dectalk not enabled")
+endif

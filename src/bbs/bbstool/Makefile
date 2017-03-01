@@ -1,14 +1,13 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-LDLIBS = -L/usr/tools/X/0/lib -lXm -lXt -lX11
+all: BBSTOOL_APP
+clean: BBSTOOL_APP_CLEAN
 
-PROD = b_tool
-OBJS = tool.o usrwin.o lckwin.o dmnwin.o monitor.o msgwin.o
-CFILES = tool.c usrwin.c lckwin.c dmnwin.c bbsd.c \
-		monitor.c msgwin.c
-HDRS = bbstool.h
-SUPPORT = Makefile Tool.ad
+include $(THIS_SRCDIR)/../../top.mk
 
-
-include ../common.mk
+ifneq ($(ENABLE_BBSTOOL),0)
+BBSTOOL_APP: $(BBSTOOL_APP)
+else
+BBSTOOL_APP:
+	$(error "BBS Tool not enabled")
+endif

@@ -1,11 +1,15 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/stat.h>
 
 #include "config.h"
 #include "bbslib.h"
+#include "tools.h"
 
 FILE *fp_city, *fp_first, *fp_last, *fp_zip;
 
-int
+static int
 	parse_call(struct callbook_entry *cb, char *s, int len),
 	parse_lname(struct callbook_entry *cb, char *s, int len),
 	parse_fname(struct callbook_entry *cb, char *s, int len),
@@ -17,6 +21,9 @@ int
 	parse_birth(struct callbook_entry *cb, char *s, int len),
 	parse_expire(struct callbook_entry *cb, char *s, int len),
 	parse_class(struct callbook_entry *cb, char *s, int len);
+static void create_output_files(char *s);
+static void append_index(struct callbook_entry *cb, int loc);
+static void create_callbook(FILE *fp, char *dir);
 
 struct input_record {
 	int pos, len;
@@ -39,7 +46,7 @@ struct input_record {
 int count[10][26];
 #endif
 
-void
+static void
 create_output_files(char *s)
 {
 	FILE *fp;
@@ -88,6 +95,7 @@ create_output_files(char *s)
 	}
 }
 
+int
 main(int argc, char *argv[])
 {
 	char callbook[80];
@@ -97,25 +105,25 @@ main(int argc, char *argv[])
 
 	if(argc < 2) {
 		printf("Enter location of hamcall.129: ");
-		gets(callbook);
+		safegets(callbook, sizeof(callbook));
 		printf("Enter directory for output: ");
-		gets(outdir);
+		safegets(outdir, sizeof(outdir));
 	} else {
-		strcpy(callbook, argv[1]);
-		strcpy(outdir, argv[2]);
+		strncpy(callbook, argv[1], sizeof(callbook));
+		strncpy(outdir, argv[2], sizeof(outdir));
 	}
 
 	strcat(callbook, "/hamcall.129");
 	if((fp = fopen(callbook, "r")) == NULL) {
 		printf("\n** Could not open callbook file: %s\n", callbook);
-		exit(1);
+		return 1;
 	}
 
 
 	sprintf(fn, "%s/tmp", outdir);
 	if((tfp = fopen(fn, "w")) == NULL) {
 		printf("\n** Error writing to the directory: %s\n", outdir);
-		exit(1);
+		return 1;
 	}
 	fclose(tfp);
 	unlink(fn);
@@ -127,9 +135,10 @@ main(int argc, char *argv[])
 	fclose(fp_first);
 	fclose(fp_zip);
 	fclose(fp_city);
-	exit(0);
+	return 0;
 }
 
+static void
 append_index(struct callbook_entry *cb, int loc)
 {
 	struct callbook_index indx;
@@ -155,6 +164,7 @@ append_index(struct callbook_entry *cb, int loc)
 	fwrite(&indx, sizeof(indx), 1, fp_zip);
 }
 
+static void
 create_callbook(FILE *fp, char *dir)
 {
 	char buf[256];
@@ -210,6 +220,7 @@ create_callbook(FILE *fp, char *dir)
 	}
 }
 
+static int
 parse_call(struct callbook_entry *cb, char *s, int len)
 {
 	char buf[80];
@@ -242,6 +253,7 @@ parse_call(struct callbook_entry *cb, char *s, int len)
 	return OK;
 }
 
+static int
 parse_lname(struct callbook_entry *cb, char *s, int len)
 {
 	strncpy(cb->lname, s, len);
@@ -250,6 +262,7 @@ parse_lname(struct callbook_entry *cb, char *s, int len)
 	return OK;
 }
 
+static int
 parse_fname(struct callbook_entry *cb, char *s, int len)
 {
 	if(*s == ' ') {
@@ -269,12 +282,14 @@ parse_fname(struct callbook_entry *cb, char *s, int len)
 	return OK;
 }
 
+static int
 parse_mname(struct callbook_entry *cb, char *s, int len)
 {
 	cb->mname[0] = *s;
 	return OK;
 }
 
+static int
 parse_addr(struct callbook_entry *cb, char *s, int len)
 {
 	strncpy(cb->addr, s, len);
@@ -283,6 +298,7 @@ parse_addr(struct callbook_entry *cb, char *s, int len)
 	return OK;
 }
 
+static int
 parse_city(struct callbook_entry *cb, char *s, int len)
 {
 	strncpy(cb->city, s, len);
@@ -291,6 +307,7 @@ parse_city(struct callbook_entry *cb, char *s, int len)
 	return OK;
 }
 
+static int
 parse_state(struct callbook_entry *cb, char *s, int len)
 {
 	cb->state[0] = *s++;
@@ -298,6 +315,7 @@ parse_state(struct callbook_entry *cb, char *s, int len)
 	return OK;
 }
 
+static int
 parse_zip(struct callbook_entry *cb, char *s, int len)
 {
 	strncpy(cb->zip, s, len);
@@ -305,6 +323,7 @@ parse_zip(struct callbook_entry *cb, char *s, int len)
 	return OK;
 }
 
+static int
 parse_birth(struct callbook_entry *cb, char *s, int len)
 {
 	cb->birth[0] = *s++;
@@ -312,6 +331,7 @@ parse_birth(struct callbook_entry *cb, char *s, int len)
 	return OK;
 }
 
+static int
 parse_expire(struct callbook_entry *cb, char *s, int len)
 {
 	strncpy(cb->exp, s, len);
@@ -319,6 +339,7 @@ parse_expire(struct callbook_entry *cb, char *s, int len)
 	return OK;
 }
 
+static int
 parse_class(struct callbook_entry *cb, char *s, int len)
 {
 	cb->class[0] = *s;

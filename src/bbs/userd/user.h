@@ -13,7 +13,8 @@ extern char
 	*Bbs_Host,
 	*Userd_Acc_Path;
 
-extern time_t
+extern time_t time_now;
+time_t
 	Time(time_t *t),
 	time_now,
 	Userd_Age_Suspect,
@@ -106,22 +107,23 @@ struct UserList {
 #define CLEAN	0
 #define DIRTY	1
 
-extern void
+void
 	usrdir_immune(char *call, int immune),
 	usrdir_number(char *call, int number),
-    usrdir_touch(char *call, int port, long now),
+	usrdir_touch(char *call, int port, long now),
 	usrdir_allocate(char *call, char *s);
 
-extern int
+int
 	usrdir_kill(char *s),
 	usrdir_build(void),
 	usrfile_write(char *call),
 	usrdir_unique_number(int num),
 	usrfile_create(char *call),
+	usrfile_kill(char *call),
 	usrfile_close_all(struct active_processes *ap),
 	usrfile_close(struct active_processes *ap);
 
-extern char
+char
 	*usrfile_show(void),
 	*login_user(struct active_processes *ap, char *s),
 	*edit_toggle(struct active_processes *ap, int token, char *s),
@@ -137,13 +139,13 @@ extern char
 	*show_user(struct active_processes *ap),
 	*parse(struct active_processes *ap, char *s);
 
-extern struct UserList
+struct UserList
 	*usrfile_find(char *call);
 
-extern struct UserInformation
+struct UserInformation
 	*usrfile_read(char *call, struct active_processes *ap);
 
-extern struct IncludeList
+struct IncludeList
 	*free_list(struct IncludeList *list),
 	*add_2_list(struct IncludeList *list, char *str);
 

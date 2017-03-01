@@ -1,7 +1,9 @@
 #include "c_cmmn.h"
+#include "search.h"
 
 int front, back, choice;
 
+int
 search_start(int cnt)
 {
 	front = 0;
@@ -10,6 +12,7 @@ search_start(int cnt)
 	return choice;
 }
 
+int
 search_next(int direction)
 {
 	if(direction < 0) {
@@ -22,11 +25,13 @@ search_next(int direction)
 	return choice;
 }
 
+int
 search_range(void)
 {
 	return (back - front)/2;
 }
 
+int
 search_end(int direction)
 {
 	if(direction < 0)

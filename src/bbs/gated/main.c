@@ -10,6 +10,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -56,7 +57,7 @@ service_port(struct active_processes *ap)
 	if(socket_read_line(ap->fd, buf, 256, 10) == ERROR)
 		return ERROR;
 
-	logf("gated", "R:", buf);
+	log_f("gated", "R:", buf);
 	s = buf;
 	NextChar(s);
 	if(*s) {
@@ -65,7 +66,7 @@ service_port(struct active_processes *ap)
 	} else
 		c = Error("invalid command");
 
-	logf("gated", "S:", c);
+	log_f("gated", "S:", c);
 	if(socket_raw_write(ap->fd, c) == ERROR)
 		return ERROR;
 
@@ -127,16 +128,19 @@ check_users(struct active_processes *ap, int create)
 			return;
 		strcpy(buf, userd_fetch(g->call));
 		if(!strncmp(buf, "NO,", 3)) {
-			sprintf(buf, "%s is not a user\n", g->call);
+			snprintf(buf, sizeof(buf), "%s is not a user\n",
+				g->call);
 			socket_raw_write(ap->fd, buf);
 
 			if(create) {
 				printf("%s, is not a user\n", g->call);
-				sprintf(buf, "CREATE %s", g->call);
+				snprintf(buf, sizeof(buf), "CREATE %s",
+					g->call);
 				userd_fetch(buf);
-				sprintf(buf, "HELP 2", g->call);
+				sprintf(buf, "HELP 2");
 				userd_fetch(buf);
-				sprintf(buf, "ADDRESS %s", g->addr);
+				snprintf(buf, sizeof(buf), "ADDRESS %s",
+					g->addr);
 				userd_fetch(buf);
 				sprintf(buf, "EMAIL ON");
 				userd_fetch(buf);
@@ -155,7 +159,7 @@ write_config_file(void)
 	printf("HOST %s\n", Bbs_Host);
 	printf("PORT %d\n", Gated_Port);
 	printf("GATEFILE %s\n", Gated_File);
-	printf("FLUSH %d (minutes)\n", Gated_Flush / tMin);
+	printf("FLUSH %ld (minutes)\n", Gated_Flush / tMin);
 }
 
 void
@@ -194,13 +198,14 @@ read_config_file(char *fn)
 		}
 		if(!strcmp(field, "FLUSH")) {
 			Gated_Flush = (time_t)get_number(&s) * tMin;
-			printf("FLUSH = %d\n", Gated_Flush/tMin);
+			printf("FLUSH = %ld\n", Gated_Flush/tMin);
 			continue;
 		}
 	}
 	fclose(fp);
 }
 
+int
 main(int argc, char *argv[])
 {
 	int listen_port;
@@ -215,7 +220,7 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgIGNOREHOST))
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
-		daemon();
+		daemon(1, 1);
 
 	if(bbsd_open(Bbs_Host, Bbsd_Port, "gated", "DAEMON") == ERROR)
 		error_print_exit(0);
@@ -308,6 +313,8 @@ main(int argc, char *argv[])
             NEXT(ap);
         }
 	}
+
+	return 0;
 }
 
 time_t

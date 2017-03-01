@@ -1,11 +1,8 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = b_gated
-OBJS =	main.o age.o file.o date.o parse.o mail.o guess.o
-#AGE_OBJS =	age.o file.o date.o
-CFILES =	main.c file.c date.c parse.c mail.c guess.c age.c
-HDRS = gate.h
-SUPPORT = Makefile
+all: GATED_APP
+clean: GATED_APP_CLEAN
 
-include ../common.mk
+include $(THIS_SRCDIR)/../../top.mk
+
+GATED_APP: $(GATED_APP)

@@ -23,15 +23,15 @@ struct active_procs {
 	int fd;
 };
 
-extern struct active_procs
+struct active_procs
 	*proc_add(void),
 	*proc_remove(struct active_procs *ap);
 
-extern struct text_line
+struct text_line
 	*textline_allocate(char *s),			/* textline.c */
 	*textline_free(struct text_line *tl);	/* textline.c */
 
-extern void
+void
     modem_baudrate(int baud),
     modem_flush(int fd),
     modem_debug(int fd),
@@ -55,10 +55,10 @@ extern void
 	textline_append(struct text_line **tl, char *s),	/* textline.c */
 	textline_prepend(struct text_line **tl, char *s),	/* textline.c */
 	textline_sort(struct text_line **tl, int position),
-	test_host(char *host),					/* daemon.c */
-	daemon(void);							/* daemon.c */
+	test_host(char *host);					/* daemon.c */
 
-extern int
+int
+	talk(char *str),
 	textline_count(struct text_line *tl),
 	textline_maxlength(struct text_line *tl),
 	spool_fclose(FILE *fp),					/* spool.c */
@@ -68,11 +68,11 @@ extern int
 	open_tty(struct tty *t),				/* tty.c */
 	close_tty(int fd);						/* tty.c */
 
-extern long
+long
 	get_hexnum(char **str),					/* common.c */
 	get_number(char **str);					/* common.c */
 
-extern char
+char
     *modem_read(int fd, int timeout),
 	*copy_string(char *s),					/* common.c */
 	*get_call(char **str),					/* common.c */
@@ -80,10 +80,10 @@ extern char
 	*get_string_to(char **str, char term),	/* common.c */
 	*get_word(char **str);					/* common.c */
 
-extern FILE
+FILE
 	*spool_fopen(char *fn);					/* spool.c */
 
-extern int
+int
     modem_close(int fd),
     modem_open(char *device),
     modem_dial(char *device, char *phone_number, char *init),
@@ -95,13 +95,18 @@ extern int
 	socket_read_line(int fd, char *line, int len, int timeout),
 	socket_accept(int sock),
 	socket_open(char *host, int port),
-	socket_listen(int *port);
+	socket_listen(int *port),
+	socket_read_pending(int fd),
+	socket_close(int fd),
+	IsPrintable(char *s);
 
 extern short
 	sum_string(char *s);
 
 extern void
 	*mem_calloc(int cnt, int size);
+
+void safegets(char *buf, size_t sz);
 
 int
 #ifndef SABER

@@ -1,10 +1,22 @@
 #include <stdio.h>
 #include <fcntl.h>
 #include <time.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
+/*
 #include "vars.h"
+*/
+
+static void hist_read_database(int delay);
+static void hist_condense(void);
+static void hist_port_time(int port);
+static void hist_connects();
+static void hist_time();
+static void initstring(void);
+static void putstring(int loc, char *s);
+static void printstring(void);
 
 #define YESTERDAY		0
 #define WEEKDAYS		1
@@ -22,12 +34,12 @@
 #define HOURSperMONTH	(HOURSperDAY * DAYSperMONTH)
 
 static char *port_name[6] = {
-	"144.93 port",
-	"223.62 port",
-	"433.37 port",
-	"Phone Port 749-1950",
-	"Phone Port 749-0605",
-	"Console (Gateway) Port" };
+	"Port 1",
+	"Port 2",
+	"Port 3",
+	"Port 4",
+	"Port 5",
+	"Port 6" };
 
 char string[256];
 char yesterday[10];
@@ -53,6 +65,7 @@ struct graphs {
 int use_stdout = FALSE;
 FILE *output;
 
+int
 main(int argc, char **argv)
 {
 	int delay = 0;
@@ -80,11 +93,14 @@ main(int argc, char **argv)
 	hist_port_time(2);
 	hist_port_time(4);
 #endif
+
+	return 0;
 }
 
+static void
 hist_read_database(int delay)
 {
-	long t;
+	time_t t;
 	struct tm *tm;
 	char buf[256];
 	int i;
@@ -97,7 +113,7 @@ hist_read_database(int delay)
 
 		/* determine time value for midnight, last night */
 
-	t = Time(NULL);
+	t = time(NULL);
 	tm = localtime(&t);
 	tm->tm_sec = 0;
 	tm->tm_min = 0;
@@ -115,7 +131,8 @@ hist_read_database(int delay)
 		/* set termination entry then scan list setting ranges */
 
 	tm = localtime(&t);
-	sprintf(yesterday, "%2d/%02d/%02d", tm->tm_mon+1, tm->tm_mday, tm->tm_year);
+	sprintf(yesterday, "%d-%02d-%02d",
+		tm->tm_year, tm->tm_mon+1, tm->tm_mday);
 	bins[HOURSperMONTH-1].t1 = t;
 	bins[HOURSperMONTH-1].dow = tm->tm_wday;
 
@@ -147,7 +164,7 @@ hist_read_database(int delay)
 		long length;
 		int connect, delta;
 
-		sscanf(buf, "%d %d %d", &t0, &t1, &connect);
+		sscanf(buf, "%ld %ld %d", &t0, &t1, &connect);
 		delta = t1 - t0;
 
 				/* take early exit if connect is not within the last
@@ -206,6 +223,7 @@ hist_read_database(int delay)
 #endif
 }
 
+static void
 hist_condense(void)
 {
 	int i, j, k;
@@ -321,6 +339,7 @@ hist_condense(void)
 #define RESOLUTION		300
 #define LINESperHOUR	12
 
+static void
 hist_port_time(int port)
 {
 	int i, cnt, mcnt[3];
@@ -559,6 +578,7 @@ int port;
 
 }
 
+static void
 hist_connects()
 {
 	int i;
@@ -600,6 +620,7 @@ hist_connects()
 #endif
 }
 
+static void
 hist_time()
 {
 	int i;
@@ -643,6 +664,7 @@ hist_time()
 }
 #endif
 
+static void
 initstring(void)
 {
 	int i;
@@ -650,6 +672,7 @@ initstring(void)
 		string[i] = ' ';
 }
 
+static void
 putstring(int loc, char *s)
 {
 	int len = strlen(s);
@@ -657,6 +680,7 @@ putstring(int loc, char *s)
 		string[loc++] = *s++;
 }
 
+static void
 printstring(void)
 {
 	string[78] = 0;

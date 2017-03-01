@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -42,6 +43,7 @@ iscall(char *s)
 	return TRUE;
 }
 
+int
 read_user_file(char *filename)
 {
 	char s[256];
@@ -203,7 +205,7 @@ read_user_file(char *filename)
 	}
 
 	if(dbug_level & dbgVERBOSE)
-		printf("Loaded %d users in %d seconds\n", cnt, time(NULL) - t0);
+		printf("Loaded %d users in %ld seconds\n", cnt, time(NULL) - t0);
 	fclose(fp);
 	return OK;
 }
@@ -272,7 +274,7 @@ read_bbs_file(char *filename)
 	}
 
 	if(dbug_level & dbgVERBOSE)
-		printf("Loaded %d bbss in %d seconds\n", cnt, time(NULL) - t0);
+		printf("Loaded %d bbss in %ld seconds\n", cnt, time(NULL) - t0);
 	fclose(fp);
 	return OK;
 }
@@ -290,7 +292,7 @@ startup(void)
 	if(!(dbug_level & dbgNODAEMONS))
 		bbsd_msg("Startup users");
 	if(read_new_user_file(Wpd_User_File) == ERROR) {
-		printf("Error opening USERFILE\n", Wpd_User_File);
+		printf("Error opening USERFILE %s\n", Wpd_User_File);
 		exit(1);
 	}
 

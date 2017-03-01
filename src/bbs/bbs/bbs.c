@@ -16,9 +16,8 @@
 #include <netdb.h>
 #include <time.h>
 #include <unistd.h>
-
-
-extern char *sys_errlist[];
+#include <stdlib.h>
+#include <ctype.h>
 
 void
 	get_socket(char *str, int cnt),
@@ -48,6 +47,13 @@ static void
 #include "function.h"
 #include "history.h"
 #include "vars.h"
+#include "filesys.h"
+#include "wp.h"
+#include "remote.h"
+#include "bbscommon.h"
+#include "parse.h"
+#include "cmd_pend.h"
+#include "file.h"
 
 static void
 	init_program_vars(void);
@@ -64,10 +70,7 @@ static int
 short bbscallsum;
 
 extern int
-	debug_level,
 	LastMsgListedCdate;
-
-extern char *sys_errlist[];
 
 FILE
 	*logfile = NULL;
@@ -103,6 +106,7 @@ monitor_setup()
 	return monitor_port;
 }
 
+void
 monitor_disconnect()
 {
 	if(monitor_connected == FALSE)
@@ -114,6 +118,7 @@ monitor_disconnect()
 	monitor_connected = FALSE;
 }
 
+void
 monitor_connect()
 {
 	if(monitor_connected == TRUE)
@@ -373,13 +378,13 @@ read_options(int argc, char **argv)
 	switch(Program) {
 	case Prog_CALLBK:
 #if 0
-		daemon();
+		daemon(1, 1);
 #endif
 		callbk_server(atoi(argv[optind]), argv[optind+1]);
 		exit(0);
 
 	case Prog_WP:
-		daemon();
+		daemon(1, 1);
 		wp_server(atoi(argv[optind]), argv[optind+1]);
 		exit(0);
 
@@ -449,6 +454,7 @@ read_options(int argc, char **argv)
 }
 
 /*ARGSUSED*/
+int
 main(int argc, char **argv)
 {
 	int retry = 0;
@@ -567,6 +573,8 @@ main(int argc, char **argv)
 		build_full_message_list();
 #endif
 	}
+
+	return 0;
 }
 
 int reverse_fwd_mode = FALSE;
@@ -674,6 +682,7 @@ display_motd(int force)
 }
 
 
+void
 timeout_waiting_for_input()
 {
 	signal(SIGALRM, SIG_IGN);
@@ -894,7 +903,7 @@ log_user(char *str)
 	fflush(logfile);
 }
 
-
+int
 ports(void)
 {
 	long t1 = time(NULL);

@@ -1,16 +1,8 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = 
-CFILES = dialin.c
-HDRS =
-OBJS = dialin.o
-SUPPORT = Makefile
+all: DIAL_APP
+clean: DIAL_APP_CLEAN
 
-ALL:	b_dialin
+include $(THIS_SRCDIR)/../../top.mk
 
-b_dialin:	$(OBJS) $(LIB)/libbbs.a $(LIB)/libtools.a
-	$(CC) $(CFLAGS) -o b_dialin $(CFILES) $(LIBS) $(LDLIBS)
-	$(CC) $(CFLAGS) -DBS -o b_dialinBS $(CFILES) $(LIBS) $(LDLIBS)
-
-include ../common.mk
+DIAL_APP: $(DIAL_APP) $(DIALBS_APP)

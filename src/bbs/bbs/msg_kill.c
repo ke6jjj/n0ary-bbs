@@ -10,12 +10,20 @@
 #include "user.h"
 #include "message.h"
 #include "vars.h"
+#include "msg_kill.h"
+#include "help.h"
+
+static void kill_mine(void);
+static int kill_range(int start, int finish);
+static void kill_messages(struct TOKEN *t);
+static int kill_message_number(struct msg_dir_entry *m);
 
 static int
 	inquire,
 	hard_delete,
 	mine;
 
+int
 msg_kill_t(struct TOKEN *t)
 {
 	int msg_cnt = 0;
@@ -84,6 +92,7 @@ msg_kill_t(struct TOKEN *t)
 }
 
 
+static void
 kill_mine(void)
 {
 	struct list_criteria lc;
@@ -103,6 +112,7 @@ kill_mine(void)
 	}
 }
 
+static int
 kill_range(int start, int finish)
 {
 	struct list_criteria lc;
@@ -129,6 +139,7 @@ kill_range(int start, int finish)
 	return OK;
 }
 
+static void
 kill_messages(struct TOKEN *t)
 {
 	struct list_criteria lc;
@@ -160,6 +171,7 @@ kill_messages(struct TOKEN *t)
 	}
 }
 
+static int
 kill_message_number(struct msg_dir_entry *m)
 {
 	char *result;

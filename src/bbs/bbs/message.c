@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -12,13 +13,17 @@
 #include "message.h"
 #include "vars.h"
 #include "version.h"
+#include "msg_read.h"
+#include "msg_fwd.h"
+#include "msg_kill.h"
+#include "msg_immune.h"
+#include "msg_list.h"
+#include "msg_nts.h"
+#include "msg_edit.h"
+#include "parse.h"
+#include "help.h"
 
-void
-	remove_token(struct TOKEN *t);
-
-extern void
-    msg_build_mid(void);
-    
+static int msg_alter_state(int op, struct TOKEN *t);
 
 struct text_line *GrpList = NULL;
 
@@ -668,7 +673,7 @@ msg_activate_all_held(void)
 	}
 }
 
-int
+static int
 msg_alter_state(int op, struct TOKEN *t)
 {
 	struct msg_dir_entry *m;

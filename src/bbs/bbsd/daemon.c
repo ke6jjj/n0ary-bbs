@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <dirent.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
 #include "bbslib.h"
 #include "bbsd.h"
+#include "daemon.h"
 
 #define dmnDOWN		0
 #define dmnSTART	1
@@ -37,7 +39,7 @@ daemon_display(struct Daemons *dl)
 	case dmnONLINE: p = "Online"; break;
 	}
 
-	printf("\t%s\t%s%4d  RESPAWN:%sTO:%4d  %s\n",
+	printf("\t%s\t%s%4d  RESPAWN:%sTO:%4ld  %s\n",
 		dl->name, p,
 		dl->proc_num, dl->respawn ? "YES ":"NO  ",
 		dl->timeout, dl->cmd);

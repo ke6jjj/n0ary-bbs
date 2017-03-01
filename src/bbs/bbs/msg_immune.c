@@ -10,7 +10,13 @@
 #include "user.h"
 #include "message.h"
 #include "vars.h"
+#include "msg_immune.h"
 
+static int immune_range(int mode, int start, int finish);
+static void immune_messages(int mode, struct TOKEN *t);
+static int immune_message_number(int mode, int num);
+
+int
 msg_immune_t(int mode, struct TOKEN *t)
 {
 	int msg_cnt = 0;
@@ -54,7 +60,7 @@ msg_immune_t(int mode, struct TOKEN *t)
 	return OK;
 }
 
-
+static int
 immune_range(int mode, int start, int finish)
 {
 	struct list_criteria lc;
@@ -83,6 +89,7 @@ immune_range(int mode, int start, int finish)
 	return OK;
 }
 
+static void
 immune_messages(int mode, struct TOKEN *t)
 {
 	struct list_criteria lc;
@@ -114,6 +121,7 @@ immune_messages(int mode, struct TOKEN *t)
 	}
 }
 
+static int
 immune_message_number(int mode, int num)
 {
 	switch(mode) {

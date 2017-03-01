@@ -12,6 +12,7 @@
 #include "wp.h"
 #include "vars.h"
 #include "version.h"
+#include "msg_addr.h"
 
 #define History(x)		history |= x
 #define First_Time(x)	!(history &= x)
@@ -391,7 +392,7 @@ check_personal(struct msg_dir_entry *msg, int history)
 		return OK;
 
 	default:
-		sprintf(buf, "Invalid TO/TYPE [0x%x]", msg->flags);
+		sprintf(buf, "Invalid TO/TYPE [0x%lx]", msg->flags);
 		bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__, "check_personal", CmdLine, buf);
 	}
 	return OK;
@@ -479,7 +480,7 @@ check_bulletin(struct msg_dir_entry *msg, int history)
 		return OK;
 
 	default:
-		sprintf(buf, "Invalid TO/TYPE [0x%x]", msg->flags);
+		sprintf(buf, "Invalid TO/TYPE [0x%lx]", msg->flags);
 		bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__, 
 				   "check_bulletin", CmdLine, buf);
 	}
@@ -545,7 +546,7 @@ check_nts(struct msg_dir_entry *msg, int history)
 		return OK;
 
 	default:
-		sprintf(buf, "Invalid TO/TYPE [0x%x]", msg->flags);
+		sprintf(buf, "Invalid TO/TYPE [0x%lx]", msg->flags);
 		bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__, 
 				   "check_nts", CmdLine, buf);
 	}
@@ -614,7 +615,7 @@ validate_message(struct msg_dir_entry *msg, int history)
 		return check_secure(msg, history);
 	}
 
-	sprintf(buf, "Invalid TYPE [0x%x]", msg->flags);
+	sprintf(buf, "Invalid TYPE [0x%lx]", msg->flags);
 	bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__, 
 			   "validate_message", CmdLine, buf);
 	return ERROR;

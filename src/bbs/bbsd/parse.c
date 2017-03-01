@@ -1,11 +1,14 @@
 #include <stdio.h>
 #include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
 #include "bbslib.h"
 #include "bbsd.h"
+#include "daemon.h"
 
 int operation = FALSE;
 extern int shutdown_daemon;
@@ -16,7 +19,7 @@ convert_time(void)
 	char *result;
 	if((result = config_fetch("DEBUG_TIME")) == NULL)
 		return "0\n";
-	sprintf(output, "%d\n", str2time_t(result));
+	snprintf(output, sizeof(output), "%ld\n", str2time_t(result));
 	return output;
 }
 
@@ -31,7 +34,7 @@ parse_check(char *s)
 	if(*s == 0)
 		return Error("Expected a call");
 
-	strcpy(call, get_string(&s));
+	strncpy(call, get_string(&s), sizeof(call));
 	if(*s != 0)
 		port = locate_port(get_string(&s));
 
@@ -48,7 +51,7 @@ parse_check(char *s)
 		NEXT(ap);
 	}
 
-	sprintf(output, "%d\n", cnt);
+	snprintf(output, sizeof(output), "%d\n", cnt);
 	return output;
 }
 
@@ -66,12 +69,12 @@ parse_status(struct active_processes *me, char *s)
 		while(ap) {
 			if(ap->verbose == TRUE) {
 				long t = time(NULL);
-				sprintf(buf, "%d %s %s %d %d %d %d %s %s\n",
+				sprintf(buf, "%d %s %s %d %d %ld %ld %s %s\n",
 					ap->proc_num, ap->call, ap->via->name,
 					ap->chat_port, ap->pid, t - ap->t0, t - ap->idle,
 					ap->chat?"YES":"NO", ap->text ? ap->text:".");
 			} else {
-				sprintf(buf, "%d %s %s %d %d %d %d %s %s\n",
+				sprintf(buf, "%d %s %s %d %d %ld %ld %s %s\n",
 					ap->proc_num, ap->call, ap->via->name,
 					ap->chat_port, ap->pid, ap->t0, ap->idle,
 					ap->chat?"YES":"NO", ap->text ? ap->text:".");
@@ -237,7 +240,7 @@ parse(struct active_processes *ap, char *s)
 				if((ap->via = locate_port(get_string(&s))) == NULL)
 					return Error("invalid port");
 						
-				sprintf(buf, "LOGIN %d %s %s %d",
+				sprintf(buf, "LOGIN %d %s %s %ld",
 					ap->proc_num, ap->call, ap->via->name, ap->t0);
 				textline_append(&Notify, buf);
 

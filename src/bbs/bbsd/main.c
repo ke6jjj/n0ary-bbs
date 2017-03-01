@@ -2,12 +2,15 @@
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
 #include "bbslib.h"
 #include "bbsd.h"
+#include "daemon.h"
 
 long
 	time_now = 0;
@@ -60,7 +63,7 @@ service_port(struct active_processes *ap)
 	if(VERBOSE)
 		printf("R: %s\n", buf);
 
-	logf("bbsd", "R:", buf);
+	log_f("bbsd", "R:", buf);
 	s = buf;
 	NextChar(s);
 	if(*s) {
@@ -69,7 +72,7 @@ service_port(struct active_processes *ap)
 	} else
 		c = Error("invalid command");
 
-	logf("bbsd", "S:", c);
+	log_f("bbsd", "S:", c);
 	if(VERBOSE)
 		printf("S: %s", c);
 
@@ -104,7 +107,8 @@ add_proc()
 	ap->pid = ERROR;
 	ap->verbose = FALSE;
 
-	sprintf(buf, "LOGIN %d UnKwn STATUS %d", ap->proc_num, ap->t0);
+	snprintf(buf, sizeof(buf),
+		"LOGIN %d UnKwn STATUS %ld", ap->proc_num, ap->t0);
 	textline_append(&Notify, buf);
 
 	return ap;	
@@ -233,6 +237,7 @@ fetch_configuration(void)
 	return fail;
 }
 
+int
 main(int argc, char *argv[])
 {
 	int listen_port;
@@ -248,30 +253,30 @@ main(int argc, char *argv[])
 
 	if(read_config_file(argv[optind]) == ERROR) {
 		printf("Couldn't read configuration file %s\n", argv[optind]);
-		exit(1);
+		return 1;
 	}
 	if(fetch_configuration() != OK) {
 		printf("Critical failures occured with configuration, aborting..\n");
-		exit(1);
+		return 1;
 	}
 
 	if(check_for_bbsd()) {
 		printf("Already a bbsd process running\n");
-		exit(0);
+		return 0;
 	}
 
 	if(!(dbug_level & dbgIGNOREHOST))
 		test_host(Bbs_Host);
 
 	if(!(dbug_level & dbgFOREGROUND))
-		daemon();
+		daemon(1, 1);
 	signal(SIGPIPE, SIG_IGN);
 
 	lock_all("Bring up in progress");
 
 	listen_port = Bbsd_Port;
 	if((listen_sock = socket_listen(&listen_port)) == ERROR)
-		exit(1);
+		return 1;
 
 	build_daemon_list();
 	while(TRUE) {
@@ -281,7 +286,7 @@ main(int argc, char *argv[])
 		struct timeval t;
 
 		if(shutdown_daemon)
-			exit(0);
+			return 0;
 
 		ap = procs;
 		FD_ZERO(&ready);
@@ -337,7 +342,8 @@ main(int argc, char *argv[])
 					ap = remove_proc(ap);
 				else {
 					char buf[80];
-					sprintf(buf, "# %d\n", ap->proc_num);
+					snprintf(buf, sizeof(buf),
+						"# %d\n", ap->proc_num);
 					if(write(ap->fd, buf, strlen(buf)) < 0)
 						ap = remove_proc(ap);
 				}
@@ -358,6 +364,8 @@ main(int argc, char *argv[])
 		if(Notify != NULL)
 			notify_monitors();
 	}
+
+	return 0;
 }
 
 long

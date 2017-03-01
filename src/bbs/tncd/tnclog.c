@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -25,45 +26,48 @@ usage(char *name)
 	exit(1);
 }
 
-void
-parse_options(int argc, char *argv[])
+static void
+parse_tnclog_options(int argc, char *argv[])
 {
 	int i;
 	struct PortDefinition *pd = port_table();
 
 	if(argc == 2)
-		while(pd->port != 0) {
+		while(pd != NULL) {
 			if(!strcmp(argv[1], pd->name)) {
 				monitor = tnc_monitor(pd->name);
 				Tncd_Name = pd->name;
 				Tncd_Host = tnc_host(pd->name);
 				return;
 			}
-			pd++;
+			pd = pd->next;
 		}
 	usage(argv[0]);
 }
 
+int
 main(int argc, char *argv[])
 {
 	int cnt, fd;
 	char buf[1025], filename[1025];
 
-	parse_options(argc, argv);
+	parse_tnclog_options(argc, argv);
 
-	if((log_sock = open_socket(Tncd_Host, monitor)) == ERROR) {
+	if((log_sock = socket_open(Tncd_Host, monitor)) == ERROR) {
 		printf("Couldn't attach to port %s:%d\n", Tncd_Host, monitor);
-		exit(1);
+		return 1;
 	}
 
 	sprintf(filename, "%s/%s.log", DIR, Tncd_Name);
 	if((fd = open(filename, O_WRONLY|O_CREAT, 0x3FF)) < 0) {
 		perror(filename);
-		exit(1);
+		return 1;
 	}
 
 	while(cnt = read(log_sock, buf, 1024)) {
 		write(fd, buf, cnt);
 	}
 	close(fd);
+
+	return 0;
 }

@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -15,15 +17,35 @@ generate_wp_update(struct active_processes *ap)
 	struct smtp_message *g_smtpmsg, *l_smtpmsg = NULL;
 	char lfn[256], gfn[256];
 	FILE *lfp = NULL, *gfp;
-	int gcnt, lcnt;
+	int gcnt, lcnt, gfd, lfd;
 
-	strcpy(gfn, tmpnam(NULL));
-	if((gfp = fopen(gfn, "w")) == NULL)
+	strcpy(gfn, "/tmp/wpupdate.g.XXXXXX");
+
+	if ((gfd = mkstemp(gfn)) < 0)
 		return ERROR;
 
+	if((gfp = fopen(gfn, "w")) == NULL) {
+		close(gfd);
+		return ERROR;
+	}
+
+	close(gfd);
+
 	if(Wpd_Local_Distrib) {
-		strcpy(lfn, tmpnam(NULL));
-		lfp = fopen(lfn, "w");
+		strcpy(lfn, "/tmp/wpupdate.l.XXXXXX");
+		if ((lfd = mkstemp(lfn)) < 0) {
+			fclose(gfp);
+			unlink(gfn);
+			return ERROR;
+		}
+		if ((lfp = fopen(lfn, "w")) == NULL) {
+			fclose(gfp);
+			unlink(gfn);
+			close(lfd);
+			unlink(lfn);
+			return ERROR;
+		}
+		close(lfd);
 		l_smtpmsg = malloc_struct(smtp_message);
 	}
 

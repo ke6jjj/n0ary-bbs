@@ -312,6 +312,7 @@ wp(void)
 	return OK;
 }
 
+void
 wp_server(int num, char *mode)
 {
 	int result = ERROR;

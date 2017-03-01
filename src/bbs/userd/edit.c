@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -58,7 +59,7 @@ edit_toggle(struct active_processes *ap, int token, char *s)
 			i = 0;
 			port = ap->ul->info.port;
 			while(port) {
-				sprintf(output, "%sPORT%d %s %s %d %d %d\n", output, i++,
+				sprintf(output, "%sPORT%d %s %s %ld %ld %ld\n", output, i++,
 					port->name, port->allow ? "YES":"NO",
 					port->count, port->firstseen, port->lastseen);
 				NEXT(port);
@@ -294,7 +295,7 @@ edit_number(struct active_processes *ap, int token, char *s)
 	}
 
 	if(*s == 0) {
-		sprintf(output, "%d\n", *number);
+		sprintf(output, "%ld\n", *number);
 		return output;
 	}
 
@@ -338,13 +339,13 @@ show_user(struct active_processes *ap)
 		sprintf(output, "%sRIG %s\n", output, ap->ul->info.rig);
 
 	if(ap->ul->info.base)
-		sprintf(output, "%sBASE %d\n", output, ap->ul->info.base);
+		sprintf(output, "%sBASE %ld\n", output, ap->ul->info.base);
 	if(ap->ul->info.lines)
-		sprintf(output, "%sLINES %d\n", output, ap->ul->info.lines);
+		sprintf(output, "%sLINES %ld\n", output, ap->ul->info.lines);
 	if(ap->ul->info.message)
-		sprintf(output, "%sMESSAGE %d\n", output, ap->ul->info.message);
+		sprintf(output, "%sMESSAGE %ld\n", output, ap->ul->info.message);
 
-	sprintf(output, "%sNUMBER %d\n", output, ap->ul->info.number);
+	sprintf(output, "%sNUMBER %ld\n", output, ap->ul->info.number);
 
 	if(ap->ul->info.sysop) strcat(output, "SYSOP\n");
 	if(ap->ul->info.bbs) strcat(output, "BBS\n");
@@ -362,7 +363,7 @@ show_user(struct active_processes *ap)
 	if(ap->ul->info.email) strcat(output, "EMAIL\n");
 	if(ap->ul->info.emailall) strcat(output, "EMAILALL\n");
 
-	if(ap->ul->info.help) sprintf(output, "%sHELP %d\n", output, ap->ul->info.help);
+	if(ap->ul->info.help) sprintf(output, "%sHELP %ld\n", output, ap->ul->info.help);
 
 	for(i=0; i<10; i++)
 		if(ap->ul->info.macro[i][0])
@@ -386,7 +387,7 @@ show_user(struct active_processes *ap)
 
 	port = ap->ul->info.port;
 	while(port) {
-		sprintf(output, "%sPORT %s %s %d %d %d\n", output,
+		sprintf(output, "%sPORT %s %s %ld %ld %ld\n", output,
 			port->name, port->allow ? "YES":"NO",
 			port->count, port->firstseen, port->lastseen);
 		NEXT(port);

@@ -67,7 +67,7 @@ msg_hold_get_reason(struct msg_dir_entry *m, char *reason)
 	} else
 		textline_append(&tl, reason);
 
-	sprintf(buf, "%s %d", msgd_xlate(mHOLD), m->number);
+	sprintf(buf, "%s %ld", msgd_xlate(mHOLD), m->number);
 	msgd_cmd_textline(buf, tl);
 	textline_free(tl);
 	return OK;

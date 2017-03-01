@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -14,6 +16,9 @@
 #define WAIT		1
 #define IDENTIFY	2
 
+static int service_socket(void);
+static void dec_talk(char *s);
+
 FILE *dectalk_fp;
 int sock_fd = ERROR;
 
@@ -22,9 +27,8 @@ char *p = input;
 
 extern void test_host(char*);
 
-main(argc, argv)
-int argc;
-char *argv[];
+int
+main(int argc, char *argv[])
 {
 	int fdlimit = getdtablesize();
 	int port = DECTALK_PORT;
@@ -37,11 +41,11 @@ char *argv[];
 	test_host(DECTALK_HOST);
 
 #ifndef DEBUG
-	daemon();
+	daemon(1, 1);
 #endif
 
 	if((dectalk_fp = fopen(DECTALK_DEVICE, "w")) == NULL)
-		exit(1);
+		return 1;
 
 	while(TRUE) {
 		fd_set ready;
@@ -70,18 +74,18 @@ char *argv[];
 
 		if(cnt < 0) {
 			perror("select");
-			exit(1);
+			return 1;
 		}
 
 		if(cnt == 0) {
 			switch(state) {
 			case IDENTIFY:
-				talk("N0ARY auxiliary");
+				dec_talk("N0ARY auxiliary");
 				state = IDLE;
 				break;
 
 			case WAIT:
-				talk(input);
+				dec_talk(input);
 				p = input;
 				*p = 0;
 				state = IDENTIFY;
@@ -94,29 +98,34 @@ char *argv[];
 			if(sock_fd == ERROR)
 				if((sock_fd = socket_accept(sock)) < 0) {
 					perror("sola: accept");
-					exit(2);
+					return 2;
 				}
 
 		if(FD_ISSET(sock_fd, &ready)) {
 			state = service_socket();
 		}
 	}
+
+	return 0;
 }
 
 
+static int
 service_socket()
 {
 	int len = read(sock_fd, p, 256);
 
-	if(len < 0)
-		return;
+	if(len < 0) {
+		perror("read");
+		exit(2);
+	}
 
 	if(len == 0) {
 		close(sock_fd);
 		sock_fd = ERROR;
 
 		if((int)p != (int)input) {
-			talk(input);
+			dec_talk(input);
 			p = input;
 			*p = 0;
 		}
@@ -163,8 +172,8 @@ int *port;
 }
 #endif
 
-talk(s)
-char *s;
+static void
+dec_talk(char *s)
 {
 	char *p = &s[strlen(s)-1];
 	while(isspace(*p) || *p == ',' || *p == '.' || *p == '?')

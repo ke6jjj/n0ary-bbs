@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <getopt.h>
 
 #include "c_cmmn.h"
 #include "config.h"

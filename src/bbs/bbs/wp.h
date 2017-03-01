@@ -30,3 +30,5 @@ extern int
 
 extern void
 	wp_seen(char *call);
+
+void wp_server(int num, char *mode);

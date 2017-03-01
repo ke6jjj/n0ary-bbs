@@ -2,6 +2,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <time.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -11,10 +12,13 @@
 #include "user.h"
 #include "tokens.h"
 #include "message.h"
+#include "msg_mail.h"
+#include "msg_read.h"
 
 #include "system.h"
 #include "smtp.h"
 
+int
 scan_for_to(struct text_line **tl, char *rcpt)
 {
 	int found = FALSE;

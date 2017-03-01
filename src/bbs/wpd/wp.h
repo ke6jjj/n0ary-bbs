@@ -10,12 +10,12 @@ extern int operation;
 extern long new_level;
 extern long bbs_mode;
 
-extern time_t
-	Time(time_t *t),
-	time_now,
+extern time_t time_now,
 	Wpd_Refresh,
 	Wpd_Age,
 	Wpd_Update;
+
+time_t Time(time_t *t);
 
 extern int
 	dbug_level,
@@ -80,16 +80,16 @@ extern char
 #define CLEAN	0
 #define DIRTY	1
 
-extern char
+char
 	*get_call(char **str),
 	*get_string(char **str),
 	*get_string_to(char **str, char term);
 
-extern long
+long
 	get_hexnum(char **str),
 	get_number(char **str);
 
-extern void
+void
 	startup(void),
 	search(int fd, char *cmd),
 	hash_search_user(int fd, char *pat, int mode),
@@ -97,17 +97,18 @@ extern void
 	hash_user_init(void),
 	hash_bbs_init(void);
 
-extern struct wp_user_entry
+struct wp_user_entry
 	*make_user(char *call),
 	*hash_create_user(char *s),
 	*hash_get_user(char *s);
 
-extern struct wp_bbs_entry
+struct wp_bbs_entry
 	*make_bbs(char *call),
 	*hash_create_bbs(char *s),
 	*hash_get_bbs(char *s);
 
-extern int
+int
+	iscall(char *call),
 	generate_wp_update(struct active_processes *ap),
 	msg_generate(struct smtp_message *msg),
 	disp_update(struct active_processes *ap, struct smtp_message *msg),
@@ -116,10 +117,12 @@ extern int
 	read_new_bbs_file(char *filename),
 	read_bbs_file(char *filename),
 	hash_gen_update(FILE *gfp, int *gcnt, FILE *lfp, int *lcnt),
+	hash_delete_user(char *s),
+	hash_delete_bbs(char *s),
 	hash_deleted_user(char *s),
 	hash_deleted_bbs(char *s);
 
-extern char
+char
 	*upload(char *cmd),
 	*update(char *cmd),
 	*update_read(int msg),
@@ -141,7 +144,6 @@ extern char
 	*report_entry(char *call),
 	*parse(struct active_processes *ap, char *s);
 
-extern time_t
-	Time(time_t *t),
+time_t
 	date2time(char *s),
 	udate2time(char *s);

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "tools.h"
@@ -11,7 +11,7 @@ textline_allocate(char *s)
 	struct text_line *tl;
 
 	if(s == NULL)
-		return;
+		return NULL;
 
 	tl = malloc_struct(text_line);
 	tl->s = (char *)malloc(strlen(s)+1);

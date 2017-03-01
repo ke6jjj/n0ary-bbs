@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "tools.h"
@@ -9,6 +10,9 @@
 #include "tokens.h"
 #include "bbslib.h"
 #include "message.h"
+#include "cmd_pend.h"
+#include "msg_mail.h"
+#include "filesys.h"
 
 int
 	PendingCmd = FALSE;
@@ -50,6 +54,7 @@ queue_pending_command(char *cmd)
 	strcpy(po->text, cmd);
 }
 
+void
 run_pending_operations(void)
 {
 	struct pending_operations *lpo, *po = PendingOp;

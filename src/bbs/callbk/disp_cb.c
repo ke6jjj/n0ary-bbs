@@ -2,7 +2,12 @@
 
 #include "config.h"
 #include "bbslib.h"
+#include "tools.h"
 
+static void display_indx(FILE *fp);
+static void display_cb(FILE *fp);
+
+int
 main(int argc, char *argv[])
 {
 	char callbook[80];
@@ -12,13 +17,13 @@ main(int argc, char *argv[])
 
 	if(argc == 0) {
 		printf("Enter callbook file to display: ");
-		gets(callbook);
+		safegets(callbook, sizeof(callbook));
 	} else
 		strcpy(callbook, argv[1]);
 
 	if((fp = fopen(callbook, "r")) == NULL) {
 		printf("\n** Could not open callbook file: %s\n", callbook);
-		exit(1);
+		return 1;
 	}
 	p = (char*)rindex(callbook, '.');
 
@@ -27,9 +32,10 @@ main(int argc, char *argv[])
 	else
 		display_cb(fp);
 	fclose(fp);
-	exit(0);
+	return 0;
 }
 
+static void
 display_indx(FILE *fp)
 {
 	char buf[256];
@@ -41,6 +47,7 @@ display_indx(FILE *fp)
 		printf("%6d: %s\t%c%c:%d\n", cnt++, cb.key, cb.area, cb.suffix, cb.loc);
 }
 
+static void
 display_cb(FILE *fp)
 {
 	char buf[256];

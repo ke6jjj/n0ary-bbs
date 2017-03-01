@@ -5,6 +5,7 @@
 #else
 #include <termios.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 #endif
 
 #include "c_cmmn.h"
@@ -36,16 +37,20 @@ open_tty(struct tty *t)
 	if((fd = open(t->device, t->mode)) == ERROR)
 		return fd;
 
+#ifdef HAVE_TERMIOS
+ 	if(tcgetattr(fd, &tt)) {
+		close(fd);
+		return ERROR;
+	}
+#else
 #ifdef TCGETS
 	if(ioctl(fd, TCGETS, &tt)) {
 		close(fd);
 		return ERROR;
 	}
 #else
- 	if(tcgetattr(fd, &tt)) {
-		close(fd);
-		return ERROR;
-	}
+#error "Don't know how to get terminal settings."
+#endif
 #endif
 
 	tt.c_oflag = t->oflag;
@@ -53,16 +58,20 @@ open_tty(struct tty *t)
 	tt.c_cflag = t->cflag;
 	tt.c_iflag = t->iflag;
 
+#ifdef HAVE_TERMIOS
+ 	if(tcsetattr(fd, 0, &tt)) {
+		close(fd);
+		return ERROR;
+	}
+#else
 #ifdef TCSETS
 	if(ioctl(fd, TCSETS, &tt)) {
 		close(fd);
 		return ERROR;
 	}
 #else
- 	if(tcsetattr(fd, 0, &tt)) {
-		close(fd);
-		return ERROR;
-	}
+#error "Don't know how to set terminal settings."
+#endif
 #endif
 
 #ifdef F_SETOWN			/* Is this really needed? -- rwp */

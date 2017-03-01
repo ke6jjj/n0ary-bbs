@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -125,7 +126,7 @@ hash_write(FILE *fp)
 	for(i=0; i<HASH_SIZE; i++) {
 		struct bid_entry *b = bid[i];
 		while(b) {
-			fprintf(fp, "+%s %d\n", b->str, b->seen);
+			fprintf(fp, "+%s %ld\n", b->str, b->seen);
 			NEXT(b);
 		}
 	}
@@ -208,7 +209,7 @@ age(void)
 
 	if(dbug_level & dbgVERBOSE) {
 		printf("aging results = %d\n", cnt);
-		printf("         time = %d seconds\n", time(NULL) - t0);
+		printf("         time = %ld seconds\n", time(NULL) - t0);
 	}
 }
 

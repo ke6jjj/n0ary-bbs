@@ -68,7 +68,7 @@ write_user_file(void)
 	spool_fclose(fp);
 	user_image = CLEAN;
 	if(dbug_level & dbgVERBOSE)
-		printf("Writing user file took %d seconds\n", time(NULL) - t0);
+		printf("Writing user file took %ld seconds\n", time(NULL) - t0);
 	return r;
 }
 
@@ -101,7 +101,7 @@ write_bbs_file(void)
 	spool_fclose(fp);
 	bbs_image = CLEAN;
 	if(dbug_level & dbgVERBOSE)
-		printf("Writing bbs file took %d seconds\n", time(NULL) - t0);
+		printf("Writing bbs file took %ld seconds\n", time(NULL) - t0);
 	return r;
 }
 

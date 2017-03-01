@@ -2,6 +2,7 @@
 #include <string.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -18,6 +19,7 @@
 #include "wx.h"
 #include "history.h"
 #include "system.h"
+#include "parse.h"
 
 #define OPCODE	0
 #define OPERAND	1
@@ -98,6 +100,7 @@ remove_token(struct TOKEN *t)
 	free(t);
 }
 
+void
 run_macro_zero(void)
 {
 	char *s = user_get_macro(0);

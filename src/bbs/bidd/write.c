@@ -57,6 +57,6 @@ write_file()
 	if(!(dbug_level & dbgNODAEMONS))
 		bbsd_msg("");
 	if(dbug_level & dbgVERBOSE)
-		printf("   write time = %d seconds\n", time(NULL) - t0);
+		printf("   write time = %ld seconds\n", time(NULL) - t0);
 	return r;
 }

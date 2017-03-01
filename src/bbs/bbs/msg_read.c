@@ -4,6 +4,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <dirent.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -17,6 +18,10 @@
 #include "msg_fwddir.h"
 #include "vars.h"
 #include "version.h"
+#include "msg_read.h"
+#include "filesys.h"
+#include "bbscommon.h"
+#include "help.h"
 
 static int
 	header,
@@ -26,12 +31,16 @@ static int
 	killmsg,
 	mine;
 
-extern int
-	debug_level;
+static int who_has_read(int num);
+static int read_message_number(int num);
+static int read_mine(void);
+static int read_messages_who(struct TOKEN *t);
+static int read_messages_why(struct TOKEN *t);
+static int display_routing(struct msg_dir_entry *m, struct text_line **tl,
+	int mode);
+static int build_send_cmd(struct msg_dir_entry *m, char *cmd, size_t sz);
 
-int who_has_read(int num);
-int read_message_number(int num);
-
+int
 msg_read_t(struct TOKEN *t)
 {
 	int read_cnt = 0;
@@ -108,6 +117,7 @@ msg_read_t(struct TOKEN *t)
 	return OK;
 }
 
+static int
 read_mine(void)
 {
 	struct list_criteria lc;
@@ -148,6 +158,7 @@ read_mine(void)
 	return OK;
 }
 
+void
 read_messages(struct TOKEN *t)
 {
 #ifdef THRASH_MSGD
@@ -172,6 +183,7 @@ read_messages(struct TOKEN *t)
 	}
 }
 
+static int
 read_messages_why(struct TOKEN *t)
 {
 	while(t->token != END) {
@@ -188,6 +200,7 @@ read_messages_why(struct TOKEN *t)
 	return OK;
 }
 
+static int
 read_messages_who(struct TOKEN *t)
 {
 	while(t->token != END) {
@@ -209,7 +222,7 @@ disp_who(char *s)
 	PRINTF("%s ", s);
 }
 
-int
+static int
 who_has_read(int num)
 {
 	struct msg_dir_entry *m;
@@ -222,7 +235,7 @@ who_has_read(int num)
 
 	if(m->read_cnt > 0) {
 		char cmd[80];
-		sprintf(cmd, "%s %d", msgd_xlate(mWHO), num);
+		snprintf(cmd, sizeof(cmd), "%s %d", msgd_xlate(mWHO), num);
 		msgd_fetch_multi(cmd, disp_who);
 		PRINT("\n");
 	} else
@@ -245,7 +258,7 @@ who_has_read(int num)
  * X-Bid:
  */
 
-int
+static int
 read_message_number(int num)
 {
 	struct msg_dir_entry *m = msg_locate(num);
@@ -343,7 +356,7 @@ read_message_number(int num)
 	return OK;
 }
 
-int
+static int
 display_routing(struct msg_dir_entry *m, struct text_line **tl, int mode)
 {
 	int cnt = 0;
@@ -369,7 +382,7 @@ display_routing(struct msg_dir_entry *m, struct text_line **tl, int mode)
 		} else {
 			char rh[256];
 			char *p, *q;
-			strcpy(rh, (*tl)->s);
+			strncpy(rh, (*tl)->s, sizeof(rh));
 
 			p = (char *)index(rh, '@');
 			if(p != NULL) {
@@ -399,18 +412,18 @@ display_routing(struct msg_dir_entry *m, struct text_line **tl, int mode)
 	return OK;
 }
 
-
-build_send_cmd(struct msg_dir_entry *m, char *cmd)
+static int
+build_send_cmd(struct msg_dir_entry *m, char *cmd, size_t sz)
 {
 	switch(m->flags & MsgTypeMask) {
 	case MsgPersonal:
-		strcpy(cmd, "SP");
+		strncpy(cmd, "SP", sz);
 		break;
 	case MsgBulletin:
-		strcpy(cmd, "SB");
+		strncpy(cmd, "SB", sz);
 		break;
 	case MsgNTS:
-		strcpy(cmd, "ST");
+		strncpy(cmd, "ST", sz);
 		break;
 
 	default:
@@ -419,16 +432,16 @@ build_send_cmd(struct msg_dir_entry *m, char *cmd)
 	}
 
 	if(m->to.at.str[0])
-		sprintf(cmd, "%s %s @ %s", cmd, m->to.name.str, m->to.at.str);
+		snprintf(cmd, sz, "%s %s @ %s", cmd, m->to.name.str, m->to.at.str);
 	else
-		sprintf(cmd, "%s %s", cmd, m->to.name.str);
+		snprintf(cmd, sz, "%s %s", cmd, m->to.name.str);
 
 	if(ISupportHloc) {
 		if(m->to.address[0])
-			sprintf(cmd, "%s.%s", cmd, m->to.address);
+			snprintf(cmd, sz, "%s.%s", cmd, m->to.address);
 	} else {
 		char buf[256];
-		sprintf(buf, "Message #%d being forwarded to %s", m->number, usercall);
+		snprintf(buf, sizeof(buf), "Message #%ld being forwarded to %s", m->number, usercall);
 		bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__, 
 				   "!ISupportHloc", buf, "");
 		msg_hold_by_bbs(m->number, "BBS doesn't support HLOC? .. don't activate");
@@ -437,12 +450,12 @@ build_send_cmd(struct msg_dir_entry *m, char *cmd)
 
 	if(ISupportBID) {
 		if(m->bid[0])
-			sprintf(cmd, "%s < %s $%s\n", cmd, m->from.name.str, m->bid);
+			snprintf(cmd, sz, "%s < %s $%s\n", cmd, m->from.name.str, m->bid);
 		else
-			sprintf(cmd, "%s < %s\n", cmd, m->from.name.str);
+			snprintf(cmd, sz, "%s < %s\n", cmd, m->from.name.str);
 	} else {
 		char buf[256];
-		sprintf(buf, "Message #%d being forwarded to %s", m->number, usercall);
+		snprintf(buf, sizeof(buf), "Message #%ld being forwarded to %s", m->number, usercall);
 		bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__, 
 				   "!ISupportBID", buf, m->bid);
 		msg_hold_by_bbs(m->number, "BBS doesn't support BID? .. don't activate");
@@ -452,6 +465,7 @@ build_send_cmd(struct msg_dir_entry *m, char *cmd)
 	return OK;
 }
 
+int
 msg_title_write(int num, FILE *fp)
 {
 	struct msg_dir_entry *m;
@@ -466,7 +480,7 @@ msg_title_write(int num, FILE *fp)
 	dt = localtime(&(m->cdate));
 	strftime(datebuf, 40, "[%y%m%d/%H""%M]", dt);
 
-	fprintf(fp, "Msg: %d %s", m->number, datebuf);
+	fprintf(fp, "Msg: %ld %s", m->number, datebuf);
 
 	if(m->bid[0])
 		fprintf(fp, " BID: %s", m->bid);
@@ -514,7 +528,7 @@ msg_forward(
 
 			rfc822_parse(m, rfc822_find(rTO, m->header));
 
-			if(build_send_cmd(m, cmd)) {
+			if(build_send_cmd(m, cmd, sizeof(cmd))) {
 				NEXT(queue);
 				continue;
 			}
@@ -522,7 +536,7 @@ msg_forward(
 
 			{
 				char outbuf[256];
-				sprintf(outbuf, "%d %s", m->number, cmd);
+				snprintf(outbuf, sizeof(outbuf), "%ld %s", m->number, cmd);
 				bbsd_msg(outbuf);
 			}
 			if(m->body == NULL) {
@@ -531,7 +545,7 @@ msg_forward(
 			}
 			result = cmd_upcall(cmd);
 
-			sprintf(logbuf, "\t%d\t%s", m->number, cmd);
+			snprintf(logbuf, sizeof(logbuf), "\t%ld\t%s", m->number, cmd);
 			logd(logbuf);
 
 			if(result == ERROR) {
@@ -542,7 +556,7 @@ msg_forward(
 			if(result == TRUE) {
 				int body_err = FALSE;
 				if(debug_level & DBG_MSGFWD)
-					PRINTF("%05d  SEND  %s@%s",
+					PRINTF("%05ld  SEND  %s@%s",
 						m->number, m->to.name.str, m->to.at.str);
 
 				if(body_upcall(m->sub) != OK) {
@@ -552,11 +566,11 @@ msg_forward(
 
 				strftime(datebuf, 40, "%y%m%d/%H""%M", dt);
 				if(m->bid[0])
-					sprintf(buf, "R:%s %d@%s.%s %s $%s",
+					snprintf(buf, sizeof(buf), "R:%s %ld@%s.%s %s $%s",
 						datebuf, m->number, Bbs_Call, Bbs_Hloc,
 						Bbs_Header_Comment, m->bid);
 				else
-					sprintf(buf, "R:%s %d@%s.%s %s",
+					snprintf(buf, sizeof(buf), "R:%s %ld@%s.%s %s",
 						datebuf, m->number, Bbs_Call, Bbs_Hloc,
 						Bbs_Header_Comment);
 
@@ -583,7 +597,7 @@ msg_forward(
 				}
 			} else
 				if(debug_level & DBG_MSGFWD)
-					PRINTF("%05d REJECT %s@%s",
+					PRINTF("%05ld REJECT %s@%s",
 						m->number, m->to.name.str, m->to.at.str);
 
 			result = OK;
@@ -598,7 +612,7 @@ msg_forward(
 			if(debug_level & DBG_MSGFWD) PRINTF("\n");
 
 		} else {
-			sprintf(logbuf, "\t%d\t %s@%s [%s]", m->number,
+			snprintf(logbuf, sizeof(logbuf), "\t%ld\t %s@%s [%s]", m->number,
 				m->to.name.str, m->to.at.str,
 				(m->flags & MsgHeld)? "HELD":"KILLED");
 			logd(logbuf);
@@ -620,7 +634,7 @@ msg_revfwd_cmd(char *buf)
 	char result[256];
 
 	PRINTF("%s\n", buf);
-	sprintf(result, "%s: %s", usercall, buf);
+	snprintf(result, sizeof(result), "%s: %s", usercall, buf);
 	bbsd_msg(result);
 
 	GETS(result, 255);
@@ -689,7 +703,7 @@ msg_revfwd(void)
 
 	{
 		char prefix[80];
-		sprintf(prefix, "<%s: ", sys->alias->alias);
+		snprintf(prefix, sizeof(prefix), "<%s: ", sys->alias->alias);
 		bbsd_prefix_msg(prefix);
 		bbsd_msg(" ");
 	}

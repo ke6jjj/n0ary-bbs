@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -18,10 +19,11 @@
 #include "server.h"
 #include "history.h"
 #include "wp.h"
+#include "bbscommon.h"
+
+static void dump_all_helps(void);
 
 FILE *hlpmsg_fp = NULL;
-
-extern char *sys_errlist[];
 
 static int 
 	hlpmsg_value = 9876,
@@ -64,6 +66,7 @@ help(void)
 	return OK;
 }
 
+static void
 dump_all_helps(void)
 {
 	init_more();
@@ -164,7 +167,7 @@ replace_macro(char **p, char c)
 		break;
 
 	case 'U':
-		sprintf(buf, "%d", user_get_value(uNUMBER));
+		sprintf(buf, "%ld", user_get_value(uNUMBER));
 		q = buf;
 		break;
 
@@ -277,13 +280,16 @@ system_msg(int num)
 			}
 		}
 
-		if(value & mask)
-			if(buf[5])
+		if(value & mask) {
+			if(buf[5]) {
 				PRINT(help_macro_exp(&buf[5]));
-			else
+			} else {
 				PRINT("\n");
-		if(more())
+			}
+		}
+		if(more()) {
 			return ERROR;
+		}
 	}
 
 	PRINT("Error reading help message file\n");
@@ -334,6 +340,7 @@ error_number(int errmsg, int n)
 	return ERROR;
 }
 
+int
 error_string(int errmsg, char *str)
 {
 	system_msg_string(errmsg, str);

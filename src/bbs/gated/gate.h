@@ -47,13 +47,13 @@ extern char
 	*Gated_File;
 
 extern int
+	delete_entry(char *call, char *addr),
 	hash_key(char *s),
 	add_user(struct gate_entry *g),
 	add_address(struct gate_entry *g),
 	read_file(void),
 	write_file(void),
-	write_if_needed(void),
-	iscall(char *s);
+	write_if_needed(void);
 
 extern char
     *time2date(long t),
@@ -63,4 +63,5 @@ extern char
 
 extern void
     age(struct active_processes *ap),
-	check_users(struct active_processes *ap, int create);
+	check_users(struct active_processes *ap, int create),
+    read_new_file(void);

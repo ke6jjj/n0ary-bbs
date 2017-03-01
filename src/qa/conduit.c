@@ -9,12 +9,11 @@
 #else
 #include <varargs.h>
 #endif
+#include <stdlib.h>
 
 
 #include "c_cmmn.h"
 #include "tools.h"
-
-extern char *sys_errlist[];
 
 int
 get_line(int fd, char *p, int cnt)
@@ -69,6 +68,7 @@ print_socket(int fd, char *fmt, ...)
 	putchar_socket(fd, buf);
 }
 
+int
 main(int argc, char *argv[])
 {
 	char c;
@@ -158,5 +158,5 @@ main(int argc, char *argv[])
 	close(listen_sock);
 	if(in)
 		close(in);
-	exit(0);
+	return 0;
 }

@@ -3,10 +3,13 @@
 #ifndef SUNOS
 #include <regex.h>
 #endif
+#include <ctype.h>
+#include <unistd.h>
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
 #include "bbslib.h"
+#include "rfc822.h"
 
 static long ListMode = mNORMAL;
 
@@ -121,7 +124,7 @@ msg_ReadBody(struct msg_dir_entry *m)
 	if(m->body != NULL)
 		return OK;
 
-	sprintf(cmd, "%s %d", msgd_xlate(mREADH), m->number);
+	sprintf(cmd, "%s %ld", msgd_xlate(mREADH), m->number);
 	if(msgd_fetch_textline(cmd, &(m->body)) != OK) {
 		m->body = textline_free(m->body);
 		return ERROR;
@@ -137,7 +140,7 @@ msg_ReadBodyBy(struct msg_dir_entry *m, char *by)
 	if(m->body != NULL)
 		return OK;
 
-	sprintf(cmd, "%s %d %s", msgd_xlate(mREADH), m->number, by);
+	sprintf(cmd, "%s %ld %s", msgd_xlate(mREADH), m->number, by);
 	if(msgd_fetch_textline(cmd, &(m->body)) != OK) {
 		m->body = textline_free(m->body);
 		return ERROR;
@@ -155,7 +158,7 @@ msg_ReadRfc(struct msg_dir_entry *m)
 		m->header = NULL;
 	}
 
-	sprintf(cmd, "%s %d", msgd_xlate(mREADRFC), m->number);
+	sprintf(cmd, "%s %ld", msgd_xlate(mREADRFC), m->number);
 	if(msgd_fetch_textline(cmd, &(m->header)) != OK) {
 		m->header = textline_free(m->header);
 		return ERROR;
@@ -213,7 +216,7 @@ msg_ListSinceMode(long t)
 	if(ListMode == mSINCE)
 		return "OK\n";
 	ListMode = mSINCE;
-	sprintf(cmd, "%s %d", msgd_xlate(mSINCE), t);
+	sprintf(cmd, "%s %ld", msgd_xlate(mSINCE), t);
 	return msgd_cmd(cmd);
 }
 

@@ -1,24 +1,8 @@
-include ../include/config.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-SRCS = qa.c conduit.c Makefile
+all: QA_PRODUCTS
+clean: QA_CLEAN
 
-install:	qa conduit
-	cp qa ../bin
-	cp conduit ../bin
+include $(THIS_SRCDIR)/../top.mk
 
-all: qa conduit
-
-qa:
-	$(CC) $(CFLAGS) -o qa qa.c -I../include -L../lib -ltools
-
-conduit:
-	$(CC) $(CFLAGS) -o conduit conduit.c -I../include -L../lib -ltools
-
-clean:
-	rm -f qa conduit
-
-link:
-	for file in $(SRCS); do \
-		ln -s $(SRC_DIR)/$$file $(DEST_DIR); \
-	done
-
+QA_PRODUCTS: $(QA_PRODUCTS)

@@ -11,6 +11,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -75,7 +76,7 @@ service_port(struct active_processes *ap)
 
 	if(socket_read_line(ap->fd, buf, 256, 10) == ERROR)
 		return ERROR;
-	logf("wpd", "R:", buf);
+	log_f("wpd", "R:", buf);
 
 	s = buf;
 	NextChar(s);
@@ -85,7 +86,7 @@ service_port(struct active_processes *ap)
 	} else
 		c = Error("call");
 
-	logf("wpd", "S:", c);
+	log_f("wpd", "S:", c);
 	if(socket_raw_write(ap->fd, c) == ERROR)
 		return ERROR;
 
@@ -172,9 +173,9 @@ write_config_file(void)
 	printf("USERFILE %s\n", Wpd_User_File);
 	printf("BBSFILE %s\n", Wpd_Bbs_File);
 	printf("WPFILE %s\n", Wpd_Dump_File);
-	printf("REFRESH %d (days)\n", Wpd_Refresh / tDay);
-	printf("AGE %d (months)\n", Wpd_Age / tMonth);
-	printf("FLUSH %d (minutes)\n", Wpd_Flush / tMin);
+	printf("REFRESH %ld (days)\n", Wpd_Refresh / tDay);
+	printf("AGE %ld (months)\n", Wpd_Age / tMonth);
+	printf("FLUSH %ld (minutes)\n", Wpd_Flush / tMin);
 }
 
 void
@@ -227,17 +228,17 @@ read_config_file(char *fn)
 		}
 		if(!strcmp(field, "FLUSH")) {
 			Wpd_Flush = (time_t)get_number(&s) * tMin;
-			printf("FLUSH = %d\n", Wpd_Flush/tMin);
+			printf("FLUSH = %ld\n", Wpd_Flush/tMin);
 			continue;
 		}
 		if(!strcmp(field, "AGE")) {
 			Wpd_Age = (time_t)get_number(&s) * tMonth;
-			printf("AGE = %d\n", Wpd_Age/tMonth);
+			printf("AGE = %ld\n", Wpd_Age/tMonth);
 			continue;
 		}
 		if(!strcmp(field, "REFRESH")) {
 			Wpd_Refresh = (time_t)get_number(&s) * tDay;
-			printf("REFRESH = %d\n", Wpd_Refresh/tDay);
+			printf("REFRESH = %ld\n", Wpd_Refresh/tDay);
 			continue;
 		}
 	}
@@ -263,6 +264,7 @@ usage(char *pgm)
 	printf("\n");
 }
 
+int
 main(int argc, char *argv[])
 {
 	int listen_port;
@@ -277,7 +279,7 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgIGNOREHOST))
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
-		daemon();
+		daemon(1, 1);
 
 	if(bbsd_open(Bbs_Host, Bbsd_Port, "wpd", "DAEMON") == ERROR)
 		error_print_exit(0);
@@ -302,12 +304,12 @@ main(int argc, char *argv[])
 		error_print();
 
 		if(shutdown_daemon) {
-			logf("wpd", "S", "Shutdown requested");
+			log_f("wpd", "S", "Shutdown requested");
 			if(user_image == DIRTY)
 				write_user_file();
 			if(bbs_image == DIRTY)
 				write_bbs_file();
-			exit(0);
+			return 0;
 		}
 
 		ap = procs;
@@ -362,9 +364,9 @@ main(int argc, char *argv[])
 
 					if(dbug_level & dbgVERBOSE) {
 						char out[80];
-						sprintf(out, "Aging took %d seconds\n", time(NULL) - t0);
+						sprintf(out, "Aging took %ld seconds\n", time(NULL) - t0);
 						puts(out);
-						logf("wpd", "S:", out);
+						log_f("wpd", "S:", out);
 					}
 				}
 
@@ -401,6 +403,8 @@ main(int argc, char *argv[])
 
 		wait3(NULL, WNOHANG, NULL);
 	}
+
+	return 0;
 }
 
 time_t

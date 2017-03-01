@@ -1,5 +1,8 @@
 #include <stdio.h>
 #include <time.h>
+#include <strings.h>
+
+#include "date.h"
 
 long
 date2time(char *s)
@@ -10,7 +13,7 @@ date2time(char *s)
 	bzero(&tm, sizeof(tm));
 	strptime(s, "%D", &tm);
 
-#ifdef SUNOS
+#ifdef HAVE_TIMEGM
 	t = timegm(&tm);
 #else
 	t = mktime(&tm);

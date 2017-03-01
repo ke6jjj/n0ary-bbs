@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <errno.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "monitor.h"

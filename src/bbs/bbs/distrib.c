@@ -1,18 +1,27 @@
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
 #include "bbslib.h"
 #include "function.h"
+#include "distrib.h"
 
 #include "user.h"
 #include "tokens.h"
 #include "body.h"
 #include "vars.h"
 
+static int distrib_list(void);
+static int distrib_kill(char *fn);
+static int distrib_write(char *fn);
+static int distrib_read(char *fn);
+static int distrib_approve(char *fn, FILE *fp);
+
+int
 distrib_t(void)
 {
 	struct TOKEN *t = TokenList;
@@ -104,6 +113,7 @@ distrib_t(void)
 	return OK;
 }
 
+static int
 distrib_kill(char *fn)
 {
 	FILE *fp;
@@ -148,6 +158,7 @@ distrib_kill(char *fn)
 	return OK;
 }
 
+static int
 distrib_approve(char *fn, FILE *fp)
 {
 	char buf[80];
@@ -178,6 +189,7 @@ distrib_approve(char *fn, FILE *fp)
 	return ERROR;
 }
 
+static int
 distrib_read(char *fn)
 {
 	FILE *fp;
@@ -225,7 +237,7 @@ distrib_read(char *fn)
 	return OK;
 }
 
-
+static int
 distrib_list(void)
 {
 	struct dirent *dp;
@@ -264,6 +276,7 @@ distrib_list(void)
 	return OK;
 }
 
+static int
 distrib_write(char *fn)
 {
 	FILE *fp;
@@ -321,6 +334,7 @@ distrib_write(char *fn)
 
 static FILE *dfp = NULL;
 
+int
 distrib_open(char *fn, char *title)
 {
 	char *p, str[80];
@@ -341,6 +355,7 @@ distrib_open(char *fn, char *title)
 	return OK;
 }
 
+int
 distrib_get_next(char *call)
 {
 	char *p, str[80];
@@ -361,6 +376,7 @@ distrib_get_next(char *call)
 	return OK;
 }
 
+int
 distrib_close(void)
 {
 	if(dfp != NULL) {

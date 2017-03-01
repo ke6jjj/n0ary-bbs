@@ -20,8 +20,10 @@
 #include "tokens.h"
 #include "message.h"
 #include "function.h"
+#include "maintenance.h"
+#include "bbscommon.h"
 
-extern char *sys_errlist[];
+static int echo(int cond);
 
 extern long
 	inactivity_timer;
@@ -38,6 +40,7 @@ int
  * there is no way to reach sysop access.
  */
 
+void
 check_for_root_access(void)
 {
 	/* For this to work the user must be named SYSOP */
@@ -101,6 +104,7 @@ display_debug_level(void)
 	PRINTF("\n");
 }
 
+int
 maint(void)
 {
 	struct TOKEN *t = TokenList;
@@ -208,22 +212,22 @@ maint(void)
 	return OK;
 }
 
+int
 echo_off(void)
 {
 	return echo(OFF);
 }
 
+static int
 echo(int cond)
 {
 	struct termios tt;
-#ifdef TCGETATTR
-	if(ioctl(0, TCGETATTR, &tt))
-		return error_log("echo.ioctl(TCGETATTR): %s", sys_errlist[errno]);
+
+#ifdef HAVE_TERMIOS
+	if (tcgetattr(0, &tt))
+		return error_log("echo.tcgetattr: %s", sys_errlist[errno]);
 #else
-#ifdef TCGETA
-	if(ioctl(0, TCGETA, &tt))
-		return error_log("echo.ioctl(TCGETA): %s", sys_errlist[errno]);
-#endif
+#error "Need termios"
 #endif
 
 	switch(cond) {
@@ -235,14 +239,12 @@ echo(int cond)
 		break;
 	}
 
-#ifdef TCSETATTR
-	if(ioctl(0, TCSETATTR, &tt))
-		return error_log("echo.ioctl(TCSETATTR): %s", sys_errlist[errno]);
+#ifdef HAVE_TERMIOS
+	if(tcsetattr(0, TCSANOW, &tt))
+		return error_log("echo.tcsetattr: %s", sys_errlist[errno]);
 #else
-#ifdef TCSETA
-	if(ioctl(0, TCSETA, &tt))
-		return error_log("echo.ioctl(TCSETA): %s", sys_errlist[errno]);
+#error "Need termios"
 #endif
-#endif
+
 	return OK;
 }

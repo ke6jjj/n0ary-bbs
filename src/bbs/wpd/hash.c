@@ -1,7 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #ifndef SUNOS
 #include <regex.h>
 #endif
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -240,7 +242,7 @@ hash_write(FILE *fp, int mode)
 
 				if(dbug_level & dbgVERBOSE) {
 					char buf[256];
-					sprintf(buf, "+%s %d %u %u %u %u %s %s %s %s\n",
+					sprintf(buf, "+%s %ld %u %u %u %u %s %s %s %s\n",
 						wp->call, wp->level, (unsigned)wp->firstseen,
 						(unsigned)wp->seen, (unsigned)wp->changed,
 						(unsigned)wp->last_update_sent,
@@ -248,7 +250,7 @@ hash_write(FILE *fp, int mode)
 					printf("%s", buf);
 				}
 
-				fprintf(fp, "+%s %d %u %u %u %u %s %s %s %s\n",
+				fprintf(fp, "+%s %ld %u %u %u %u %s %s %s %s\n",
 					wp->call, wp->level, (unsigned)wp->firstseen,
 					(unsigned)wp->seen, (unsigned)wp->changed,
 					(unsigned)wp->last_update_sent,
@@ -261,7 +263,7 @@ hash_write(FILE *fp, int mode)
 		for(i=0; i<BBS_HASH_SIZE; i++) {
 			struct wp_bbs_entry *wp = bbs[i];
 			while(wp) {
-				fprintf(fp, "+%s %d %s\n", wp->call, wp->level, wp->hloc);
+				fprintf(fp, "+%s %ld %s\n", wp->call, wp->level, wp->hloc);
 				NEXT(wp);
 			}
 		}
@@ -316,8 +318,8 @@ hash_gen_update(FILE *gfp, int *gcnt, FILE *lfp, int *lcnt)
 	time_t threshold = t - Wpd_Age;
 
 	if(dbug_level & dbgVERBOSE) {
-		printf("current time = %d\n", t);
-		printf("refresh threshold = %d\n\n", refresh);
+		printf("current time = %ld\n", t);
+		printf("refresh threshold = %ld\n\n", refresh);
 	}
 
 	*gcnt = *lcnt = 0;
@@ -330,14 +332,14 @@ hash_gen_update(FILE *gfp, int *gcnt, FILE *lfp, int *lcnt)
 			if(wp->level < WP_Init) {
 				if(wp->changed > wp->last_update_sent) {
 					if(dbug_level & dbgVERBOSE)
-						printf("%s changed since update %d > %d\n",
+						printf("%s changed since update %ld > %ld\n",
 							wp->call, wp->changed, wp->last_update_sent);
 					update = TRUE;
 				} else
 				if((wp->seen > wp->last_update_sent) &&
 					(wp->last_update_sent < refresh)) {
 					if(dbug_level & dbgVERBOSE)
-						printf("%s seen in last two weeks %d > %d\n",
+						printf("%s seen in last two weeks %ld > %ld\n",
 							wp->call, wp->seen, wp->last_update_sent);
 					update = TRUE;
 				}

@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <sys/time.h>
+#include <ctype.h>
 
 #include "c_cmmn.h"
 #include "tools.h"

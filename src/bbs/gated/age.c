@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"

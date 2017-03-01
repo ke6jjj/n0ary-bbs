@@ -1,9 +1,13 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
+#include <inttypes.h>
+#include <stdlib.h>
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
 #include "bbslib.h"
+#include "rfc822.h"
 
 static void
 	rfc822_gen_bid(struct RfcFields *rf, struct msg_dir_entry *m, char *buf),
@@ -144,13 +148,13 @@ rfc822_gen_bid(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 static void
 rfc822_gen_create(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 {
-	sprintf(buf, "%s %d", rf->text, m->cdate);
+	sprintf(buf, "%s %"PRId64, rf->text, m->cdate);
 }
 
 static void
 rfc822_gen_born(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 {
-	sprintf(buf, "%s %d", rf->text, m->edate);
+	sprintf(buf, "%s %"PRId64, rf->text, m->edate);
 }
 
 static void
@@ -186,13 +190,13 @@ rfc822_gen_immune(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 static void
 rfc822_gen_kill(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 {
-	sprintf(buf, "%s %d", rf->text, m->kdate);
+	sprintf(buf, "%s %"PRId64, rf->text, m->kdate);
 }
 
 static void
 rfc822_gen_time2live(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 {
-	sprintf(buf, "%s %d", rf->text, m->time2live);
+	sprintf(buf, "%s %"PRId64, rf->text, m->time2live);
 }
 
 static void
@@ -211,7 +215,7 @@ rfc822_gen_readby(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 static void
 rfc822_gen_replyto(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 {
-	sprintf(buf, "%s %s", rf->text);
+	sprintf(buf, "%s %s", rf->text, m->from.address);
 }
 
 static void
@@ -257,7 +261,7 @@ xlate_date(char *s)
 
 	t = str2time_t(s);
 	c = (char*)index(s, '\n');
-	sprintf(s, "%d", t);
+	sprintf(s, "%ld", t);
 	if(c != NULL)
 		strcat(s, "\n");
 	return t;

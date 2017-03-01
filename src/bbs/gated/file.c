@@ -1,6 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
+#include <stdlib.h>
+
+#include "date.h"
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -8,7 +12,9 @@
 #include "bbslib.h"
 #include "gate.h"
 
-extern char *sys_errlist[];
+static int iscall(char *s);
+static int hash_init(void);
+static void write_comment(FILE *fp);
 
 struct gate_entry
 	*GateList = NULL,
@@ -22,7 +28,7 @@ hash_key(char *s)
 	return (int)toupper(*s);
 }
 
-int
+static int
 iscall(char *s)
 {
 	int len = strlen(s);
@@ -121,7 +127,7 @@ read_file(void)
 		error_log("Couldn't open %s: %s", Gated_File, sys_errlist[errno]);
 		if(write_file() == ERROR)
 			return error_log("Couldn't create %s", Gated_File);
-		return read_file();
+		return read_file(); /* Could be better written -JSC */
 	}
 
 	if(dbug_level)
@@ -190,12 +196,12 @@ read_file(void)
 	}
 
 	if(dbug_level)
-		printf("Loaded %d translations in %d seconds\n", cnt, time(NULL) - t0);
+		printf("Loaded %d translations in %ld seconds\n", cnt, time(NULL) - t0);
 	fclose(fp);
 	return OK;
 }
 
-int
+static int
 hash_init(void)
 {
 	struct gate_entry *g = GateList;
@@ -219,6 +225,7 @@ hash_init(void)
 	return OK;
 }
 
+void
 read_new_file(void)
 {
 	hash_init();

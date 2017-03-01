@@ -1,18 +1,8 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = b_wpd
-SRC_DIR = bbs/wpd
+all: WPD_APP
+clean: WPD_APP_CLEAN
 
-OBJS =	main.o read.o hash.o date.o parse.o report.o write.o\
-		edit.o mail.o update.o search.o upload.o
-CFILES =	main.c read.c hash.c date.c parse.c report.c write.c\
-		edit.c mail.c update.c search.c upload.c
-HDRS = wp.h
-SUPPORT = Makefile
+include $(THIS_SRCDIR)/../../top.mk
 
-include ../common.mk
-
-$(OBJS):	wp.h $(INCLUDE)/c_cmmn.h $(INCLUDE)/tools.h $(INCLUDE)/bbslib.h
-
-
+WPD_APP: $(WPD_APP)

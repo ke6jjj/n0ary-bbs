@@ -11,7 +11,8 @@
 #include "user.h"
 #include "message.h"
 #include "pending.h"
-
+#include "msg_list.h"
+#include "bbscommon.h"
 
 static int
 	show_forwarding,
@@ -583,7 +584,7 @@ msg_list_t(struct TOKEN *t)
 	return OK;
 }
 
-
+int
 msg_catchup(void)
 {
 	if(LastMsgListedCdate == 0) {

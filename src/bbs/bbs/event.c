@@ -5,6 +5,7 @@
 #include <fcntl.h>
 #include <dirent.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -16,6 +17,7 @@
 #include "tokens.h"
 #include "event.h"
 #include "body.h"
+#include "file.h"
 
 static char keyword[20][10];
 static int number[20];
@@ -48,8 +50,10 @@ event_cnt()
 }
 
 static int
-ev_compare_time(struct event_entry *i, struct event_entry *j)
+ev_compare_time(const void *a, const void *b)
 {
+	const struct event_entry *i = a, *j = b;
+
 	return(i->time - j->time);
 }
 

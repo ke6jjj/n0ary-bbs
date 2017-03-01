@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <dirent.h>
 #include <time.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
+#include "tools.h"
 #include "config.h"
 #include "bbslib.h"
 #include "user.h"
@@ -249,7 +252,7 @@ find_user_by_suffix(char *s)
 	output[0] = 0;
 	while(dir) {
 		if(re_exec(dir->call) == 1) {
-			sprintf(output, "%s %s", dir->call);
+			sprintf(output, "%s %s", output, dir->call);
 			found = TRUE;
 		}
 		NEXT(dir);

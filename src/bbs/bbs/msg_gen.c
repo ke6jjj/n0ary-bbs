@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -10,6 +11,8 @@
 #include "tokens.h"
 #include "message.h"
 #include "vars.h"
+#include "msg_gen.h"
+#include "msg_addr.h"
 
 struct generated_message
 	*GenMsg = NULL;
@@ -83,6 +86,7 @@ buffer_msg_to_user(char *name, char *buf)
 	return genmsg;
 }
 
+int
 send_msg_to_user(char *name, char *subject, char *buf)
 {
 	struct msg_dir_entry msg, *m = &msg;

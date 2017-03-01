@@ -4,6 +4,8 @@
 #include <regex.h>
 #endif
 #include <sys/time.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -18,6 +20,8 @@
 #include "system.h"
 #include "msg_fwddir.h"
 #include "version.h"
+#include "msg_fwd.h"
+#include "msg_read.h"
 
 extern int
 	debug_level;
@@ -487,7 +491,7 @@ forward_by_tnc(struct System *sys)
 
 	strcpy(last_sent, "Nothing yet");
 
-	sprintf(buf, "PAUSE", sys->connect);
+	sprintf(buf, "PAUSE");
 	bbsd_msg(buf);
 	sleep(5);
 	sprintf(buf, "Connecting to %s", sys->connect);
@@ -507,7 +511,7 @@ forward_by_tnc(struct System *sys)
 		case chatRECV:
 			if(tnc_getline(tnc_fd, buf, 256, chat->to)) {
 				sprintf(buf,
-					"***Last sent: %s\n***Timeout (%d secs) waiting for: %s",
+					"***Last sent: %s\n***Timeout (%ld secs) waiting for: %s",
 					last_sent, chat->to, chat->txt);
 				logd(buf);
 				close(tnc_fd);

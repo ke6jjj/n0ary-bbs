@@ -1,15 +1,8 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = b_userd
-OBJS =	main.o usrdir.o parse.o usrfile.o edit.o age.o disp.o
-CFILES  =	main.c usrdir.c parse.c usrfile.c edit.c age.c disp.c
-HDRS = user.h
-SUPPORT = Makefile
+all: USERD_APP
+clean: USERD_APP_CLEAN
 
-all:	$(PROD)
+include $(THIS_SRCDIR)/../../top.mk
 
-$(OBJS):	$(HDRS)\
-			$(INCLUDE)/c_cmmn.h $(INCLUDE)/tools.h $(INCLUDE)/bbslib.h
-
-include ../common.mk
+USERD_APP: $(USERD_APP)

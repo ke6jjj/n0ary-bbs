@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
-#include "vars.h"
 #include "bbslib.h"
+#include "vars.h"
 #include "system.h"
 #include "function.h"
 #include "user.h"

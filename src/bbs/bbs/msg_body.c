@@ -15,6 +15,12 @@
 #include "wp.h"
 #include "rfc822.h"
 #include "version.h"
+#include "msg_body.h"
+#include "parse.h"
+#include "msg_addr.h"
+#include "help.h"
+
+static int subject_not_required(struct msg_dir_entry *m);
 
 int
 	this_bbs_in_header;
@@ -236,6 +242,7 @@ get_message_body(struct msg_dir_entry *m)
 	return ERROR;
 }
 
+int
 gen_vacation_body(struct text_line **tl, char *from)
 {
 	FILE *fpr;
@@ -299,7 +306,7 @@ get_subject(struct msg_dir_entry *m)
 #define cSUBJECT	'&'
 #define cCOMMAND	'!'
 
-int
+static int
 subject_not_required(struct msg_dir_entry *m)
 {
 	char buf[80];
@@ -331,11 +338,23 @@ subject_not_required(struct msg_dir_entry *m)
  * This routine is called from the msg_body.c:get_body() function to copy
  * a message into another message. The inserted messages will be offset
  * from the left margin by "> " to make it easy to identify.
+ *
+ * -----
+ * I noticed that msg_body.c:get_body() actually passes an additional
+ * argument named "type" to this function. Some sort of oversight has
+ * occurred because this function only takes one argument.
+ *
+ * Since the type argument seems to be an enumeration representing
+ * one of "FILE", "EVENT" or "MESSAGE", and since this function seems to
+ * continue parsing to determine what kind of object is being included,
+ * I'm going to assume that perhaps the type was an argument in the past
+ * but it has since been removed. I will add it back, but it will be an
+ * ignored argument for now.
+ * ----- KE6JJJ - 2017-01-09
  */
 
-
 int
-include_msg(char *buf)
+include_msg(char *buf, int type)
 {
 	struct msg_dir_entry *m;
 	struct text_line *tl;
@@ -394,7 +413,7 @@ include_msg(char *buf)
 		 */
 
 	link_line("\n");
-	sprintf(buf, "> Msg# %5d  To: %s  Fr: %s  Subj: %s\n",
+	sprintf(buf, "> Msg# %5ld  To: %s  Fr: %s  Subj: %s\n",
 		m->number, m->to.name.str, m->from.name.str, m->sub);
 	link_line(buf);
 	link_line(">\n");

@@ -102,7 +102,7 @@ sendframe(
  * directed to us as a digipeater, repeat it.  If it is addressed to
  * us or to QST-0, kick it upstairs depending on the protocol ID.
  */
-int
+void
 ax_recv(int dev, struct mbuf *bp)
 {
 	struct ax25_addr *ap;

@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <termios.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -66,6 +68,7 @@ method()
  */
 
 /*ARGSUSED*/
+int
 main(argc, argv)
 int argc;
 char *argv[];
@@ -108,7 +111,7 @@ char *argv[];
 		p = call;
 		do {
 			printf("Enter your callsign (first name if non-ham): ");
-			gets(call);
+			safegets(call, sizeof(call));
 		} while(*p == 0);
 
 		call[6]=0;
@@ -137,4 +140,6 @@ char *argv[];
 
 	sprintf(pgm, "%s/b_bbs", Bin_Dir);
 	execl(pgm, "b_bbs", "-v", method(), call, 0);
+
+	return 0;
 }

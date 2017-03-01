@@ -8,6 +8,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -28,12 +29,14 @@
 #define LISTCALLS	1
 #define READMSG		2
 
-struct input_buffers {
+static struct input_buffers {
 	struct input_buffers *last, *next;
 	long time;
 	char s[256];
 	int cnt;
 } buf[MAXRING], *bptr, *cptr;
+
+static void encode_connect_method(char *s, int method);
 
 static char
 	*xlate_call(char *call);
@@ -56,9 +59,13 @@ static int
 	bbs_access(char *s),
 	lastlogin_by_number(char *s),
 	held_messages(char *s),
+#if 0
+	rmt_cmd(char *s),
+	rmt_play_str(char *s),
+#endif
 	unread_by_number(char *s);
 
-struct commands {
+static struct commands {
 	char *code;
 	int len;
 	int (*func)();
@@ -85,19 +92,19 @@ struct commands {
 	{ 0, 0, 0 }
 };
 
-char *dow[] = {
+static char *dow[] = {
 	" SUNDAY", " MONDAY", " TUESDAY",
 	" WEDNESDAY", " THURSDAY", " FRIDAY",
 	" SATURDAY"
 };
 
-char *moy[] = {
+static char *moy[] = {
 	" JANUARY", " FEBRUARY", " MARCH", " APRIL",
 	" MAY", " JUNE", " JULY", " AUGUST",
 	" SEPTEMBER"," OCTOBER", " NOVEMBER", " DECEMBER"
 };
 
-char *dom[] = {
+static char *dom[] = {
 	"0"," 1ST"," 2ND"," 3RD"," 4TH"," 5TH"," 6TH",
 	" 7TH"," 8TH"," 9TH"," 10TH"," 11TH"," 12TH",
 	" 13TH"," 14TH"," 15TH"," 16TH"," 17TH"," 18TH",
@@ -113,7 +120,7 @@ static void
 	encode_time(char *s, long int t),
 	encode_number(char *s, int n);
 
-char play_str[10000];
+static char play_str[10000];
 
 static char *
 xlate_call(char *call)
@@ -294,7 +301,7 @@ user_unread(int what, int msgnum)
 					sprintf(play_str, "%s, secure", play_str);
 
 				if(m->size / 1000)
-					sprintf(play_str, "%s,\n%d K message from %s subject %s", 
+					sprintf(play_str, "%s,\n%ld K message from %s subject %s", 
 						play_str, m->size/1000, xlate_call(m->from.name.str),
 						m->sub);
 				else
@@ -324,6 +331,7 @@ user_lastlogin()
 	return OK;
 }
 
+static void
 encode_connect_method(char *s, int method)
 {
 	char *str = " OOPS";
@@ -629,7 +637,8 @@ find_usernum(char *suffix)
 	return OK;
 }
 
-int
+#if 0
+static int /* Is this even used? */
 rmt_cmd(char *str)
 {
 	int i = 0;
@@ -650,12 +659,13 @@ rmt_cmd(char *str)
 	return OK;
 }
 
-int
+static int
 rmt_play_str(char *s)
 {
 	talk(s);
 	return OK;
 }
+#endif
 
 int
 remote_access(char *str)

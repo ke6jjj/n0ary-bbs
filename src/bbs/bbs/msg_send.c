@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -16,6 +17,12 @@
 #include "body.h"
 #include "callbk.h"
 #include "version.h"
+#include "parse.h"
+#include "msg_addr.h"
+#include "msg_body.h"
+#include "msg_mail.h"
+#include "distrib.h"
+#include "help.h"
 
 extern int
 	this_bbs_in_header;
@@ -62,10 +69,10 @@ msg_snd_t(struct TOKEN *head)
 	result = msg_snd(&msg);
 
 	if(not_accepted_reason != NULL)
-		sprintf(logbuf, "\t%s\t%d\t%s", not_accepted_reason,
-			msg.number, CmdLine);
+		snprintf(logbuf, sizeof(logbuf), "\t%s\t%ld\t%s",
+			not_accepted_reason, msg.number, CmdLine);
 	else
-		sprintf(logbuf, "\t%d\t%s", msg.number, CmdLine);
+		snprintf(logbuf, sizeof(logbuf), "\t%ld\t%s", msg.number, CmdLine);
 
 	logd(logbuf);
 	return result;
@@ -484,10 +491,10 @@ msg_copy(int num, struct msg_dir_entry *msg)
 	if(!in_distribution) {
 		char buf[256];
 		if(m->to.at.str[0])
-			sprintf(buf, "[Copy Of: Msg# %5d  To: %s@%s  Fr: %s]",
+			snprintf(buf, sizeof(buf), "[Copy Of: Msg# %5ld  To: %s@%s  Fr: %s]",
 				m->number, m->to.name.str, m->to.at.str, m->from.name.str);
 		else
-			sprintf(buf, "[Copy Of: Msg# %5d  To: %s  Fr: %s]",
+			snprintf(buf, sizeof(buf), "[Copy Of: Msg# %5ld  To: %s  Fr: %s]",
 				m->number, m->to.name.str, m->from.name.str);
 		textline_append(&(new.body), "");
 		textline_append(&(new.body), buf);
@@ -609,7 +616,7 @@ check_for_recpt_options(struct msg_dir_entry *m)
 			} else {
 				printf("*** DEBUG ***\n** msg_mail(): failed\n");
 		printf("** probably the 'timeout occured' message from the smtp_msg_send call.\n");
-				printf("**   msg number: %d\n", m->number);
+				printf("**   msg number: %ld\n", m->number);
 				printf("**    addressee: %s\n", m->to.name.str);
 				printf("**         user: %s\n", usercall);
 				printf("**           To: %s\n", user_get_field(uADDRESS));
@@ -695,7 +702,7 @@ read_routing(char *buf, char *homebbs, long *orig_date, int *num)
 		&tm->tm_year, &tm->tm_mon, &tm->tm_mday,
 		&tm->tm_hour, &tm->tm_min);
 	tm->tm_mon--;
-#ifdef SUNOS
+#ifdef HAVE_TIMEGM
 	*orig_date = timegm(tm);
 #else
 	*orig_date = mktime(tm); /* was timelocal -- rwp */

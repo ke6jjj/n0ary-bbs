@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -13,6 +14,7 @@
 #include "vars.h"
 #include "function.h"
 #include "system.h"
+#include "filesys.h"
 
 extern int
 	debug_level;

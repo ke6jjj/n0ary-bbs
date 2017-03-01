@@ -5,6 +5,8 @@
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <netdb.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"

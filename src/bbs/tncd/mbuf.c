@@ -1,5 +1,6 @@
 /* Primitive mbuf allocate/free routines */
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <sys/types.h>
 #include "c_cmmn.h"

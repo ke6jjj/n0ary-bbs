@@ -7,6 +7,7 @@
 #ifndef SUNOS
 #include <regex.h>
 #endif
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -21,9 +22,14 @@
 #include "system.h"
 #include "msg_fwddir.h"
 #include "rfc822.h"
+#include "msg_util.h"
+
+static void msg_hash_init(void);
+static void msg_hash_set(struct msg_dir_entry *m);
+static int msg_hash_get(int num, struct msg_dir_entry **r);
+static int matches_criteria(struct msg_dir_entry *ml, struct list_criteria *lc);
 
 int time_list_built = 0;
-extern int debug_level;
 
 struct msg_dir_entry
 	*free_message_list(void),
@@ -34,7 +40,7 @@ static struct user_list_info ui;
 
 struct msg_dir_entry *msg_dir_hash[10000];
 
-void
+static void
 msg_hash_init(void)
 {
 	int i;
@@ -42,24 +48,28 @@ msg_hash_init(void)
 		msg_dir_hash[i] = NULL;
 }
 
-void
+static void
 msg_hash_set(struct msg_dir_entry *m)
 {
 	int key = m->number % 10000;
 	msg_dir_hash[key] = m;
 }
 
-struct msg_dir_entry *
-msg_hash_get(int num)
+static int
+msg_hash_get(int num, struct msg_dir_entry **r)
 {
 	int key = num % 10000;
 	struct msg_dir_entry *m = msg_dir_hash[key];
 
-	if(m == NULL)
-		return NULL;
-	if(m->number == num)
-		return m;
-	return (struct msg_dir_entry *)ERROR;
+	if(m == NULL) {
+		*r = NULL;
+		return OK;
+	}
+	if(m->number == num) {
+		*r = m;
+		return OK;
+	}
+	return ERROR;
 }
 
 static int
@@ -188,6 +198,7 @@ SetMsgImmune(struct msg_dir_entry *m)
 	m->flags |= (MsgActive | MsgImmune);
 }
 
+void
 ClrMsgImmune(struct msg_dir_entry *m)
 {
 	if(m->flags & MsgImmune)
@@ -326,17 +337,11 @@ msg_cmd(int token)
 static struct msg_dir_entry *
 msg_quick_locate(int msgnum)
 {
-	struct msg_dir_entry *m = msg_hash_get(msgnum);
-	
-	switch((int)m) {
-	case NULL:
-		return NULL;
-	case ERROR:
-		break;
-	default:
-		return m;
-	}
+	struct msg_dir_entry *m;
 
+	if (msg_hash_get(msgnum, &m) == OK)
+		return m;
+	
 	m = MsgDirList;
 	while(m) {
 		if(m->number == msgnum)
@@ -349,17 +354,11 @@ msg_quick_locate(int msgnum)
 struct msg_dir_entry *
 msg_locate(int msgnum)
 {
-	struct msg_dir_entry *m = msg_hash_get(msgnum);
-	
-	switch((int)m) {
-	case NULL:
-		return NULL;
-	case ERROR:
-		break;
-	default:
-		return m;
-	}
+	struct msg_dir_entry *m;
 
+	if (msg_hash_get(msgnum, &m) == OK)
+		return m;
+	
 	m = MsgDirList;
 	while(m) {
 		if(m->number == msgnum)

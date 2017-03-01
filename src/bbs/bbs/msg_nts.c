@@ -8,8 +8,10 @@
 #include "user.h"
 #include "tokens.h"
 #include "message.h"
+#include "msg_nts.h"
 
 /*ARGSUSED*/
+int
 msg_check_t(struct TOKEN *t)
 {
 #ifdef NOMSGD
@@ -57,6 +59,7 @@ msg_check_t(struct TOKEN *t)
 	return msg_check(function, msg_list);
 #else
 	PRINTF("msg_check_t() has not been coded\n");
+	return ERROR;
 #endif
 }
 

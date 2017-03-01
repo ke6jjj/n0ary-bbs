@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -11,6 +12,9 @@
 #include "message.h"
 #include "vars.h"
 #include "pending.h"
+#include "msg_util.h"
+
+static int execute_replacement(char *replace, struct msg_dir_entry *m);
 
 #if 0
 
@@ -154,7 +158,7 @@ field_translation(struct msg_dir_entry *m)
 }
 
 
-int
+static int
 execute_replacement(char *replace, struct msg_dir_entry *m)
 {
 	int done = FALSE;

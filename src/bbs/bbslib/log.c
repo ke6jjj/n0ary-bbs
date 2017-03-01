@@ -1,5 +1,6 @@
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -27,7 +28,7 @@ log_setdir(void)
 }
 
 void
-logf(char *name, char *s, char *p)
+log_f(char *name, char *s, char *p)
 {
 	FILE *fp;
 	char fn[80];

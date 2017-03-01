@@ -1,5 +1,7 @@
 /* User subroutines for AX.25 */
 #include <ctype.h>
+#include <string.h>
+#include <strings.h>
 
 #include "global.h"
 #include "mbuf.h"

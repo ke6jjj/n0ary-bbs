@@ -15,8 +15,7 @@
 #include "callbk.h"
 #include "tokens.h"
 #include "message.h"
-
-extern char *sys_errlist[];
+#include "maintenance.h"
 
 static void
 	welcome_new_user_in_callbook(void),
@@ -42,7 +41,7 @@ logout_user(void)
 	min = sec/60;
 	sec %= 60;
 
-	sprintf(buf, "%d %d %s %d\t; %s for %d:%02d on %s",
+	sprintf(buf, "%ld %ld %s %ld\t; %s for %d:%02d on %s",
 		login_time, logout_time,
 		Via,
 		user_get_value(uNUMBER),

@@ -4,6 +4,8 @@
 #ifndef SUNOS
 #include <regex.h>
 #endif
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -453,7 +455,7 @@ user_set_value(int token, long val)
 		return;
 	}
 
-	sprintf(cmd, "%s %d", uc->key, val);
+	snprintf(cmd, sizeof(cmd), "%s %ld", uc->key, val);
 	result = userd_fetch(cmd);
 
 	if(!strncmp(result, "NO,", 3)) {
@@ -853,11 +855,11 @@ parse_bbssid(char *str, char *chksid)
 	ISupportBID = FALSE;
 
 	if((p = (char *)index(buf, ']')) == NULL)
-		return;
+		return OK;
 	*p = 0;
 
 	if((p = (char *)rindex(buf, '-')) == NULL)
-		return;
+		return OK;
 
 	while(*p) {
 		switch(*p++) {

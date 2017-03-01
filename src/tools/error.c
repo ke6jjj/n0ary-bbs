@@ -5,6 +5,7 @@
 #else
 #include <varargs.h>
 #endif
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "tools.h"

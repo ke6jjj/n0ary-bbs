@@ -3,6 +3,7 @@
 #include <sys/time.h>
 #include <termios.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "tools.h"
@@ -15,7 +16,6 @@
 #define sRECOVER    6
 #define sDONE		7
 
-extern char *sys_errlist[];
 static int debug_fd = ERROR;
 static int baudrate = B38400;
 
@@ -142,12 +142,16 @@ modem_open(char *device)
 
 	modem_debug_write("X: Open modem");
 
+#ifdef HAVE_TERMIOS
+ 	if(tcgetattr(fd,&tt))
+ 		return error_log("tcgetattr(fd,&tt): %s", sys_errlist[errno]);
+#else
 #ifdef TCGETS
 	if(ioctl(fd, TCGETS, &tt))
 		return error_log("ioctl(fd,TCGETS): %s", sys_errlist[errno]);
 #else
- 	if(tcgetattr(fd,&tt))
- 		return error_log("tcgetattr(fd,&tt): %s", sys_errlist[errno]);
+#error "Need termios"
+#endif
 #endif
 
 	tt.c_oflag = OPOST|ONLCR;
@@ -155,12 +159,16 @@ modem_open(char *device)
 	tt.c_cflag = baudrate|CS8|CSTOPB|CREAD;
 	tt.c_iflag = 0;
 
+#ifdef HAVE_TERMIOS
+ 	if(tcsetattr(fd, 0, &tt))
+ 		return error_log("tcsets(fd,&tt): %s", sys_errlist[errno]);
+#else
 #ifdef TCGETS
 	if(ioctl(fd, TCSETS, &tt))
 		return error_log("ioctl(fd,TCSETS): %s", sys_errlist[errno]);
 #else
- 	if(tcsetattr(fd, 0, &tt))
- 		return error_log("tcsets(fd,&tt): %s", sys_errlist[errno]);
+#error "Need termios"
+#endif
 #endif
 
 	if(fcntl(fd, F_SETOWN, getpid()) < 0)

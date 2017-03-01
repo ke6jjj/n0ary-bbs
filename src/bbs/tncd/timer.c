@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <sys/types.h>
+#include <stdlib.h>
+
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"

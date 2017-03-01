@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -12,6 +14,9 @@
 #include "user.h"
 #include "server.h"
 #include "vars.h"
+#include "search.h"
+#include "bbscommon.h"
+#include "parse.h"
 
 #define cbDONE		0
 #define cbLNAME		1
@@ -24,12 +29,12 @@
 #define cbCALLAREA	2
 #define cbSUFFIX	3
 
-#define CB_PRINT(p)\
+#define CB_PRINT(p) {\
 	if(cbtl) {\
 		textline_append(cbtl, p);\
 	} else {\
 		PRINTF("%s\n", p);\
-	}
+	}}
 
 static struct text_line
 	**cbtl = NULL;

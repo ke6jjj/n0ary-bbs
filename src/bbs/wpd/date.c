@@ -1,5 +1,12 @@
 #include <stdio.h>
 #include <time.h>
+#include <stdlib.h>
+
+#include "c_cmmn.h"
+#include "config.h"
+#include "tools.h"
+#include "bbslib.h"
+#include "wp.h"
 
 time_t
 date2time(char *s)
@@ -12,7 +19,7 @@ date2time(char *s)
 	tm->tm_min = 1;
 	tm->tm_hour = 0;
 
-#ifdef SUNOS
+#ifdef HAVE_TIMEGM
 	t = timegm(tm);
 #else
 	t = mktime(tm);
@@ -34,7 +41,7 @@ udate2time(char *s)
 	tm.tm_min = 1;
 	tm.tm_hour = 0;
 
-#ifdef SUNOS
+#ifdef HAVE_TIMEGM
 	t = timegm(&tm);
 #else
 	t = mktime(&tm);

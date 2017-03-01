@@ -1,3 +1,6 @@
+#include <stdint.h>
+#include <time.h>
+
 #define FOREGROUND	(dbug_level & dbgFOREGROUND)
 #define VERBOSE		(dbug_level & dbgVERBOSE && FOREGROUND)
 
@@ -102,7 +105,7 @@ extern int
 	maintenance_mode,
 	bbs_fwd_mask;
 
-extern char *
+char *
 	get_call(char **str);
 
 struct call_and_checksum {
@@ -286,12 +289,12 @@ struct msg_dir_entry {
 		char address[LenHLOC];
 	} to, from;
 
-	long	odate;
-	long	kdate;
-	long	cdate;
-	long	edate;
-	long	time2live;
-	long	update_t;
+	int64_t	odate;
+	int64_t	kdate;
+	int64_t	cdate;
+	int64_t	edate;
+	int64_t	time2live;
+	int64_t	update_t;
 
 	long	read_cnt;
 	long	fwd_cnt;
@@ -589,11 +592,11 @@ struct PhoneDefinition {
 	char *init_str;
 };
 
-extern int
+int
 	callbk(void),
 	lookup_call_callbk(char *call, struct callbook_entry *cb);
 
-extern void
+void
 	msgd_debug(int level),
 	gen_callbk_body(struct text_line **tl),
 	callbk_server(int num, char *mode),
@@ -601,16 +604,17 @@ extern void
 	parse_options(int argc, char *argv[],  struct ConfigurationList *cl, char *me),
 	show_configuration_rules(char *fn),
 	show_reqd_configuration(struct ConfigurationList *cl, char *proc_name, char *fn),
-	logf(char *name, char *s, char *p),
+	log_f(char *name, char *s, char *p),
 	log_clear(char *name),
 	msgd_close(void),
 	logd(char *string),						/* logd.c */
+	logd_stamp(char *whoami, char *string),				/* logd.c */
 	logd_close(void),						/* logd.c */
 	wpd_close(void),						/* wpd.c */
 	userd_close(void),						/* userd.c */
 	gated_close(void);						/* gated.c */
 
-extern int
+int
 	message_matches_criteria(char *match, struct msg_dir_entry *m, long timenow),
 	msgd_open(void),
 	msgd_fetch_multi(char *cmd, void (*callback)(char *s)),
@@ -626,7 +630,7 @@ extern int
 	gated_fetch_multi(char *cmd, void (*callback)(char *s)),	/* gated.c */
 	gated_open(void);						/* gated.c */
 
-extern char
+char
     *daemon_version(char *name, char *call),
 	*rfc822_find(int token, struct text_line *tl),
 	*rfc822_xlate(int field),
@@ -644,7 +648,8 @@ extern char
 	*gated_read(void),						/* gated.c */
 	*gated_fetch(char *cmd);				/* gated.c */
 
-extern int
+int
+        msg_ReadRfc(struct msg_dir_entry *m),
 	msg_SendMessage(struct msg_dir_entry *m),
 	msg_ReadBody(struct msg_dir_entry *m),
 	msg_ReadBodyBy(struct msg_dir_entry *m, char *by),
@@ -653,7 +658,7 @@ extern int
 	bid_delete(char *bid),
 	bid_add(char *bid);
 
-extern char
+char
 	*msg_SetActive(int number),
 	*msg_SetImmune(int number),
 	*msg_SetHeld(int number, struct text_line *reason),
@@ -661,12 +666,12 @@ extern char
 	*msg_BbsMode(void),
 	*msg_CatchUp(void),
 	*msg_NormalMode(void),
-    *msg_ListMineMode(void),
-    *msg_ListSinceMode(long t),
+	*msg_ListMineMode(void),
+	*msg_ListSinceMode(long t),
 	*msg_LoginUser(char *call);
 
 
-extern struct text_line
+struct text_line
 	*msg_WhyHeld(int number);
 
 int
@@ -676,20 +681,24 @@ int
 	error_log();
 #endif
 
-extern long
-    msg_ListMode(void),
+long msg_ListMode(void);
 #if 0
 	get_time(long *t),
 #endif
+
+time_t
 	str2time_t(char *s),
 	bbsd_get_time(void);
 
-extern int
+int
+	rfc822_parse(struct msg_dir_entry *m, char *buf),
 	port_indx(char *name),
 	port_secure(char *name),
 	port_type(char *name),
 	port_show(char *name),
 	tnc_port(char *name),
+	tnc_connect(char *host, int port, char *dest, char *mycall),
+	tnc_set_ax25(struct ax25_params *ax25),
 	tnc_monitor(char *name),
 	bbsd_socket(void),
 	bbsd_msg(char *str),
@@ -717,10 +726,10 @@ extern int
 	bbsd_notify_on(void),
 	bbsd_notify_off(void);
 
-extern void
+void
 	bbsd_close(void);
 
-extern char
+char
 	*build_sid(void),
 	*port_name(int indx),
 	*port_alias(char *name),
@@ -735,13 +744,12 @@ extern char
 	*bbsd_get_variable(char *var),
 	*bbsd_get_orig_variable(char *var);
 
-extern struct Tnc_ax25
+struct Tnc_ax25
 	*tnc_ax25(char *name);
 
-extern struct PortDefinition
+struct PortDefinition
 	*port_find(char *name),
 	*port_table(void);
 
-extern struct TncDefinition *tnc_table(void);
-extern struct PhoneDefinition *phone_table(void);
-
+struct TncDefinition *tnc_table(void);
+struct PhoneDefinition *phone_table(void);

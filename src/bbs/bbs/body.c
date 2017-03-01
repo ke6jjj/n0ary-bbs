@@ -1,7 +1,7 @@
-
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -12,6 +12,8 @@
 #include "body.h"
 #include "tokens.h"
 #include "vars.h"
+#include "msg_body.h"
+#include "help.h"
 
 struct body_line {
 	struct body_line *next;
@@ -386,7 +388,7 @@ get_body(struct text_line **tl, int type, char *orig_bbs,
 			return mABORT;
 
 		case mINCLUDE:
-			include_msg(buf, type);
+			include_msg(buf, type); /* XXX Oops? Doesn't take arg*/
 			continue;
 
 		case mREADFILE:

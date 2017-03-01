@@ -7,11 +7,13 @@
 
 static int smtp_log_enabled = FALSE;
 
+void
 smtp_log_enable(void)
 {
 	smtp_log_enabled = TRUE;
 }
 
+void
 smtp_log_disable(void)
 {
 	smtp_log_enabled = FALSE;

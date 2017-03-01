@@ -2,6 +2,7 @@
  * behavior over packet radio
  */
 #include <stdio.h>
+#include <string.h>
 
 #include "timer.h"
 #include "mbuf.h"

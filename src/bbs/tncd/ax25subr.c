@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include <ctype.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "timer.h"
@@ -189,7 +190,7 @@ setcall(struct ax25_addr *out, char *call)
 	/* Now find and convert ssid, if any */
 	if(dp != NULL){
 		dp++;	/* skip dash */
-		ssid = atoi(dp);
+		ssid = atoi((char*)dp);
 		if(ssid > 15)
 			return -1;
 	} else

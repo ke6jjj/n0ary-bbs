@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -24,7 +26,7 @@ wait_for_line(int fd, char *match)
 		case sockTIMEOUT:
 			return TRUE;
 		case sockOK:
-logf("wpd", "r:", buf);
+log_f("wpd", "r:", buf);
 			if(re_exec(buf))
 				return OK;
 		}
@@ -93,14 +95,14 @@ msg_generate(struct smtp_message *msg)
 	while(body) {
 		int csize;
 
-logf("wpd", "M:", "waiting on prompt >");
+log_f("wpd", "M:", "waiting on prompt >");
     	if(wait_for_line(to_gate[0], ".*>$") != OK) {
 			printf("expected >\n");
 			return ERROR;
 		}
 
 		sprintf(buf, "SP %s < %s\n", msg->rcpt->s, msg->from->s);
-logf("wpd", "M:", buf);
+log_f("wpd", "M:", buf);
 		write(to_bbs[1], buf, strlen(buf));
 
 		if(match(to_gate[0], "OK") == ERROR) {

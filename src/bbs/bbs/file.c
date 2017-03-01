@@ -8,6 +8,7 @@
 #include "config.h"
 #include "function.h"
 #include "file.h"
+#include "bbslib.h"
 #include "vars.h"
 
 int

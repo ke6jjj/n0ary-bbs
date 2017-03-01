@@ -5,6 +5,7 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <arpa/inet.h>
 
 #include "c_cmmn.h"
 
@@ -12,7 +13,7 @@ static long
 get_peer_address(int fd)
 {
 	struct sockaddr_in a;
-	int y = sizeof(a);
+	socklen_t y = sizeof(a);
 
 	if(getpeername(fd, (struct sockaddr *)&a, &y) < 0)
 		return ERROR;
@@ -30,7 +31,7 @@ static long
 get_our_address(int fd)
 {
 	struct sockaddr_in a;
-	int y = sizeof(a);
+	socklen_t y = sizeof(a);
 
 	if(getsockname(fd, (struct sockaddr *)&a, &y) < 0)
 		return ERROR;

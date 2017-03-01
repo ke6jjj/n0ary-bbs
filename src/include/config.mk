@@ -1,19 +1,30 @@
-# root of source tree
-SRC_ROOT = #SRC_ROOT#
+BBS_CONFIG_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-# Complier choice
-#CC = acc
-#ANSI = -Xt
-DBUG = -O
-CC = gcc
-ANSI = -ansi
-AR = ar
-LD = ld
+include $(BBS_CONFIG_SRCDIR)/site_config.mk
 
-ENVIRONMENT = -D_BSD_SOURCE -DSUNOS -DDECTALK -DDTMF
-INCLUDE = $(SRC_ROOT)/include
-LIB = $(SRC_ROOT)/lib
+BBS_CFLAGS := -O2 -Werror -I$(TOP_SRCDIR)/include -DBBS_DIR=\"$(BBS_DIR)\"
 
-INC = $(LOCAL_INC) -I$(INCLUDE)
-LIBS = -L$(SRC_ROOT)/lib $(LOCAL_LIBS) -ltools
-CFLAGS = $(DBUG) $(XTYPE) $(INC) $(ANSI) $(ENVIRONMENT)
+ifneq ($(ENABLE_DECTALK),0)
+  BBS_CFLAGS += -DDECTALK
+endif
+
+ifneq ($(ENABLED_DTMF),0)
+  BBS_CFLAGS += -DDTMF
+endif
+
+ifdef SUNOS
+  BBS_CFLAGS += -DSUNOS
+  HAVE_TIMEGM=1
+endif
+ifdef FREEBSD
+  HAVE_TIMEGM=1
+  HAVE_TERMIOS=1
+  BBS_LDFLAGS+= -lcompat
+endif
+
+ifdef HAVE_TIMEGM
+  BBS_CFLAGS += -DHAVE_TIMEGM
+endif
+ifdef HAVE_TERMIOS
+  BBS_CFLAGS += -DHAVE_TERMIOS
+endif

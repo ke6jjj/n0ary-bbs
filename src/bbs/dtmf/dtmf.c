@@ -46,18 +46,34 @@ open_dtmf_port(void)
 		exit(1);
 	}
 
+#ifdef HAVE_TERMIOS
+	if (tcgetattr(fd, &tt) < 0) {
+		perror("tcgetattr");
+		exit(1);
+	}
+#else
 	if(ioctl(fd, TCGETS, &tt)) {
-        perror("ioctl TCGETS");
-        exit(1);
-    }
-    tt.c_iflag = IGNCR;
-    tt.c_oflag = OPOST | ONLCR;
-    tt.c_cflag = B1200 | CS8 | CSTOPB | CREAD;
-    tt.c_lflag = 0;
-    if(ioctl(fd, TCSETS, &tt)) {
-        perror("ioctl TCSETS");
-        exit(1);
-    }
+		perror("ioctl TCGETS");
+		exit(1);
+	}
+#endif
+
+	tt.c_iflag = IGNCR;
+	tt.c_oflag = OPOST | ONLCR;
+	tt.c_cflag = B1200 | CS8 | CSTOPB | CREAD;
+	tt.c_lflag = 0;
+
+#ifdef HAVE_TERMIOS
+	if (tcsetattr(fd, TCSANOW, &tt) < 0) {
+		perror("tcsetattr");
+		exit(1);
+	}
+#else
+	if(ioctl(fd, TCSETS, &tt)) {
+		perror("ioctl TCSETS");
+		exit(1);
+	}
+#endif
 
 	return fd;
 }

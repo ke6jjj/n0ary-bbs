@@ -10,24 +10,31 @@
 #include "pending.h"
 #include "tokens.h"
 #include "tools.h"
+#include "bbscommon.h"
+#include "wp.h"
+
+static void display_line(char *s);
+static int force_more(void);
 
 int 
 	no_prompt,
 	preempt_init_more = FALSE,
 	more_cnt = 0;
 
-void
+static void
 display_line(char *s)
 {
 	PRINTF("%s\n", s);
 }
 
+void
 init_more(void)
 {
 	if(!preempt_init_more)
 		more_cnt = Lines;
 }
 
+int
 more(void)
 {
 	if(batch_mode || Lines == 0 || no_prompt)
@@ -47,6 +54,7 @@ more(void)
 	return OK;
 }
 
+int
 conditional_more(void)
 {
 	if(batch_mode || Lines == 0 || no_prompt)
@@ -55,6 +63,7 @@ conditional_more(void)
 	return force_more();
 }
 
+static int
 force_more(void)
 {
 	if(batch_mode)
@@ -142,6 +151,7 @@ GETnSTRdef(char *str, int cnt, int caps, char *def)
 			strcpy(str, defstr);
 }
 
+void
 prompt_for_string(char *outstr, char *str, int cnt, int caps, char *defstr)
 {
 	PRINTF(outstr, defstr);
@@ -195,6 +205,7 @@ isNumber(char *s)
 	return TRUE;
 }
 
+int
 isCall(char *s)
 {
 	int pre = 0, num = 0, suf =0, *part = &pre;

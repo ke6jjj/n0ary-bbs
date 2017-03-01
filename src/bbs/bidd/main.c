@@ -4,11 +4,12 @@
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <fcntl.h>
-#include <sys/termios.h>
+#include <termios.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -56,8 +57,8 @@ display_config(void)
 	printf(" Bbsd_Port = %d\n", Bbsd_Port);
 	printf(" Bidd_Port = %d\n", Bidd_Port);
 	printf(" Bidd_File = %s\n", Bidd_File);
-	printf("Bidd_Flush = %d\n", Bidd_Flush);
-	printf("  Bidd_Age = %d\n", Bidd_Age);
+	printf("Bidd_Flush = %ld\n", Bidd_Flush);
+	printf("  Bidd_Age = %ld\n", Bidd_Age);
 	fflush(stdout);
 	exit(0);
 }
@@ -70,11 +71,11 @@ service_port(struct active_processes *ap)
 	if(socket_read_line(ap->fd, buf, 256, 10) == ERROR)
 		return ERROR;
 
-	logf("bidd", "R:", buf);
+	log_f("bidd", "R:", buf);
 	if((c = parse(buf)) == NULL)
 		return ERROR;
 
-	logf("bidd", "S:", c);
+	log_f("bidd", "S:", c);
 	if(socket_raw_write(ap->fd, c) == ERROR)
 		return ERROR;
 
@@ -124,7 +125,7 @@ remove_proc(struct active_processes *ap)
     return tap;
 }
 
-
+int
 main(int argc, char *argv[])
 {
 	int listen_sock;
@@ -138,7 +139,7 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgIGNOREHOST))
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
-		daemon();
+		daemon(1, 1);
 
     if(bbsd_open(Bbs_Host, Bbsd_Port, "bidd", "DAEMON") == ERROR)
 		error_print_exit(0);
@@ -154,11 +155,11 @@ main(int argc, char *argv[])
 
 	if(read_new_file(Bidd_File) == ERROR) {
 		printf("Error opening %s\n", Bidd_File);
-		exit(1);
+		return 1;
 	}
 
 	if((listen_sock = socket_listen(&Bidd_Port)) == ERROR)
-		exit(1);
+		return 1;
 
     bbsd_port(Bidd_Port);
 	if(!(dbug_level & dbgNODAEMONS))
@@ -176,7 +177,7 @@ main(int argc, char *argv[])
 		if(shutdown_daemon) {
 			if(bid_image == DIRTY)
 				write_file();
-			exit(0);
+			return 0;
 		}
 
 		ap = procs;
@@ -241,6 +242,8 @@ main(int argc, char *argv[])
             NEXT(ap);
         }
 	}
+
+	return 0;
 }
 
 time_t

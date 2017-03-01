@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -47,7 +48,7 @@ wpd_open_specific(char *hostname, int port)
 		return OK;
 
 	if(hostname == NULL) {
-		gethostname(&thishost, 80);
+		gethostname(thishost, 80);
 		host = thishost;
 	}
 

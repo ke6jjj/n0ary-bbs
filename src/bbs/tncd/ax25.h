@@ -170,6 +170,7 @@ extern void
 	lapbstate(struct ax25_cb *axp, int s),
 	est_link(struct ax25_cb *axp);
 extern void
+	ax_recv(int dev, struct mbuf *bp),
 	ax25_dump(struct mbuf *bp),
 	disc_ax25(struct ax25_cb *axp),
 	pax25(char *e, struct ax25_addr *addr),
@@ -186,8 +187,7 @@ extern int
 	addreq_sid(struct ax25_addr *a, struct ax25_addr *b),
 	addreq(struct ax25_addr *a, struct ax25_addr *b),
 	setcall(struct ax25_addr *out, char *call),
-	sendframe(struct ax25_cb *axp, char cmdrsp, char ctl, struct mbuf *data),
-	ax_recv(int dev, struct mbuf *bp);
+	sendframe(struct ax25_cb *axp, char cmdrsp, char ctl, struct mbuf *data);
 
 extern struct ax25_cb
 	*open_ax25(struct ax25 *addr, int window,

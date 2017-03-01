@@ -1,10 +1,13 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = b_dectalk
-CFILES = dectalk.c
-HDRS =
-SUPPORT = Makefile
-OBJS = dectalk.o
+all: DECTALK_APP
+clean: DECTALK_APP_CLEAN
 
-include ../common.mk
+include $(THIS_SRCDIR)/../../top.mk
+
+ifneq ($(ENABLE_DECTALK),0)
+  DECTALK_APP: $(DECTALK_APP)
+else
+  DECTALK_APP:
+	$(error "dectalk not enabled")
+endif

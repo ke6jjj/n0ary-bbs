@@ -9,6 +9,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -60,7 +61,7 @@ service_port(struct active_processes *ap)
 	if(socket_read_line(ap->fd, buf, 256, 10) == ERROR)
 		return ERROR;
 
-	logf("userd", "R:", buf);
+	log_f("userd", "R:", buf);
 
 	s = buf;
 	NextChar(s);
@@ -74,7 +75,7 @@ service_port(struct active_processes *ap)
 	if(socket_raw_write(ap->fd, c) == ERROR)
 		return ERROR;
 
-	logf("userd", "S:", c);
+	log_f("userd", "S:", c);
 	return OK;
 }
 
@@ -128,7 +129,7 @@ write_config_file(void)
 	printf("HOST %s\n", Bbs_Host);
 	printf("PORT %d\n", Userd_Port);
 	printf("USERFILEPATH %s\n", Userd_Acc_Path);
-	printf("AGE %d (minutes)\n", Userd_Age_Interval / tMin);
+	printf("AGE %ld (minutes)\n", Userd_Age_Interval / tMin);
 }
 
 void
@@ -167,13 +168,14 @@ read_config_file(char *fn)
 		}
 		if(!strcmp(field, "AGE")) {
 			Userd_Age_Interval = (time_t)get_number(&s) * tMin;
-			printf("AGE = %d\n", Userd_Age_Interval/tMin);
+			printf("AGE = %ld\n", Userd_Age_Interval/tMin);
 			continue;
 		}
 	}
 	fclose(fp);
 }
 
+int
 main(int argc, char *argv[])
 {
 	int listen_port;
@@ -188,7 +190,7 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgIGNOREHOST))
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
-		daemon();
+		daemon(1, 1);
 
     if(bbsd_open(Bbs_Host, Bbsd_Port, "userd", "DAEMON") == ERROR)
 		error_print_exit(0);
@@ -206,7 +208,7 @@ main(int argc, char *argv[])
 
 	listen_port = Userd_Port;
 	if((listen_sock = socket_listen(&listen_port)) == ERROR)
-		exit(1);
+		return 1;
 
     bbsd_port(Userd_Port);
 	if(!(dbug_level & dbgNODAEMONS))
@@ -220,7 +222,7 @@ main(int argc, char *argv[])
 		int fdlimit;
 
 		if(shutdown_daemon == TRUE) {
-			exit(0);
+			return 0;
 		}
 
 		ap = procs;
@@ -252,7 +254,7 @@ main(int argc, char *argv[])
 			time_t now = Time(NULL);
 			log_clear("userd");
 			if(now > age_time) {
-				logf("userd", "X:", "Start aging");
+				log_f("userd", "X:", "Start aging");
 				if(!(dbug_level & dbgNODAEMONS))
 					bbsd_msg("Aging users");
 				age_users(NULL);
@@ -287,6 +289,8 @@ main(int argc, char *argv[])
         }
 
 	}
+
+	return 0;
 }
 
 time_t

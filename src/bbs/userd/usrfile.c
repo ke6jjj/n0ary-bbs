@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -28,10 +29,10 @@ usrfile_put(struct UserInformation *u, FILE *fp)
 		i++;
 	}
 
-	fprintf(fp, "+%d %d %d %d %d\n",
+	fprintf(fp, "+%ld %d %d %d %d\n",
 		u->number, (u->immune) ? 1:0, lastseen, where, cnt);
 
-	fprintf(fp, "NUMBER %d\n", u->number);
+	fprintf(fp, "NUMBER %ld\n", u->number);
 	if(u->lname[0]) fprintf(fp, "LNAME %s\n", u->lname);
 	if(u->phone[0]) fprintf(fp, "PHONE %s\n", u->phone);
 	if(u->email_addr[0]) fprintf(fp, "ADDRESS %s\n", u->email_addr);
@@ -40,8 +41,8 @@ usrfile_put(struct UserInformation *u, FILE *fp)
 	if(u->software[0]) fprintf(fp, "SOFTWARE %s\n", u->software);
 	if(u->computer[0]) fprintf(fp, "COMPUTER %s\n", u->computer);
 	if(u->rig[0]) fprintf(fp, "RIG %s\n", u->rig);
-	if(u->lines) fprintf(fp, "LINES %d\n", u->lines);
-	if(u->base) fprintf(fp, "BASE %d\n", u->base);
+	if(u->lines) fprintf(fp, "LINES %ld\n", u->lines);
+	if(u->base) fprintf(fp, "BASE %ld\n", u->base);
 
 	list = u->Include;
 	while(list) {
@@ -54,7 +55,7 @@ usrfile_put(struct UserInformation *u, FILE *fp)
 		fprintf(fp, "EXCLUDE %s\n", list->str);
 		NEXT(list);
 	}
-	fprintf(fp, "MESSAGE %d\n", u->message);
+	fprintf(fp, "MESSAGE %ld\n", u->message);
 	if(u->bbs) fprintf(fp, "BBS\n");
 	if(u->sysop) fprintf(fp, "SYSOP\n");
 	if(u->approved) fprintf(fp, "APPROVED\n");
@@ -70,7 +71,7 @@ usrfile_put(struct UserInformation *u, FILE *fp)
 	if(u->newline) fprintf(fp, "NEWLINE\n");
 	if(u->uppercase) fprintf(fp, "UPPERCASE\n");
 	if(u->ascending) fprintf(fp, "ASCEND\n");
-	fprintf(fp, "HELP %d\n", u->help);
+	fprintf(fp, "HELP %ld\n", u->help);
 
 	for(i=0; i<10; i++)
 		if(u->macro[i][0])
@@ -78,7 +79,7 @@ usrfile_put(struct UserInformation *u, FILE *fp)
 
 	port = u->port;
 	while(port) {
-		fprintf(fp, "PORT %s %s %d %d %d\n", port->name,
+		fprintf(fp, "PORT %s %s %ld %ld %ld\n", port->name,
 			port->allow ? "OK":"NO", port->count,
 			port->firstseen, port->lastseen);
 		NEXT(port);
@@ -669,7 +670,7 @@ usrfile_show()
 		sprintf(output, "%s\t%d %s [%s]\t", output, i++, ul->call,
 			(ul->condition == CLEAN) ? "CLEAN":"DIRTY");
 		while(pl) {
-			sprintf(output, "%s%x ", output, pl->ap);
+			sprintf(output, "%s%p ", output, pl->ap);
 			NEXT(pl);
 		}
 		strcat(output, "\n");
