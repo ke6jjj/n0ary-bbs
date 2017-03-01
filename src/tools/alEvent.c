@@ -208,13 +208,44 @@ alEvent_shutdown(void)
 }
 
 /*
- * alEvent_addFdCallback
+ * alEvent_queueCallback
+ *
+ * Schedule a function to be called at the start of the next event
+ * cycle.
+ */
+int
+alEvent_queueCallback(alCallback cb, int flags, void *arg0, int arg1)
+{
+  alQueuedCallbackEntry *cbEntry;
+
+  if (flags & ALCB_UNIQUE) {
+    SLIST_FOREACH(cbEntry, &alQueuedCallbacks, listEntry) {
+      if (cbEntry->cb.obj == cb.obj && cbEntry->cb.fn == cb.fn &&
+          cbEntry->arg0 == arg0 && cbEntry->arg1 == arg1)
+      {
+        return 0;
+      }
+    }
+  }
+
+  cbEntry = alMallocFatal(alQueuedCallbackEntry, 1);
+  cbEntry->cb = cb;
+  cbEntry->arg0 = arg0;
+  cbEntry->arg1 = arg1;
+
+  SLIST_INSERT_HEAD(&alQueuedCallbacks, cbEntry, listEntry);
+
+  return 0;
+}
+
+/*
+ * alEvent_registerFd
  *
  * Registers a file descriptor with the event system and a callback to call
  * when events occur on that descriptor.
  */
 int
-alEvent_addFdCallback(int fd, int flags, alCallback cb, alEventHandle *r)
+alEvent_registerFd(int fd, int flags, alCallback cb, alEventHandle *r)
 {
   alEventDescriptorEntry *entry;
   struct kevent filters[2];
@@ -276,13 +307,13 @@ failed_kqueue_add:
 }
 
 /*
- * alEvent_addProcCallback
+ * alEvent_registerProc
  *
  * Registers a process identifier with the event system and a callback to call
  * when events occur with that process.
  */
 int
-alEvent_addProcCallback(pid_t pid, int flags, alCallback cb, alEventHandle *r)
+alEvent_registerProc(pid_t pid, int flags, alCallback cb, alEventHandle *r)
 {
   alEventDescriptorEntry *entry;
   struct kevent filter;
@@ -553,7 +584,7 @@ alEvent_cancelTimer(int id)
 }
 
 int
-alEvent_removeEventCallback(alEventHandle handle)
+alEvent_deregister(alEventHandle handle)
 {
   struct kevent ev[2];
   int inspect_failure;

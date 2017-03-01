@@ -51,6 +51,13 @@ typedef struct {
 } alCallback;
 
 /*
+ * Callback queueing flags.
+ */
+enum alCbEnqueue_flags {
+  ALCB_UNIQUE = 1,  /* Only enqueue callback if it is not already queued */
+};
+
+/*
  * Event notification handle.
  */
 typedef void *alEventHandle;
@@ -85,30 +92,38 @@ int alEvent_init(void);
 int alEvent_shutdown(void);
 
 /*
- * alEvent_addFdCallback
+ * alEvent_queueCallback
+ *
+ * Schedule a function to be called at the start of the next event
+ * cycle.
+ */
+int alEvent_queueCallback(alCallback cb, int flags, void *arg0, int arg1);
+
+/*
+ * alEvent_registerFd
  *
  * Registers a file descriptor with the event system and a callback to call
  * when events occur on that descriptor.
  */
-int alEvent_addFdCallback(int fd, int flags, alCallback cb,
+int alEvent_registerFd(int fd, int flags, alCallback cb,
 	alEventHandle *rhandle);
 
 /*
- * alEvent_addProcCallback
+ * alEvent_registerProc
  *
  * Registers a process identifier with the event system and a callback to
  * call when events occur with that process.
  */
-int alEvent_addProcCallback(pid_t pid, int flags, alCallback cb,
+int alEvent_registerProc(pid_t pid, int flags, alCallback cb,
 	alEventHandle *rhandle);
 
 /*
- * alEvent_removeEventCallback
+ * alEvent_deregister
  *
  * Unregisters the previously registered event descriptor described by
  * 'handle' from the notification system.
  */
-int alEvent_removeEventCallback(alEventHandle handle);
+int alEvent_deregister(alEventHandle handle);
 
 /*
  * alEvent_pending
@@ -126,7 +141,20 @@ int alEvent_pending(void);
  */
 void alEvent_poll(void);
 
+/*
+ * alEvent_addTimer
+ *
+ * Schedule a callback to be issued after a certain time period has elapsed.
+ */
 int alEvent_addTimer(int timeMs, int flags, alCallback cb);
+
+/*
+ * alEvent_cancelTimer
+ *
+ * Cancel a previously started timer. (It is safe to cancel a timer that
+ * has already expired provided that it is done within 2 billion (2x10^9)
+ * interceeding timer registrations).
+ */
 int alEvent_cancelTimer(int id);
 
 #endif
