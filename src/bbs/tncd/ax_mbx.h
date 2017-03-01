@@ -33,7 +33,7 @@ struct mboxsess{			/*mailbox session structure*/
 };
 
 #define MBOX_NAGLE_GATE_SIZE 50   /* characters to queue before sending */
-#define MBOX_NAGLE_TIMER     350 /* 350ms */
+#define MBOX_NAGLE_TIMER     250 /* 250ms */
 
 #define NULLMBS  (struct mboxsess *)0
 #define NULLFWD  (struct ax25_cb *)0

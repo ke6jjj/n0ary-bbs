@@ -687,7 +687,7 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 			write(mbp->fd, "~C\n", 3);
 
 			mbp->axbbscb=axp;
-			mbx_notify_sendable(mbp, 128, 1); /*jump start the upcall*/
+			mbx_notify_sendable(mbp, 500, 1); /*jump start the upcall*/
 			return;
 
 		case CONNECTED:
@@ -731,7 +731,7 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 		axp->t_upcall = mbx_tx ;
 
 		mbp->axbbscb=axp;
-		mbx_notify_sendable(mbp, 128, 1); /*jump start the upcall*/
+		mbx_notify_sendable(mbp, 500, 1); /*jump start the upcall*/
 
 		for(j=0;j<6;j++){			   /*now, get incoming call letters*/
 			call[j]=mbp->axbbscb->addr.dest.call[j];
@@ -814,7 +814,7 @@ mbx_incom(struct ax25_cb *axp, int cnt)
 	axp->s_upcall = mbx_state;
 
 	mbp->axbbscb=axp;
-	mbx_notify_sendable(mbp, 128, 1); /*jump start the upcall*/
+	mbx_notify_sendable(mbp, 500, 1); /*jump start the upcall*/
 
 	bp = recv_ax25(axp) ;	/* get the initial input */
 	free_p(bp) ;			/* and throw it away to avoid confusion */
