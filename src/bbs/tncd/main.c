@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "alib.h"
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
@@ -47,6 +48,8 @@ int
 
 int background = 0;
 int shutdown = FALSE;
+
+alEventHandle bbsd_ev;
 
 struct ConfigurationList ConfigList[] = {
 	{ "",						tCOMMENT,	NULL },
@@ -110,26 +113,12 @@ preload(char *name)
 }
 
 void
-chk_bbsd(void)
+chk_bbsd_callback(void *obj, void *arg0, int arg1)
 {
-	struct timeval t;
-	char c[10];
-	fd_set ready;
-	FD_ZERO(&ready);
-	FD_SET(bbsd_sock, &ready);
+	char c;
 
-	t.tv_sec = 0;
-	t.tv_usec = 1;
-
-	switch(select(bbsd_sock+1, &ready, NULL, NULL, &t)) {
-	case ERROR:
+	if(read(bbsd_sock, &c, 1) == ERROR)
 		exit(1);
-	 default:
-		if(read(bbsd_sock, c, 1) == ERROR)
-			exit(1);
-	case 0:
-		break;
-	}
 }
 
 void
@@ -146,13 +135,22 @@ int
 main(int argc, char *argv[])
 {
 	extern int optind;
+	struct timeval now, nextexpire, waittime, *pwaittime;
+	alCallback cb;
+
+	alEvent_init();
 
 	parse_options(argc, argv, ConfigList,
 		"TNCD - Terminal Node Controller (KISS) Daemon");
 
 	if(bbsd_open(Bbs_Host, Bbsd_Port, argv[optind], "DAEMON") == ERROR)
 		error_print_exit(0);
+
 	bbsd_sock = bbsd_socket();
+	AL_CALLBACK(&cb, NULL, chk_bbsd_callback);
+	int res = alEvent_registerFd(bbsd_sock, ALFD_READ, cb, &bbsd_ev);
+	if (res != 0)
+		error_print_exit(0);
 
 	error_clear();
 	bbsd_get_configuration(ConfigList);
@@ -171,32 +169,25 @@ main(int argc, char *argv[])
 
 	build_bbscall();
 
-	if(init_ax_control(Tncd_Control_Bind_Addr, Tncd_Control_Port,
-		Tncd_Monitor_Bind_Addr, Tncd_Monitor_Port) == ERROR)
+	if(ax_control_init(Tncd_Control_Bind_Addr, Tncd_Control_Port) == ERROR)
+		return 1;
+
+	if(monitor_init(Tncd_Monitor_Bind_Addr, Tncd_Monitor_Port) == ERROR)
 		return 1;
 
 	tnc[0].inuse = FALSE;
+
 	asy_init(0, Tncd_Device);
+	slip_start(0);
 
 	bbsd_msg("");
 
-	while(TRUE) {
+	while (alEvent_pending())
+		alEvent_poll();
 
-		if(tnc[0].inuse)
-			doslip(0);
+	slip_stop(0);
 
-		ax_control();
-
-		monitor_control();
-			/* service the BBS code */
-		axchk();
-
-			/* Service the clock if it has ticked */
-		tick();
-
-		chk_bbsd();
-		wait3(NULL, WNOHANG, NULL);
-	}
+	alEvent_shutdown();
 
 	return 0;
 }

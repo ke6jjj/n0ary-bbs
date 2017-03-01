@@ -152,7 +152,7 @@ extern int Tncd_N2;
 extern int Tncd_Paclen;
 extern int Tncd_Pthresh;
 
-extern int Tncd_Control_Port, Tncd_Monitor_Port, monitor_socket;
+extern int Tncd_Control_Port, Tncd_Monitor_Port;
 extern char *Tncd_Host;
 extern char *Tncd_Name;
 extern char *Tncd_Device;

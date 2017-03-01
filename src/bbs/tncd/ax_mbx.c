@@ -1,6 +1,3 @@
-/* requires a call to axchk() to be inserted in the main commutator loop of
-	the net main.c code */
-
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -8,7 +5,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
+#include <assert.h>
 
+#include "alib.h"
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
@@ -31,11 +30,20 @@ extern char
 
 #include "ax_mbx.h"
 
+static void ax_control_accept(void *obj, void *arg0, int arg1);
+static void mbx_handle_network(void *obj, void *arg0, int arg1);
+static void mbx_handle_child_exit(void *obj, void *arg0, int arg1);
+static void mbx_notify_sendable(struct mboxsess *mbp, size_t amount, int q);
+static void mbx_sendable_changed(void *obj, void *arg0, int arg1);
+static void mbx_check_sendable(struct mboxsess *mbp);
+
 static void
 	convrt2cr(char *data, int cnt),
 	convrt2nl(char *data, int cnt),
 	mbx_tx(struct ax25_cb *axp, int cnt),
 	mbx_rx(struct ax25_cb *axp, int cnt),
+	mbx_accept(void *, void *, int),
+	mbx_pid_exited(void *, void *, int),
 	shutdown_process(struct mboxsess *mbp, int issue_disc),
 	set_ax25_params(char *p, struct ax25_cb *axp),
 	freembox(struct mboxsess *mbp),
@@ -60,6 +68,7 @@ char *Tncd_Device;
 extern struct ax25_addr bbscall, fwdcall;
 
 static int cntrl_socket;
+static alEventHandle al_cntrl_handle;
 
 /* We need to setup a socket that we will check from time to time to
  * see if a program would like access to the tnc's or to status. This
@@ -67,31 +76,54 @@ static int cntrl_socket;
  */
 
 int
-init_ax_control(char *c_bindaddr, int c_port, char *m_bindaddr, int m_port)
+ax_control_init(char *c_bindaddr, int c_port)
 {
+	alCallback cb;
+
 	int port = c_port;
 	if((cntrl_socket = socket_listen(c_bindaddr, &port)) < 0) {
 		fprintf(stderr,
-		"init_ax_control: Problem opening control socket ... aborting\n");
+			"ax_control_init: Problem opening control socket "
+			"... aborting\n");
 		return ERROR;
 	}
-	port = m_port;
-	if((monitor_socket = socket_listen(m_bindaddr, &port)) < 0) {
-		fprintf(stderr,
-		"init_ax_control: Problem opening monitor socket ... aborting\n");
+	assert(port == c_port);
+
+	AL_CALLBACK(&cb, NULL, ax_control_accept);
+	if (alEvent_registerFd(cntrl_socket, ALFD_READ, cb,
+		&al_cntrl_handle) != 0)
+	{
+		fprintf(stderr, "problem registering control socket\n");
 		return ERROR;
 	}
+
 	return OK;
 }
 
+int
+ax_control_shutdown(void)
+{
+	if (al_cntrl_handle != NULL) {
+		alEvent_deregister(al_cntrl_handle);
+		al_cntrl_handle = NULL;
+	}
+	if (cntrl_socket != ERROR) {
+		close(cntrl_socket);
+		cntrl_socket = ERROR;
+	}
 
-/* setup a control port where bbs processes can ask questions regarding
- * current connections, etc.
+	return 0;
+}
+
+
+/* accept a new control port connection (processes can ask questions regarding
+ * current connections, etc.)
  */
-void
-ax_control(void)
+static void
+ax_control_accept(void *obj, void *arg0, int arg1)
 {
 	int fd;
+	alCallback cb;
 
 	if((fd = accept_socket(cntrl_socket)) != ERROR) {
 		struct mboxsess *mbp = newmbox();
@@ -100,8 +132,64 @@ ax_control(void)
 		if(dbug_level & dbgVERBOSE)
 			printf("ax_control(), accepted socket %d\n", fd);
 		mbp->fd = fd;
+
+		AL_CALLBACK(&cb, mbp, mbx_handle_network);
+		int res = alEvent_registerFd(fd, ALFD_READ, cb,
+			&mbp->al_fd_handle);
+		if (res != 0) {
+			fprintf(stderr, "mbx control register failure\n");
+			exit(1);
+		}
+		
 		socket_write(fd, versionc);
+	} else {
+		fprintf(stderr, "new control connection accept error\n");
+		exit(1);
 	}
+}
+
+/*
+ * Accept an inbound control session for an existing mailbox session
+ * (generally this is a newly spawned BBS trying to reach back to
+ * its spawning AX25 connection).
+ */
+static void
+mbx_accept(void *obj, void *arg0, int arg1)
+{
+	struct mboxsess *mbp = obj;
+
+	if ((mbp->fd = accept_socket(mbp->socket)) == ERROR ) {
+		fprintf(stderr, "mbx_accept() error\n");
+		shutdown_process(mbp, TRUE);
+	}
+
+	/* We can stop listening for new connections now */
+	alEvent_deregister(mbp->al_socket_handle);
+	mbp->al_socket_handle = NULL;
+	close(mbp->socket);
+	mbp->socket = ERROR;
+
+	/* Now start listening for activity on the connection*/
+	alCallback cb;
+	AL_CALLBACK(&cb, mbp, mbx_handle_network);
+	int res = alEvent_registerFd(mbp->fd, ALFD_READ, cb,
+		&mbp->al_fd_handle);
+	if (res != 0) {
+		fprintf(stderr, "mbx network i/o register problem\n");
+		exit(1);
+	}
+
+	/*
+	 * We can also stop listening for child exit events. We'll
+	 * receive such notifications as closures on the control
+	 * socket.
+	 */
+	res = alEvent_deregister(mbp->al_proc_handle);
+	if (res != 0) {
+		fprintf(stderr, "mbx remove proc callback problem\n");
+		exit(1);
+	}
+	mbp->al_proc_handle = NULL;
 }
 
 
@@ -146,14 +234,16 @@ initmbox(struct mboxsess *mbp)
 {
 	mbp->pid = 0;	
 	mbp->spawned = FALSE;
-	mbp->bytes = 0;
+	mbp->sendable_count = 0;
 	mbp->byte_cnt = 0;
 	mbp->p = mbp->buf;
 	mbp->cmd_cnt = 0;
 	mbp->cmd_state = 1;
 	mbp->orig = NULL;
 	mbp->fd = ERROR;
+	mbp->al_fd_handle = NULL;
 	mbp->socket = ERROR;
+	mbp->al_socket_handle = NULL;
 }
 
 static void
@@ -264,11 +354,11 @@ command(struct mboxsess *mbp)
 			break;
 
 		case 'C':
-				/* N0ARY-1>N6ZFJ,N6UNE,N6ZZZ
-				 *
-				 *   MYCALL N0ARY-1
-				 *   C N6ZFJ via N6UNE,N6ZZZ
-				 */
+			/* N0ARY-1>N6ZFJ,N6UNE,N6ZZZ
+			 *
+			 *   MYCALL N0ARY-1
+			 *   C N6ZFJ via N6UNE,N6ZZZ
+			 */
 
 			q = call;
 			while(*p != '>') *q++ = *p++;
@@ -308,172 +398,134 @@ command(struct mboxsess *mbp)
 	return OK;
 }
 
-void
-axchk(void)
+/*
+ * Process bytes from a mailbox session's network socket.
+ */
+static void
+mbx_handle_network(void *obj, void *arg0, int arg1)
 {
-	struct mbuf *bp;
-	struct mboxsess * mbp;
-	char *cp;
-	int testsize,size;
-	int connect_cnt;
+	struct mboxsess * mbp = obj;
+	char buf[1025];
+	int cnt;
 	
-	if(base == NULLMBS)
-		return;
+#if 0
+	/* FUTURE: Awaiting alEvent ability to temporarily disable read cbs */
+	if (mbp->byte_cnt != 0) {
+		/*
+	 	* Oh oh. We're probably in a busy loop waiting for the
+	 	* send buffer to open up. In the future we should probably
+	 	* disable read callbacks on this mailbox until the queue
+	 	* clears.
+	 	*/
+	}
+#endif
 
-	mbp = base;
-	connect_cnt = 0;
+	/* we do have an active bbs or outgoing process. If we don't
+	 * have any data pending on this process then check to see
+	 * if the process has sent us something new.
+	 */
+	if(mbp->byte_cnt == 0) {
+		cnt = read(mbp->fd, buf, 1024);
+		if (cnt <= 0) {
+			if(dbug_level & dbgVERBOSE)
+				printf("axchk: %s broken pipe\n", mbp->call);
+			shutdown_process(mbp, TRUE);
+			return;
+		}
+		int cmd_cnt = 0;
+		char *p = buf;
+		char *q = mbp->buf;
 
-	while(mbp != NULLMBS) {
-		char buf[1025];
-		int cnt;
-		struct mboxsess *tmbp;
+		buf[cnt] = 0;
+		if(dbug_level & dbgVERBOSE)
+			printf("%s<{%s}\n", mbp->call, buf);
 
-				/* check to see if the bbs has connected to us yet? If not
-				 * go see if it's there. If it's not skip to next process.
-				 */
-		if(mbp->fd == ERROR) {
-			if((mbp->fd = accept_socket(mbp->socket)) == ERROR) {
-				mbp = mbp->next;
+		while(cnt--) {
+			if(*p == '\r') {
+				p++;
 				continue;
 			}
-			if(dbug_level & dbgVERBOSE)
-				printf("axchk(), accepted socket %d\n", mbp->fd);
-		}
 
-		connect_cnt++;
-
-				/* we do have an active bbs or outgoing process. If we don't
-				 * have any data pending on this process then check to see
-				 * if the process has sent us something new.
-				 */
-
-		if(mbp->byte_cnt == 0) {
-			cnt = read(mbp->fd, buf, 1024);
-			switch(cnt) {
-			case 0:
-				if(dbug_level & dbgVERBOSE)
-					printf("axchk: %s broken pipe\n", mbp->call);
-				tmbp = mbp;
-				mbp = mbp->next;
-				shutdown_process(tmbp, TRUE);
-				continue;
-
-			case ERROR:
-				switch(errno) {
-				case EAGAIN:
-#if EWOULDBLOCK != EAGAIN
-				case EWOULDBLOCK:
-#endif
-					mbp->byte_cnt = 0;
-					break;
-				default:
-					if(dbug_level & dbgVERBOSE)
-						printf("axchk: %s broken pipe\n", mbp->call);
-						/* anything other than the items above indicate a
-						 * fatal problem or broken pipe. Let's shut down
-						 * the process.
-						 */
-					tmbp = mbp;
-					mbp = mbp->next;
-					shutdown_process(tmbp, TRUE);
+			switch(mbp->cmd_state) {
+			case 0:	/* IDLE */
+				if(*p == '\n')
+					mbp->cmd_state++;
+				break;
+			case 1: /* CR seen looking for '~' */
+				if(*p == '~') {
+					mbp->cmd_state++;
+					p++;
 					continue;
 				}
+				mbp->cmd_state = 0;
 				break;
-
-			default:
-				{
-					int cmd_cnt = 0;
-					char *p = buf;
-					char *q = mbp->buf;
-
-					buf[cnt] = 0;
-					if(dbug_level & dbgVERBOSE)
-						printf("%s<{%s}\n", mbp->call, buf);
-
-					while(cnt--) {
-						if(*p == '\r') {
-							p++;
-							continue;
-						}
-
-						switch(mbp->cmd_state) {
-						case 0:	/* IDLE */
-							if(*p == '\n')
-								mbp->cmd_state++;
-							break;
-						case 1: /* CR seen looking for '~' */
-							if(*p == '~') {
-								mbp->cmd_state++;
-								p++;
-								continue;
-							}
-							mbp->cmd_state = 0;
-							break;
-						case 2: /* '~' seen */
-							if(*p == '~') {
-								mbp->cmd_state = 0;
-								break;
-							}
-							mbp->cmd_state++;
-							cmd_cnt = 0;
-							mbp->command[mbp->cmd_cnt][cmd_cnt++] = *p++;
-							continue;
-						case 3: /* in command */
-							if(*p == '\n') {
-								mbp->command[mbp->cmd_cnt++][cmd_cnt] = 0;
-								mbp->cmd_state = 1;
-							} else
-								mbp->command[mbp->cmd_cnt][cmd_cnt++] = *p;
-							p++;
-							continue;
-						}
-						if(*p) {
-							*q++ = *p++;
-							mbp->byte_cnt++;
-						} else
-							p++;
-					}
-					mbp->p = mbp->buf;
-
+			case 2: /* '~' seen */
+				if(*p == '~') {
+					mbp->cmd_state = 0;
+					break;
 				}
-				break;
-			}
-		}
-
-		if(mbp->cmd_cnt)
-			if(command(mbp) == ERROR) {
-				tmbp = mbp;
-				mbp = mbp->next;
-				shutdown_process(tmbp, TRUE);
-				connect_cnt--;
+				mbp->cmd_state++;
+				cmd_cnt = 0;
+				mbp->command[mbp->cmd_cnt][cmd_cnt++] = *p++;
+				continue;
+			case 3: /* in command */
+				if(*p == '\n') {
+					mbp->command[mbp->cmd_cnt++][cmd_cnt] = 0;
+					mbp->cmd_state = 1;
+				} else
+					mbp->command[mbp->cmd_cnt][cmd_cnt++] = *p;
+				p++;
 				continue;
 			}
+			if(*p) {
+				*q++ = *p++;
+				mbp->byte_cnt++;
+			} else
+				p++;
+		}
+		mbp->p = mbp->buf;
+	}
 
-		if(mbp->byte_cnt) {
-			if(dbug_level & dbgVERBOSE)
-				printf("axchk: %s byte_cnt = %d\n", mbp->call, mbp->byte_cnt);
-			testsize = min(mbp->bytes, mbp->axbbscb->paclen+1);
-			size = min(testsize, mbp->byte_cnt) + 1;
-			bp = alloc_mbuf(size);			 
-			cp = bp->data;
-
-			*cp++ = PID_FIRST | PID_LAST | PID_NO_L3;
-			bp->cnt =1;
-		
-			while(bp->cnt < size && mbp->byte_cnt){
-				*cp++ = *mbp->p++;
-				bp->cnt++;
-				mbp->byte_cnt--;
-			}
-
-			if(dbug_level & dbgVERBOSE)
-				printf("[%s]\n", &(bp->data[1]));
-
-			convrt2cr(bp->data, bp->cnt);
-			send_ax25(mbp->axbbscb, bp);
+	if(mbp->cmd_cnt)
+		if(command(mbp) == ERROR) {
+			shutdown_process(mbp, TRUE);
+			return;
 		}
 
-		mbp = mbp->next;
+	
+	mbx_check_sendable(mbp);
+}
+
+
+static void
+mbx_check_sendable(struct mboxsess *mbp)
+{
+	struct mbuf *bp;
+	char *cp;
+	int testsize,size;
+
+	if(mbp->byte_cnt) {
+		if(dbug_level & dbgVERBOSE)
+			printf("axchk: %s byte_cnt = %d\n", mbp->call, mbp->byte_cnt);
+		testsize = min(mbp->sendable_count, mbp->axbbscb->paclen+1);
+		size = min(testsize, mbp->byte_cnt) + 1;
+		bp = alloc_mbuf(size);			 
+		cp = bp->data;
+
+		*cp++ = PID_FIRST | PID_LAST | PID_NO_L3;
+		bp->cnt =1;
+	
+		while(bp->cnt < size && mbp->byte_cnt){
+			*cp++ = *mbp->p++;
+			bp->cnt++;
+			mbp->byte_cnt--;
+		}
+
+		if(dbug_level & dbgVERBOSE)
+			printf("[%s]\n", &(bp->data[1]));
+
+		convrt2cr(bp->data, bp->cnt);
+		send_ax25(mbp->axbbscb, bp);
 	}
 }
 
@@ -491,11 +543,15 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 	if(mbp->fd != ERROR) {
 		if(dbug_level & dbgVERBOSE)
 			printf("closing fd %x..\n", mbp->fd);
+		if (mbp->al_fd_handle != NULL)
+			alEvent_deregister(mbp->al_fd_handle);
 		close(mbp->fd);
 	}
 	if(mbp->socket != ERROR) {
 		if(dbug_level & dbgVERBOSE)
 			printf("closing socket %x..\n", mbp->socket);
+		if (mbp->al_socket_handle != NULL)
+			alEvent_deregister(mbp->al_socket_handle);
 		close(mbp->socket);
 	}
 
@@ -506,9 +562,9 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 			disc_ax25(mbp->axbbscb);
 	}
 
-		/* it should have died by now. Let's get it's completion
-		 * status.
-		 */
+	/* it should have died by now. Let's get it's completion
+	 * status.
+	 */
 
 	if(mbp->spawned)
 		waitpid(mbp->pid, NULL, WNOHANG);
@@ -529,6 +585,7 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 	char call[10], port[10];
 	int pid, j;
 	struct mboxsess *mbp;
+	alCallback cb;
 
 	if(dbug_level & dbgVERBOSE)
 		printf("mbx_state(%d, %d)\n", old, new);
@@ -568,7 +625,7 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 			write(mbp->fd, "~C\n", 3);
 
 			mbp->axbbscb=axp;
-			mbp->bytes = 128;	/*jump start the upcall*/
+			mbx_notify_sendable(mbp, 128, 1); /*jump start the upcall*/
 			return;
 
 		case CONNECTED:
@@ -612,7 +669,7 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 		axp->t_upcall = mbx_tx ;
 
 		mbp->axbbscb=axp;
-		mbp->bytes = 128;	/*jump start the upcall*/
+		mbx_notify_sendable(mbp, 128, 1); /*jump start the upcall*/
 
 		for(j=0;j<6;j++){			   /*now, get incoming call letters*/
 			call[j]=mbp->axbbscb->addr.dest.call[j];
@@ -624,16 +681,25 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 		strcpy(mbp->call,call);   /*Copy call to session*/
 
 		if(mbp->pid == 0) {
-			mbp->fd = ERROR;
 			mbp->port = 0;
 			mbp->socket = socket_listen(NULL, &(mbp->port));
+				
 			sprintf(port, "%d", mbp->port);
+
+			AL_CALLBACK(&cb, mbp, mbx_accept);
+			int res = alEvent_registerFd(mbp->socket, ALFD_READ,
+				cb, &mbp->al_socket_handle);
+			if (res != 0) {
+				fprintf(stderr, "bbs accept register error\n");
+				exit(1);
+			}
 
 			if(dbug_level & dbgVERBOSE) {
 				printf("Starting bbs process [1]:\n");
 				printf("\t%s/b_bbs -v %s -s %s %s\n",
 					Bin_Dir, Tncd_Name, port, call);
 			}
+
 			/*now, fork and exec the bbs*/
 			if((pid=fork()) == 0){			/*if we are the child*/
 				char cmd[256];
@@ -645,6 +711,14 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 
 			mbp->pid=pid;				/* save pid of new baby*/
 			mbp->spawned = TRUE;
+
+			AL_CALLBACK(&cb, mbp, mbx_handle_child_exit);
+			res = alEvent_registerProc(mbp->pid, ALPROC_EXIT, cb,
+				&mbp->al_proc_handle);
+			if (res != 0) {
+				fprintf(stderr, "bbs wait register error\n");
+				exit(1);
+			}
 		} else {
 			char *buf = "CONNECTED\n";
 			write(mbp->fd, buf, strlen(buf));
@@ -678,7 +752,7 @@ mbx_incom(struct ax25_cb *axp, int cnt)
 	axp->s_upcall = mbx_state;
 
 	mbp->axbbscb=axp;
-	mbp->bytes = 128;	/*jump start the upcall*/
+	mbx_notify_sendable(mbp, 128, 1); /*jump start the upcall*/
 
 	bp = recv_ax25(axp) ;	/* get the initial input */
 	free_p(bp) ;			/* and throw it away to avoid confusion */
@@ -757,7 +831,7 @@ mbx_tx(struct ax25_cb *axp, int cnt)
 	mbp = base;
 	while(mbp != NULLMBS){
 		if(mbp->axbbscb == axp)
-			mbp->bytes = cnt;
+			mbx_notify_sendable(mbp, cnt, 1);
 		mbp = mbp->next;
 	}
 }
@@ -792,4 +866,53 @@ convrt2cr(char *data, int cnt)
 			*data = '\r';
 		data++;
 	}
+}
+
+/*
+ * bbs process exited before it established a connection with
+ * us.
+ */
+static void
+mbx_handle_child_exit(void *obj, void *arg0, int arg1)
+{
+	struct mboxsess *mbp = obj;
+	pid_t res;
+
+	assert(mbp->al_proc_handle == (alEventHandle)arg0);
+
+	res = waitpid(mbp->pid, NULL, WNOHANG);
+	assert(res == mbp->pid);
+
+	fprintf(stderr, "bbs exited before making control connection.\n");
+
+	mbp->pid = 0;
+	mbp->spawned = FALSE;
+
+	alEvent_deregister(mbp->al_proc_handle);
+	mbp->al_proc_handle = NULL;
+
+	shutdown_process(mbp, TRUE);
+}
+
+/*
+ * A previously congested LAPB connection send queue has cleared up and more
+ * bytes can be sent.
+ */
+static void
+mbx_notify_sendable(struct mboxsess *mbp, size_t amount, int queue)
+{
+	mbp->sendable_count = amount;
+
+	if (queue) {
+		alCallback cb;
+		AL_CALLBACK(&cb, mbp, mbx_sendable_changed);
+		alEvent_queueCallback(cb, ALCB_UNIQUE, NULL, 0);
+	}
+}
+
+static void
+mbx_sendable_changed(void *mbpp, void *arg0, int arg1)
+{
+	struct mboxsess *mbp = mbpp;
+	mbx_check_sendable(mbp);
 }

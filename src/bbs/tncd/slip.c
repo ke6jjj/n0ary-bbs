@@ -16,6 +16,8 @@ static struct mbuf
 static void
 	asy_start(int dev);
 
+static void doslip(int dev, void *unused);
+
 static int
 	slipq(int dev, struct mbuf *data);
 
@@ -42,6 +44,19 @@ slip_init(int dev)
 
 	return 0;
 }
+
+int
+slip_start(int dev)
+{
+	return asy_set_read_cb(dev, doslip, NULL);
+}
+
+int
+slip_stop(int dev)
+{
+	return asy_set_read_cb(dev, NULL, NULL);
+}
+	
 
 /* Start output, if possible, on asynch device dev */
 static void
@@ -130,18 +145,24 @@ slip_decode(int dev, u_char c)
 }
 
 /* Process SLIP line I/O */
-void
-doslip(int dev)
+static void
+doslip(int dev, void *unused)
 {
-	char c;
+	char buf[128];
+	int count, i;
 	struct mbuf *bp;
 
-			/* Process any pending input */
-	while(asy_recv(dev, &c, 1) != 0)
-		if((bp = slip_decode(dev, c)) != NULLBUF)
-			kiss_recv(dev, bp);
+	(void)unused;
 
-			/* Kick the transmitter if it's idle */
+	/* Process any pending input */
+	while((count = asy_recv(dev, buf, sizeof(buf))) > 0) {
+		for (i = 0; i < count; i++) {
+			if((bp = slip_decode(dev, buf[i])) != NULLBUF)
+				kiss_recv(dev, bp);
+		}
+	}
+
+	/* Kick the transmitter if it's idle */
 	asy_start(dev);
 }
 

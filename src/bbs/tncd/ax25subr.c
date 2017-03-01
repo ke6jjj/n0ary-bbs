@@ -101,10 +101,10 @@ del_ax25(struct ax25_cb *axp)
 	free((char *)axp);
 }
 
-		/* Create an ax25 control block. Allocate a new structure, if necessary,
-		 * and fill it with all the defaults. The caller
-		 * is still responsible for filling in the reply address
-		 */
+/* Create an ax25 control block. Allocate a new structure, if necessary,
+ * and fill it with all the defaults. The caller
+ * is still responsible for filling in the reply address
+ */
 struct ax25_cb *
 cr_ax25(int dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr)
 {
@@ -115,8 +115,8 @@ cr_ax25(int dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr)
 		return NULLAX25;
 
 	if((axp = find_ax25(my_addr, their_addr)) == NULLAX25){
-				/* Not already in table; create an entry
-				 * and insert it at the head of the chain
+		/* Not already in table; create an entry
+		 * and insert it at the head of the chain
  		 */
 
 		 /* Find appropriate hash chain */
@@ -125,7 +125,11 @@ cr_ax25(int dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr)
 		if(axp == NULLAX25)
 			return NULLAX25;
 
-				/* Insert at beginning of chain */
+		init_timer(&axp->t1);
+		init_timer(&axp->t2);
+		init_timer(&axp->t3);
+
+		/* Insert at beginning of chain */
 		axp->prev = NULLAX25;
 		axp->next = ax25_cb[hashval];
 		if(axp->next != NULLAX25)

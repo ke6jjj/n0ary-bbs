@@ -21,8 +21,8 @@ struct slip {
 };
 extern struct slip slip[];
 
-extern void
-	doslip(int dev);
+int slip_start(int dev);
+int slip_stop(int dev);
 
 extern int Tncd_SLIP_Flags;
 

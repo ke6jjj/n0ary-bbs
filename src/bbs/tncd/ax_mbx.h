@@ -1,19 +1,25 @@
+#include "alib.h"
+
 /* see comment at the head of ax_mbx.c - Bdale */
 /* Defines for the ax.25 mailbox facility */
 
 /*defines that control forwarder states */
 
-
 struct mboxsess{			/*mailbox session structure*/
-	int pid;				/*id of bbs process*/
+	pid_t pid;			/*id of bbs process*/
 	int spawned;			/*did we create the process?*/
+	alEventHandle al_proc_handle;
 
 	int fd;
+	alEventHandle al_fd_handle;
+
 	int socket;
+	alEventHandle al_socket_handle;
+
 	int port;
 
-	int bytes;				/*number of bytes for bbs to send at one time*/
-	int byte_cnt;
+	int sendable_count; /* number of bytes that can be enqueued now */
+	int byte_cnt; /* number of bytes in buf, waiting to be enqueued */
 	struct ax25_cb *axbbscb; /*axp associated with this structure*/
 	struct ax25_addr *orig;
 	char *p, buf[1024];
@@ -30,12 +36,7 @@ struct mboxsess{			/*mailbox session structure*/
 extern struct mboxsess
 	*base;
 
-extern int
-	init_ax_control(char *c_bindaddr, int c_port, char *m_bindaddr,
-		int m_port);
+int ax_control_init(char *c_bindaddr, int c_port);
 
-extern void
-	ax_control(void),
-	axchk(void),
-	mbx_state(struct ax25_cb *axp, int old, int new),
-	mbx_incom(struct ax25_cb *axp, int cnt);
+void mbx_state(struct ax25_cb *axp, int old, int new);
+void mbx_incom(struct ax25_cb *axp, int cnt);

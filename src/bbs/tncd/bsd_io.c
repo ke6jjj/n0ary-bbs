@@ -6,6 +6,8 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
+#include <errno.h>
 
 #ifdef SUNOS
 #include <termio.h>
@@ -16,6 +18,7 @@
 #include <fcntl.h>
 #include <sys/time.h>
 
+#include "alib.h"
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
@@ -31,63 +34,14 @@ extern char *Bbs_Call;
 
 static int asy_init_serial(int dev, char *ttydev);
 static int asy_init_tcp(int dev, char *host_port_spec);
+static void asy_read_callback(void *obj, void *arg0, int arg1);
 
 int
 asy_init(int dev, char *ttydev)
 {
-	extern int ReceiveSocket, SendSocket;
-
-	if(ReceiveSocket) {
-		int sock;
-		fd_set ready;
-		int fdlimit;
-
-		if((sock = socket_listen(NULL, &ReceiveSocket)) == ERROR) {
-			error_log("tncd: ReceiveSocket open failed on %d", ReceiveSocket);
-			error_print_exit(1);
-		}
-
-		FD_ZERO(&ready);
-		FD_SET(sock, &ready);
-		fdlimit = sock;
-		FD_SET(bbsd_sock, &ready);
-		if(bbsd_sock > fdlimit)
-			fdlimit = bbsd_sock;
-		fdlimit++;
-
-		switch(select(fdlimit, &ready, NULL, NULL, NULL)) {
-		case ERROR:
-		case 0:
-			if(dbug_level & dbgVERBOSE)
-				printf("error in select\n");
-			exit(2);
-		default:
-			if(FD_ISSET(bbsd_sock, &ready))
-				exit(2);
-
-			if((tnc[dev].fd = socket_accept(sock)) == ERROR) {
-				error_log("tncd: socket_accept failed on %d", ReceiveSocket);
-				error_print_exit(1);
-			}
-		}		
-
-		if(dbug_level & dbgVERBOSE)
-			printf("tncd: server side connected\n");
-		tnc[dev].inuse = TRUE;
-		return OK;
-	}
-
-	if(SendSocket) {
-		while((tnc[dev].fd = socket_open(NULL, SendSocket)) == ERROR)
-			sleep(2);
-		
-		if(dbug_level & dbgVERBOSE)
-			printf("tncd: client side connected\n");
-		tnc[dev].inuse = TRUE;
-		return OK;
-	}
-
 	strcpy(tnc[dev].tty, ttydev);
+	tnc[dev].read_cb = NULL;
+	tnc[dev].read_arg = NULL;
 
 	if (strchr(ttydev, ':') != NULL) {
 		/* TNC is on a terminal server */
@@ -96,6 +50,30 @@ asy_init(int dev, char *ttydev)
 		/* TNC is a local device */
 		return asy_init_serial(dev, ttydev);
 	}
+}
+
+int
+asy_set_read_cb(int dev, void (*cbf)(int, void *), void *arg)
+{
+	alCallback cb;
+	int res;
+
+	tnc[dev].read_cb = cbf;
+	tnc[dev].read_arg = arg;
+
+	if (tnc[dev].evHandle != NULL)
+		alEvent_deregister(tnc[dev].evHandle);
+
+	if (cbf != NULL) {
+		assert(tnc[dev].fd != -1);
+		AL_CALLBACK(&cb, (void*) dev, asy_read_callback);
+		res = alEvent_registerFd(tnc[dev].fd, ALFD_READ,
+			cb, &tnc[dev].evHandle);
+	} else {
+		res = 0;
+	}
+
+	return res;
 }
 
 static int
@@ -109,7 +87,7 @@ asy_init_serial(int dev, char *ttydev)
 		logd_stamp("tncd", "asy_init: bad open");
 		exit(1);
 	}
- 			/* get the stty structure and save it */
+ 	/* get the stty structure and save it */
 
 #ifdef HAVE_TERMIOS
 	if (tcgetattr(tnc[dev].fd, &tt) < 0) {
@@ -244,60 +222,38 @@ asy_output(int dev, char *buf, int cnt)
 /* Receive characters from asynch line
  * Returns count of characters read
  */
-
 int
 asy_recv(int dev, char *buf, int cnt)
 {
-	fd_set ready;
-	struct timeval timeout;
-	int fdlimit;
 	int result;
 
-	FD_ZERO(&ready);
-	FD_SET(tnc[dev].fd, &ready);
-	fdlimit = tnc[dev].fd;
-	FD_SET(bbsd_sock, &ready);
-	if(bbsd_sock > fdlimit)
-		fdlimit = bbsd_sock;
-	fdlimit++;
-	timeout.tv_sec = 0;
-	timeout.tv_usec = 35;
-
-	result = select(fdlimit, (void*)&ready, 0, 0, &timeout);
-
-	if(result < 0) {
+	result = read(tnc[dev].fd, buf, cnt);
+	if(result < 0 && (errno != EWOULDBLOCK && errno != EAGAIN)) {
 		bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__,
 				   "asy_recv", versionc,
-				   "select call returned ERROR, exiting");
+				   "Error on read, exiting");
 		exit(1);
 	}
 
-	if(result == 0)
-		return 0;
-
-	if(FD_ISSET(bbsd_sock, &ready))
-		exit(2);
-
-	if(FD_ISSET(tnc[dev].fd, &ready)) {
-		result = read(tnc[dev].fd, buf, cnt);
-		if(result < 0) {
-			bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__,
-					   "asy_recv", versionc,
-					   "Error on read, exiting");
-			exit(1);
-		}
-
-		if(result == 0) {
-			bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__,
-					   "asy_recv", versionc,
-					   "read count is 0, why were we selected? exiting");
-			exit(1);
-		}
-		return result;
+	if(result == 0) {
+		logd_stamp("tncd", "asy_: bad write, wrong count");
+		bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__,
+				   "asy_recv", versionc,
+				   "End-of-file reading TNC, exiting");
+		exit(1);
 	}
 
-	bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__,
-			   "asy_recv", versionc,
-			   "Hit on select but no match on tnc[?].fd, exiting");
-	exit(1);
+	return result;
+}
+
+static void
+asy_read_callback(void *obj, void *arg0, int arg1)
+{
+	int dev = (int) obj;
+
+	assert(dev < MAX_TNC);
+	assert(tnc[dev].fd != -1 && tnc[dev].evHandle != NULL);
+	assert(tnc[dev].read_cb != NULL);
+
+	tnc[dev].read_cb(dev, tnc[dev].read_arg);
 }
