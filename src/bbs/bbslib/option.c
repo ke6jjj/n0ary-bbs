@@ -12,14 +12,13 @@ char *Bbs_Host = BBS_HOST;
 int Logging = logOFF;
 int dbug_level = dbgNONE;
 char *config_fn = NULL;
-int ReceiveSocket = 0;
-int SendSocket = 0;
 
 static void
 usage(char *pgm)
 {
 	printf("usage:\n");
-	printf("\t%s [-w|W] [-f filename] [-l|L] [-d#] [-h host] [-p port]\n", pgm);
+	printf("\t%s [-w|W] [-f filename] [-l|L] [-d#] [-h host] [-p port]\n",
+		pgm);
 	printf("\t\t-w|W\tDisplay required configurtion variables\n");
 	printf("\t\t-f\tWrite configuration variables to \"filename\"\n");
 	printf("\t\t-l|L\tEnable logging, (l=continues, L=clears when idle\n");
@@ -41,7 +40,7 @@ parse_options(int argc, char *argv[],  struct ConfigurationList *cl, char *me)
 	int show_config = 0;
 	extern char *optarg;
 
-	while((c = getopt(argc, argv, "S:R:p:lLwWd:f:h:?")) != -1) {
+	while((c = getopt(argc, argv, "p:lLwWd:f:h:?")) != -1) {
 		char *p = optarg;
 		switch(c) {
         case 'W':
@@ -54,12 +53,6 @@ parse_options(int argc, char *argv[],  struct ConfigurationList *cl, char *me)
 			break;
 		case 'p':
 			Bbsd_Port = atoi(optarg);
-			break;
-		case 'S':
-			SendSocket = atoi(optarg);
-			break;
-		case 'R':
-			ReceiveSocket = atoi(optarg);
 			break;
 		case 'h':
 			Bbs_Host = optarg;
