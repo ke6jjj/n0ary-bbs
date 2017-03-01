@@ -8,7 +8,8 @@ CALLBK_MAKECB_ULS_APP_OBJDIR := $(CALLBK_ULS_OBJDIR)
 CALLBK_MAKECB_ULS_APP_PROD := makecb_uls
 
 CALLBK_MAKECB_ULS_APP_SRCS := \
-	am_database.c call_id.c makecb_uls.c slab.c
+	AM_proc.c EN_proc.c HD_proc.c call_id.c cb_date.c common_proc.c \
+	makecb_uls.c slab.c uls_database.c
 
 #
 # We need to see "callbk.h" from the BBS to see what size records

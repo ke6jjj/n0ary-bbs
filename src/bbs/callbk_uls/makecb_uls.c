@@ -1,3 +1,37 @@
+/*
+ * Copyright 2017, Jeremy Cooper.  All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions
+ * are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright
+ *    notice, this list of conditions and the following disclaimer.
+ * 2. Redistributions in binary form must reproduce the above copyright
+ *    notice, this list of conditions and the following disclaimer in the
+ *    documentation and/or other materials provided with the distribution.
+ * 3. All advertising materials mentioning features or use of this software
+ *    must display the following acknowledgement:
+ *    This product includes software developed by Jeremy Cooper.
+ * 4. The name of the author may not be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+/*
+ * This program was written based on specifications in the FCC
+ * ULS data file formats as found in a document titled "ULS Data File Formats"
+ * from the FCC website as of January, 2017.
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -8,12 +42,21 @@
 #include <ctype.h>
 
 #include "slab.h"
-#include "am_database.h"
-#include "am_record.h"
+#include "uls_database.h"
+#include "uls_record.h"
+#include "field_proc.h"
+#include "AM_proc.h"
+#include "HD_proc.h"
+#include "EN_proc.h"
+#include "cb_date.h"
 #include "call_id.h"
-#include "bbslib.h"
-#include "callbk.h" /* From BBS */
 
+#include "bbslib.h"
+#include "callbk.h" /* From BBS, for checking sizes */
+
+/*
+ * The details of a callbook generation session.
+ */
 struct callbook_out_context {
 	FILE *fp_city;
 	FILE *fp_first;
@@ -22,22 +65,32 @@ struct callbook_out_context {
 	const char *outdir;
 };
 
+/*
+ * A description of a record field and a function for processing it.
+ */
+struct Record_Field_Process_struct {
+	const char    *field_name;
+	field_proc_t  field_proc;
+};
+typedef struct Record_Field_Process_struct Record_Field_Process;
+
 static void usage(const char *prog);
 static void setup_out_context(const char *outdir,
 	struct callbook_out_context *cbf);
 static void close_out_context(struct callbook_out_context *cbf);
-static void load_AMDatabase_from_AM_file(struct AMDatabase *AMDb,
-	slab_t AMSlab, const char *path);
-static void load_AMDatabase_from_HD_file(struct AMDatabase *AMDb,
-	slab_t AMSlab, const char *path);
+static void load_ULSDatabase_from_AM_file(struct ULSDatabase *ULSDb,
+	slab_t ULSSlab, const char *path);
+static void load_ULSDatabase_from_HD_file(struct ULSDatabase *ULSDb,
+	slab_t ULSSlab, const char *path);
 static void process_and_dump_EN_file(struct callbook_out_context *cbf,
-	struct AMDatabase *AMDb, const char *ENpath);
-static void test(struct AMDatabase *AMDb);
+	struct ULSDatabase *ULSDb, const char *ENpath);
+static void test_query(struct ULSDatabase *ULSDb);
 static void warn_skip(const char *prefix, size_t lineno, const char *reason);
 static void warn_skip_ex(const char *prefix, size_t lineno, const char *reason,
                         const char *sample);
 static void add_call(struct callbook_out_context *,
 	uint32_t callid,
+	const char *entity_name,
 	const char *lname,
 	const char *lname_suffix,
 	const char *fname,
@@ -53,13 +106,70 @@ static void add_call(struct callbook_out_context *,
 	char op_class
 );
 static int strncpy_upr(char *dst, const char *src, size_t max);
-static uint16_t get_doy(unsigned int year, uint8_t month, uint8_t day);
+static int process_record(const Record_Field_Process *fields,
+	size_t num_fields, void *ctx, const char *warn_prefix,
+	size_t lineno, char *line);
+
+/*
+ * The processing scheme for an 'AM' record.
+ */
+const Record_Field_Process AM_fields[] = {
+	{ "Header",                    AM_proc_header    },
+	{ "Unique System Identifier",  AM_proc_uls_id    },
+	{ "ULS File Number",           NULL              },
+	{ "EBF Number",                NULL              },
+	{ "Call Sign",                 NULL              },
+	{ "Operator Class",            AM_proc_op_class  },
+};
+const int AM_fields_count = sizeof(AM_fields) / sizeof(AM_fields[0]);
+
+/*
+ * The processing scheme for an 'HD' record.
+ */
+const Record_Field_Process HD_fields[] = {
+	{ "Header",                    HD_proc_header         },
+	{ "Unique System Identifier",  HD_proc_uls_id         },
+	{ "ULS File Number",           NULL                   },
+	{ "EBF Number",                NULL                   },
+	{ "Call Sign",                 NULL                   },
+	{ "License Status",            HD_proc_license_status },
+	{ "Radio Service Code",        NULL                   },
+	{ "Grant Date",                NULL                   },
+	{ "Expired Date",              HD_proc_expire_date    },
+};
+const int HD_fields_count = sizeof(HD_fields) / sizeof(HD_fields[0]);
+
+/*
+ * The processing scheme for an 'EN' record.
+ */
+const Record_Field_Process EN_fields[] = {
+	{ "Header",                    EN_proc_header         },
+	{ "Unique System Identifier",  EN_proc_uls_id         },
+	{ "ULS File Number",           NULL                   },
+	{ "EBF Number",                NULL                   },
+	{ "Call Sign",                 EN_proc_call_sign      },
+	{ "Entity Type",               NULL                   },
+	{ "Licensee ID",               NULL                   },
+	{ "Entity Name",               EN_proc_entity_name    },
+	{ "First Name",                EN_proc_first_name     },
+	{ "MI",                        EN_proc_mi             },
+	{ "Last Name",                 EN_proc_last_name      },
+	{ "Suffix",                    EN_proc_suffix         },
+	{ "Phone",                     NULL                   },
+	{ "Fax",                       NULL                   },
+	{ "Email",                     NULL                   },
+	{ "Street Address",            EN_proc_street_addr    },
+	{ "City",                      EN_proc_city           },
+	{ "State",                     EN_proc_state          },
+	{ "ZIP Code",                  EN_proc_zip            },
+};
+const int EN_fields_count = sizeof(EN_fields) / sizeof(EN_fields[0]);
 
 int
 main(int argc, char *argv[])
 {
-	slab_t AMSlab;
-	struct AMDatabase AMDb;
+	slab_t ULSSlab;
+	struct ULSDatabase ULSDb;
 	struct callbook_out_context cbf;
 
 	if (argc < 5) {
@@ -67,22 +177,22 @@ main(int argc, char *argv[])
 		exit(1);
 	}
 
-	if (slab_init(sizeof(struct ULS_AM_Record), 100000, &AMSlab) != 0) {
+	if (slab_init(sizeof(struct ULS_Record), 100000, &ULSSlab) != 0) {
 		fprintf(stderr, "Slab init failed.\n");
 		exit(1);
 	}
 
 	setup_out_context(argv[1], &cbf);
 
-	AMDatabase_init(&AMDb);
+	ULSDatabase_init(&ULSDb);
 
-	load_AMDatabase_from_AM_file(&AMDb, AMSlab, argv[2]);
-	load_AMDatabase_from_HD_file(&AMDb, AMSlab, argv[3]);
-	process_and_dump_EN_file(&cbf, &AMDb, argv[4]);
+	load_ULSDatabase_from_AM_file(&ULSDb, ULSSlab, argv[2]);
+	load_ULSDatabase_from_HD_file(&ULSDb, ULSSlab, argv[3]);
+	process_and_dump_EN_file(&cbf, &ULSDb, argv[4]);
 
 	close_out_context(&cbf);
 
-	slab_free(AMSlab);
+	slab_free(ULSSlab);
 
 	return 0;
 }
@@ -180,29 +290,32 @@ close_out_context(struct callbook_out_context *cbf)
 }
 
 static void
-warn_skip(const char *prefix, size_t lineno, const char *reason)
+warn_skip(const char *prefix, size_t lineno, const char *name)
 {
-	printf("%s:Line %d skipped. (%s)\n", prefix, lineno, reason);
+	printf("%s:Line %zd skipped. (bad %s)\n", prefix, lineno, name);
 }
 
 static void
-warn_skip_ex(const char *prefix, size_t lineno, const char *reason,
+warn_skip_ex(const char *prefix, size_t lineno, const char *name,
 	const char *sample)
 {
-	printf("%s:Line %d skipped. (%s '%s')\n", prefix, lineno, reason,
+	printf("%s:Line %zd skipped. (bad %s '%s')\n", prefix, lineno, name,
 		sample);
 }
 
 static void
-load_AMDatabase_from_AM_file(struct AMDatabase *AMDb, slab_t AMSlab,
+warn_skip_missing(const char *prefix, size_t lineno, const char *name)
+{
+	printf("%s:Line %zd skipped. (delimiter missing at %s).\n", prefix,
+		lineno, name);
+}
+
+static void
+load_ULSDatabase_from_AM_file(struct ULSDatabase *ULSDb, slab_t ULSSlab,
 	const char *path)
 {
-	char line[128], *field, *iter, *callsign;
-	struct ULS_AM_Record *AM;
-	uint8_t op_class;
-	uint32_t op_call_id;
+	char line[128];
 	int lineno, recno;
-	size_t len;
 	FILE *fp;
 
 	/*
@@ -224,56 +337,40 @@ load_AMDatabase_from_AM_file(struct AMDatabase *AMDb, slab_t AMSlab,
 		}
 
 		lineno++;
-		iter = line;
 
-		field = strsep(&iter, "|");
-		if (strcmp(field, "AM") != 0) {
-			warn_skip("AM", lineno, "no AM");
-			continue;
-		}
+		/*
+		 * Process fields until done.
+		 */
+		AM_process_ctx ctx;
 
-		strsep(&iter, "|"); /* Seq number */
-		strsep(&iter, "|"); /* ULS number */
-		strsep(&iter, "|"); /* EBF number */
+		int res = process_record(AM_fields, AM_fields_count, &ctx,
+			"AM", lineno, line);
 
-		callsign = strsep(&iter, "|"); /* Callsign */
-		if (callsign == NULL) {
-			warn_skip("AM", lineno, "no callsign");
-			continue;
-		}
-
-		if (call2id(callsign, &op_call_id) != 0) {
-			warn_skip_ex("AM", lineno, "bad callsign", callsign);
-			continue;
-		}
-
-		field = strsep(&iter, "|"); /* Operator class */
-		if (field == NULL) {
-			warn_skip("AM", lineno, "no class");
-			continue;
-		}
-
-		if (*field == '\0')
-			/* Empty class usually means a club call */
-			/* We don't care about such calls */
+		if (res != 0)
+			/* Skip this record */
 			continue;
 
-		op_class = (uint8_t) *field;
+		/*
+		 * Allocate a new ULS record for our local database.
+		 */
+		struct ULS_Record *ULS;
 
-		AM = (struct ULS_AM_Record *) slab_alloc(AMSlab);
-		if (AM == NULL) {
+		ULS = (struct ULS_Record *) slab_alloc(ULSSlab);
+		if (ULS == NULL) {
 			fprintf(stderr, "AM:Out of memory at line %d.\n",
 				lineno);
 			exit(1);
 		}
 
-		AM->op_call_id = op_call_id;
-		AM->op_class = op_class;
-		AM->op_expire_year = 0;
-		AM->op_expire_month = 0;
-		AM->op_expire_day = 0;
+		ULS->op_uls_id = ctx.AM_uls_id;
+		ULS->op_class = ctx.AM_op_class;
 
-		AMDatabase_add(AMDb, AM);
+		/* These fields will be populated from the HD file */
+		ULS->op_expire_year = 0;
+		ULS->op_expire_month = 0;
+		ULS->op_expire_day = 0;
+
+		ULSDatabase_add(ULSDb, ULS);
 
 		recno++;
 	}
@@ -284,15 +381,11 @@ load_AMDatabase_from_AM_file(struct AMDatabase *AMDb, slab_t AMSlab,
 }
 
 static void
-load_AMDatabase_from_HD_file(struct AMDatabase *AMDb, slab_t AMSlab,
+load_ULSDatabase_from_HD_file(struct ULSDatabase *ULSDb, slab_t ULSSlab,
 	const char *path)
 {
-	char line[1024], *field, *iter, *int_end, *callsign;
-	struct ULS_AM_Record *AM;
-	uint32_t op_call_id;
-	int op_expire_month, op_expire_day, op_expire_year;
-	int lineno, recno, res;
-	size_t len;
+	char line[1024];
+	int lineno, recno;
 	FILE *fp;
 
 	/*
@@ -314,69 +407,38 @@ load_AMDatabase_from_HD_file(struct AMDatabase *AMDb, slab_t AMSlab,
 		}
 
 		lineno++;
-		iter = line;
-
-
-		field = strsep(&iter, "|");
-		if (strcmp(field, "HD") != 0) {
-			warn_skip("HD", lineno, "no HD");
-			continue;
-		}
-
-		strsep(&iter, "|"); /* Seq number */
-		strsep(&iter, "|"); /* ULS number */
-		strsep(&iter, "|"); /* EBF number */
-
-		callsign = strsep(&iter, "|"); /* Callsign */
-		if (callsign == NULL) {
-			warn_skip("HD", lineno, "no callsign");
-			continue;
-		}
-
-		if (call2id(callsign, &op_call_id) != 0) {
-			warn_skip_ex("HD", lineno, "bad callsign", callsign);
-			continue;
-		}
-
-		strsep(&iter, "|"); /* License Status */
-		strsep(&iter, "|"); /* Radio Service Code */
-		strsep(&iter, "|"); /* Grant Date */
-
-		field = strsep(&iter, "|"); /* Expire Date */
-		if (field == NULL) {
-			warn_skip("HD", lineno, "no expire");
-			continue;
-		}
-		if (*field == '\0')
-			/* Empty for whatever reason */
-			continue;
-
-		res = sscanf(field, "%d/%d/%d",
-			&op_expire_day, &op_expire_month, &op_expire_year);
-
-		if (res != 3) {
-			/* Parsing problem */
-			warn_skip_ex("HD", lineno, "bad expire date", field);
-			continue;
-		}
 
 		/*
-		 * Now lookup the cached record for this callsign.
+		 * Process fields until done.
+		 */
+		HD_process_ctx ctx;
+
+		int res = process_record(HD_fields, HD_fields_count, &ctx,
+			"HD", lineno, line);
+
+		if (res != 0)
+			/* Skip this record */
+			continue;
+
+		struct ULS_Record *ULS;
+
+		/*
+		 * Now lookup the cached record for this ULS id.
 		 * (It should be in our cache because we made a pass to
 		 * gather the licensee class from the AM file).
 		 */
-		res = AMDatabase_lookup_by_call_id(AMDb, op_call_id, &AM);
+		res = ULSDatabase_lookup_by_uls_id(ULSDb, ctx.HD_uls_id, &ULS);
 		if (res != 0) {
 			/*
-			 * No information about this call, might be expired
+			 * No information about this ULS ID, might be expired
 			 * or belong to a club.
 			 */
 			continue;
 		}
 
-		AM->op_expire_year = op_expire_year;
-		AM->op_expire_month = op_expire_month;
-		AM->op_expire_day = op_expire_day;
+		ULS->op_expire_year = ctx.HD_expire_year;
+		ULS->op_expire_month = ctx.HD_expire_month;
+		ULS->op_expire_day = ctx.HD_expire_day;
 
 		recno++;
 	}
@@ -388,17 +450,11 @@ load_AMDatabase_from_HD_file(struct AMDatabase *AMDb, slab_t AMSlab,
 
 static void
 process_and_dump_EN_file(struct callbook_out_context *cbf,
-	struct AMDatabase *AMDb, const char *ENpath)
+	struct ULSDatabase *ULSDb, const char *ENpath)
 {
 	char line[1024]; /* An EN record can be over 600 characters long */
-	char *callsign, *iter, *fname, *field, *mi, *lname, *city, *state2;
-	char *street_addr, *zip, *suffix;
-	size_t len, lineno, recno;
-	uint32_t op_call_id;
-	char path[PATH_MAX];
-	int res;
+	int lineno, recno;
 	FILE *fp;
-	struct ULS_AM_Record *AM;
 
 	/*
 	 * Load the information from the EN table.
@@ -419,109 +475,55 @@ process_and_dump_EN_file(struct callbook_out_context *cbf,
 		}
 
 		lineno++;
-		iter = line;
 
-		field = strsep(&iter, "|");
-		if (strcmp(field, "EN") != 0) {
-			warn_skip("EN", lineno, "no EN");
+
+		/*
+		 * Process fields until done.
+		 */
+		EN_process_ctx ctx;
+
+		int res = process_record(EN_fields, EN_fields_count, &ctx,
+			"EN", lineno, line);
+
+		if (res != 0)
+			/* Skip this record */
 			continue;
-		}
 
-		strsep(&iter, "|"); /* Sequence number */
-		strsep(&iter, "|"); /* ULS number */
-		strsep(&iter, "|"); /* EBF number */
-
-		callsign = strsep(&iter, "|"); /* Callsign */
-		if (callsign == NULL) {
-			warn_skip("EN", lineno, "no callsign");
-			continue;
-		}
-
-		if (call2id(callsign, &op_call_id) != 0) {
-			warn_skip_ex("EN", lineno, "bad callsign", callsign);
-			continue;
-		}
-
-		strsep(&iter, "|"); /* Entity Type */
-		strsep(&iter, "|"); /* Licensee ID */
-		strsep(&iter, "|"); /* Entity Name */
-
-		fname = strsep(&iter, "|"); /* First Name */
-		if (fname == NULL) {
-			warn_skip("EN", lineno, "no first name");
-			continue;
-		}
-
-		mi = strsep(&iter, "|"); /* Middle Initial */
-		if (mi == NULL) {
-			warn_skip("EN", lineno, "no MI");
-			continue;
-		}
-
-		lname = strsep(&iter, "|"); /* Last Name */
-		if (lname == NULL) {
-			warn_skip("EN", lineno, "no last name");
-			continue;
-		}
-
-		suffix = strsep(&iter, "|"); /* Suffix */
-		if (suffix == NULL) {
-			warn_skip("EN", lineno, "no suffix");
-			continue;
-		}
-
-		strsep(&iter, "|"); /* Phone */
-		strsep(&iter, "|"); /* Fax */
-		strsep(&iter, "|"); /* Email */
-
-		street_addr = strsep(&iter, "|"); /* Street Address */
-		if (street_addr == NULL) {
-			warn_skip("EN", lineno, "no street address");
-			continue;
-		}
-
-		city = strsep(&iter, "|"); /* City */
-		if (city == NULL) {
-			warn_skip("EN", lineno, "no city");
-			continue;
-		}
-
-		state2 = strsep(&iter, "|"); /* State */
-		if (state2 == NULL) {
-			warn_skip("EN", lineno, "no state");
-			continue;
-		}
-
-		zip = strsep(&iter, "|"); /* ZIP Code */
-		if (state2 == NULL) {
-			warn_skip("EN", lineno, "no state");
-			continue;
-		}
+		struct ULS_Record *ULS;
 
 		/*
 		 * Fetch cached data from other files.
 		 */
-		res = AMDatabase_lookup_by_call_id(AMDb, op_call_id, &AM);
+		res = ULSDatabase_lookup_by_uls_id(ULSDb, ctx.EN_uls_id, &ULS);
 		if (res != 0) {
 			/* No data available from the other tables */
 			continue;
 		}
 
+		/*
+		 * Make sure the expiration date got filled in.
+		 */
+		if (ULS->op_expire_year == 0)
+			/* Record incomplete, skip */
+			continue;
+
+		/* Finally, save the data */
 		add_call(cbf,
-			op_call_id,
-			lname,
-			suffix, /* Last name suffix, not call suffix */
-			fname,
-			mi,
-			street_addr,
-			city,
-			state2,
-			zip,
+			ctx.EN_call_id,
+			ctx.EN_entity_name,
+			ctx.EN_last_name,
+			ctx.EN_suffix, /* Last name suffix, not call suffix */
+			ctx.EN_first_name,
+			ctx.EN_mi,
+			ctx.EN_street_addr,
+			ctx.EN_city,
+			ctx.EN_state,
+			ctx.EN_zip,
 			"", /* Birthdate no longer available in ULS */
-			AM->op_expire_year,
-			AM->op_expire_month, /* 1 = Jan */
-			AM->op_expire_day,   /* 1 = 1st */
-			AM->op_class
+			ULS->op_expire_year,
+			ULS->op_expire_month, /* 1 = Jan */
+			ULS->op_expire_day,   /* 1 = 1st */
+			ULS->op_class
 		);
 	}
 
@@ -530,6 +532,7 @@ process_and_dump_EN_file(struct callbook_out_context *cbf,
 static void
 add_call(struct callbook_out_context *cbf,
 	uint32_t callid,
+	const char *entity_name,
 	const char *lname,
 	const char *lname_suffix, /* Not used yet */
 	const char *fname,
@@ -586,19 +589,40 @@ add_call(struct callbook_out_context *cbf,
 	snprintf(expire, sizeof(expire), "%02d%03d",
 		expire_year % 100, day_of_year);
 
+	/*
+	 * These fields are single characters.
+	 */
 	entry.callarea[0] = area_char;
-	strncpy(entry.prefix, prefix, sizeof(entry.prefix));
-	strncpy(entry.suffix, suffix, sizeof(entry.suffix));
-	strncpy_upr(entry.lname, lname, sizeof(entry.lname));
-	strncpy_upr(entry.fname, fname, sizeof(entry.fname));
-	strncpy_upr(entry.mname, mname, sizeof(entry.mname));
-	strncpy_upr(entry.addr, addr, sizeof(entry.addr));
-	strncpy_upr(entry.city, city, sizeof(entry.city));
-	strncpy_upr(entry.state, state, sizeof(entry.state));
-	strncpy_upr(entry.zip, zip, sizeof(entry.zip));
-	strncpy_upr(entry.birth, birth, sizeof(entry.birth));
-	strncpy_upr(entry.exp, expire, sizeof(entry.exp));
 	entry.class[0] = toupper(op_class); /* Man, that is badly named */
+
+	/*
+	 * These fields are longer strings. We try to preserve
+	 * the casing of most fields.  For State and callsign
+	 * prefix and suffix we make certain the data is uppercased.
+	 *
+	 * (When writing to indexes, however, we will normalize all fields
+	 * to uppercase).
+	 */
+	strncpy_upr(entry.prefix, prefix, sizeof(entry.prefix)-1);
+	strncpy_upr(entry.suffix, suffix, sizeof(entry.suffix)-1);
+	strncpy    (entry.lname, lname, sizeof(entry.lname)-1);
+	strncpy    (entry.mname, mname, sizeof(entry.mname)-1);
+	strncpy    (entry.addr, addr, sizeof(entry.addr)-1);
+	strncpy    (entry.city, city, sizeof(entry.city)-1);
+	strncpy_upr(entry.state, state, sizeof(entry.state)-1);
+	strncpy    (entry.zip, zip, sizeof(entry.zip)-1);
+	strncpy    (entry.birth, birth, sizeof(entry.birth)-1);
+	strncpy    (entry.exp, expire, sizeof(entry.exp)-1);
+
+	/*
+	 * Club callsigns don't have first and last names, they have
+	 * entity names. Use the entity name as the first name in such
+	 * cases.
+	 */
+	if (op_class == 'C')
+		strncpy(entry.fname, entity_name, sizeof(entry.fname)-1);
+	else
+		strncpy(entry.fname, fname, sizeof(entry.fname)-1);
 
 	/*
 	 * Record the file position at which this record resides. We
@@ -641,21 +665,21 @@ add_call(struct callbook_out_context *cbf,
 	idx.suffix = entry.suffix[0];
 
 	/* The last name index */
-	strncpy(idx.key, entry.lname, sizeof(idx.key)-1);
+	strncpy_upr(idx.key, entry.lname, sizeof(idx.key)-1);
 	if (fwrite(&idx, sizeof(idx), 1, cbf->fp_last) != 1) {
 		fprintf(stderr, "Can't append to Last Name index.\n");
 		exit(2);
 	}
 
 	/* The first name index */
-	strncpy(idx.key, entry.fname, sizeof(idx.key)-1);
+	strncpy_upr(idx.key, entry.fname, sizeof(idx.key)-1);
 	if (fwrite(&idx, sizeof(idx), 1, cbf->fp_first) != 1) {
 		fprintf(stderr, "Can't append to First Name index.\n");
 		exit(2);
 	}
 
 	/* The city index */
-	strncpy(idx.key, entry.city, sizeof(idx.key)-1);
+	strncpy_upr(idx.key, entry.city, sizeof(idx.key)-1);
 	if (fwrite(&idx, sizeof(idx), 1, cbf->fp_city) != 1) {
 		fprintf(stderr, "Can't append to City index.\n");
 		exit(2);
@@ -670,15 +694,15 @@ add_call(struct callbook_out_context *cbf,
 }
 
 static void
-test(struct AMDatabase *AMDb)
+test_query(struct ULSDatabase *ULSDb)
 {
-	char line[128], *callsign;
-	struct ULS_AM_Record *AM;
-	int region;
+	char line[128], *uls_id_str;
+	u_int32_t uls_id;
+	struct ULS_Record *ULS;
 	size_t len;
 
 	do {
-		printf("Callsign: ");
+		printf("ULS ID: ");
 		if (fgets(line, sizeof(line)-1, stdin) == NULL)
 			break;
 
@@ -688,21 +712,16 @@ test(struct AMDatabase *AMDb)
 
 		line[len-1] = '\0';
 
-		switch (AMDatabase_lookup_by_callsign(AMDb, line, &AM)) {
+		uls_id = strtoul(uls_id_str, NULL, 10);
+
+		switch (ULSDatabase_lookup_by_uls_id(ULSDb, uls_id, &ULS)) {
 		case 0:
 			printf("--- FOUND\n");
-			callsign = id2call(AM->op_call_id, line);
-			region = id2region(AM->op_call_id);
-			printf("Callsign: %s\n", callsign);
-			printf("Region  : %d\n", region);
-			printf("Class   : %c\n", AM->op_class);
+			printf("Class   : %c\n", ULS->op_class);
 			printf("Expire  : %04d-%02d-%02d\n",
-				AM->op_expire_year,
-				AM->op_expire_month,
-				AM->op_expire_day);
-			break;
-		case -1:
-			printf("--- Bad callsign\n");
+				ULS->op_expire_year,
+				ULS->op_expire_month,
+				ULS->op_expire_day);
 			break;
 		case -2:
 			printf("--- NOT FOUND\n");
@@ -719,7 +738,7 @@ strncpy_upr(char *dst, const char *src, size_t max)
 {
 	size_t i;
 
-	for (i = 0; i < max-1; i++) {
+	for (i = 0; i < max; i++) {
 		dst[i] = toupper(src[i]);
 		if (dst[i] == 0)
 			goto Terminated;
@@ -732,55 +751,85 @@ Terminated:
 }
 
 /*
- * N0ARY's callbook format stores dates as year (without century) and day of
- * year.
+ * Process a retrieved record line using the given field parsing scheme
+ * and an opaque processing context (which each processing function will
+ * know how to handle).
  *
- * year - Canonical year, CE. (1990 CE = 1990)
- * month - Canonical month number (1 = January)
- * day - Canonical day number (1 = first day of the month)
+ * Returns 0 if the record has been parsed ok and should continue on
+ * for further processing.
  */
-static uint16_t
-get_doy(unsigned int year, uint8_t month, uint8_t day)
+static int
+process_record(const Record_Field_Process *fields, size_t num_fields,
+	void *ctx, const char *warn_prefix, size_t lineno, char *line)
 {
+	char *iter = line;
+
 	/*
-	 * Given a month in the year (0 = January), return the day
-	 * of the year in which the month's first day starts, under a non-
-	 * leap year.
+	 * Process fields until done.
 	 */
-	static const int days[12] = {
-		/* Jan */ 0,
-		/* Feb */ 31,
-		/* Mar */ 31+28,
-		/* Apr */ 31+28+31,
-		/* May */ 31+28+31+30,
-		/* Jun */ 31+28+31+30+31,
-		/* Jul */ 31+28+31+30+31+30,
-		/* Aug */ 31+28+31+30+31+30+31,
-		/* Sep */ 31+28+31+30+31+30+31+31,
-		/* Oct */ 31+28+31+30+31+30+31+31+30,
-		/* Nov */ 31+28+31+30+31+30+31+31+30+31,
-		/* Dec */ 31+28+31+30+31+30+31+31+30+31+30
-	};
-	int is_leap, doy;
+	size_t i;
 
-	if ((year % 400) == 0)
-		is_leap = 1;
-	else if ((year % 100) == 0)
-		is_leap = 0;
-	else if ((year % 4) == 0)
-		is_leap = 1;
-	else
-		is_leap = 0;
+	for (i = 0; i < num_fields; i++) {
+		/*
+		 * Fetch the next field from the line.
+		 */
+		const char *field_name = fields[i].field_name;
+		char *contents = strsep(&iter, "|");
 
-	doy = days[month-1] + day - 1;
+		/*
+		 * Make sure we at least found a field delimiter.
+		 */
+		if (contents == NULL) {
+			/* Stop processing this record */
+			warn_skip_missing(warn_prefix, lineno, field_name);
+			return -1;
+		}
 
-	if (is_leap && month >= 3)
-		/* Account for February having 29 days in a leap year */
-		/* instead of the encoded number, which is 28.        */
-		doy += 1;
+		/*
+		 * Process the field, if asked.
+		 */
+		if (fields[i].field_proc == NULL) {
+			/* Nothing needs to be done with this field */
+			continue;
+		}
 
-	return doy;
+		FPStatus status = fields[i].field_proc(ctx, contents);
+
+		/*
+		 * Stop processing if something went wrong with the
+		 * field or the record just isn't worth looking at.
+		 */
+		switch (status) {
+		case FP_OK:
+			/* Field is fine. Continue on. */
+			break;
+		case FP_Skip_Record:
+			/* Skip record, no warniing needed */
+			return -1;
+		case FP_Skip_Record_Warn:
+			/* Skip this record and complain */
+			warn_skip(warn_prefix, lineno, field_name);
+			return -1;
+		case FP_Skip_Record_Warn_Ex:
+			/* Skip this record and complain with contents */
+			warn_skip_ex(warn_prefix, lineno, field_name, contents);
+			return -1;
+		case FP_Record_Complete:
+			/*
+			 * The record is ok to process, no more fields
+			 * need to be inspected.
+			 */
+			return 0;
+		default:
+			fprintf(stderr, "Unhandled FPStatus.\n");
+			exit(3);
+		}
+	}
+
+	/* Processing complete */
+	return 0;
 }
+
 
 static void
 usage(const char *prog)
