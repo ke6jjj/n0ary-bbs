@@ -31,7 +31,7 @@ main(int argc, char *argv[])
 	int c, nel;
 	FILE *fp, *tfp;
 
-	if(argc < 1) {
+	if(argc < 2) {
 		printf("Enter callbook index file to sort: ");
 		safegets(callbook, sizeof(callbook));
 	} else

@@ -103,7 +103,7 @@ main(int argc, char *argv[])
 	char fn[80];
 	FILE *fp, *tfp;
 
-	if(argc < 2) {
+	if(argc < 3) {
 		printf("Enter location of hamcall.129: ");
 		safegets(callbook, sizeof(callbook));
 		printf("Enter directory for output: ");

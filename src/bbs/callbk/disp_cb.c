@@ -16,7 +16,7 @@ main(int argc, char *argv[])
 	char *p;
 	FILE *fp, *tfp;
 
-	if(argc == 0) {
+	if(argc < 2) {
 		printf("Enter callbook file to display: ");
 		safegets(callbook, sizeof(callbook));
 	} else
