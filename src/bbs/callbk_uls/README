@@ -1,0 +1,5 @@
+The age of HAM callbooks on CD-ROM has long passed (as of 2017) so the
+usefulness of the callbook import utility (make_cb) provided with the
+N0ARY 4.1.1 source code is low. Yet the FCC now freely gives away the entire
+amateur radio database on-line, which makes it cheap and fast to obtain. This
+utility parses the FCC ULS data and replace the make_cb utility.

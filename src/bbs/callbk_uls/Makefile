@@ -1,0 +1,10 @@
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+
+all: CALLBK_ULS_APPS
+
+include $(THIS_SRCDIR)/../../top.mk
+
+CALLBK_ULS_APPS: $(CALLBK_MAKECB_ULS_APP)
+
+clean: CALLBK_MAKECB_ULS_APP_CLEAN
+install: CALLBK_MAKECB_ULS_APP_INSTALL
