@@ -246,6 +246,7 @@ initmbox(struct mboxsess *mbp)
 	mbp->al_fd_handle = NULL;
 	mbp->socket = ERROR;
 	mbp->al_socket_handle = NULL;
+	mbp->networkfull = 0;
 }
 
 static void
@@ -409,24 +410,12 @@ mbx_handle_network(void *obj, void *arg0, int arg1)
 	struct mboxsess * mbp = obj;
 	char buf[1025];
 	int cnt;
-	
-#if 0
-	/* FUTURE: Awaiting alEvent ability to temporarily disable read cbs */
-	if (available == 0)
-		/*
-	 	* Oh oh. We're probably in a busy loop waiting for the
-	 	* send buffer to open up. In the future we should probably
-	 	* disable read callbacks on this mailbox until the queue
-	 	* clears.
-	 	*/
-	}
-#endif
 
 	/* we do have an active bbs or outgoing process. If we don't
 	 * have any data pending on this process then check to see
 	 * if the process has sent us something new.
 	 */
-	size_t available = sizeof(mbp->buf) - mbp->byte_cnt - 1;
+	size_t available = sizeof(mbp->buf) - mbp->byte_cnt;
 
 	if(available > 0) {
 		size_t readamt = min(available, (sizeof(buf)-1));
@@ -488,6 +477,16 @@ mbx_handle_network(void *obj, void *arg0, int arg1)
 			} else
 				p++;
 		}
+	}
+
+	if (mbp->networkfull == 0 && mbp->byte_cnt == sizeof(mbp->buf)) {
+		/*
+		 * The packetization buffer is full. We need to disable
+		 * read events from the network socket until room comes
+		 * available.
+		 */
+		alEvent_setFdEvents(mbp->al_fd_handle, 0);
+		mbp->networkfull = 1;
 	}
 
 	if(mbp->cmd_cnt) {
@@ -585,6 +584,16 @@ mbx_process_tx_queue(struct mboxsess *mbp)
 			printf("axsend: %s re-enabling Nagle gate\n",
 				mbp->call);
 		mbp->nagle_gate_down = 1;
+	}
+
+	if (mbp->networkfull && mbp->byte_cnt < sizeof(mbp->buf)) {
+		/*
+		 * We have read notifications shut off from the network
+		 * because the read buffer was full. The buffer is no longer
+		 * full, so it's ok to re-enable read events.
+		 */
+		alEvent_setFdEvents(mbp->al_fd_handle, ALFD_READ);
+		mbp->networkfull = 0;
 	}
 }
 

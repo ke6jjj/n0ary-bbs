@@ -18,7 +18,6 @@ struct mboxsess{			/*mailbox session structure*/
 
 	int port;
 
-	int nagle_gate_down; /* whether to wait before sending small packet */
 	int nagle_timer_id; /* id of current small packet timer */
 	int sendable_count; /* number of bytes that can be enqueued now */
 	int byte_cnt; /* number of bytes in buf, waiting to be enqueued */
@@ -29,6 +28,8 @@ struct mboxsess{			/*mailbox session structure*/
 	char command[10][80];
 	char cmd_cnt;
 	char cmd_state;
+	char networkfull;
+	char nagle_gate_down; /* whether to wait before sending small packet */
 	struct mboxsess *next;	/*pointer to next session*/
 };
 
