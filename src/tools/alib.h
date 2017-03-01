@@ -19,16 +19,23 @@ typedef struct {
 } alCallback;
 
 /*
- * File descriptor notification handle.
+ * Event notification handle.
  */
-typedef void *alFileHandle;
+typedef void *alEventHandle;
    
 /*
  * File descriptor notification flags.
  */
-enum alEvent_flags {
-  ALEVENT_READ = 1,
-  ALEVENT_WRITE = (1 << 1)
+enum alFdEvent_flags {
+  ALFD_READ = 1,
+  ALFD_WRITE = (1 << 1)
+};
+
+/*
+ * Process notification flags.
+ */
+enum alProcEvent_flags {
+  ALPROC_EXIT = 1,
 };
   
 /*
@@ -51,15 +58,25 @@ int alEvent_shutdown(void);
  * Registers a file descriptor with the event system and a callback to call
  * when events occur on that descriptor.
  */
-alFileHandle alEvent_addFdCallback(int fd, int flags, alCallback cb);
+int alEvent_addFdCallback(int fd, int flags, alCallback cb,
+	alEventHandle *rhandle);
 
 /*
- * alEvent_removeFdCallback
+ * alEvent_addProcCallback
  *
- * Unregisters the previously registered file descriptor described by
+ * Registers a process identifier with the event system and a callback to
+ * call when events occur with that process.
+ */
+int alEvent_addProcCallback(pid_t pid, int flags, alCallback cb,
+	alEventHandle *rhandle);
+
+/*
+ * alEvent_removeEventCallback
+ *
+ * Unregisters the previously registered event descriptor described by
  * 'handle' from the notification system.
  */
-int alEvent_removeFdCallback(alFileHandle handle);
+int alEvent_removeEventCallback(alEventHandle handle);
 
 /*
  * alEvent_pending
