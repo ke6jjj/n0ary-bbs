@@ -608,7 +608,7 @@ check_homebbs(void)
 	strcpy(str, wp_get_field(usercall, wHOME));
 
 	if(str[0] != '?') {
-		if(wp_test_field(usercall, wHLOC) == ERROR) {
+		if(wp_test_field(str, wHLOC) == ERROR) {
 PRINTF("Your choice for a homebbs [%s] is not in my local white pages\n", str);
 PRINT("as being a valid BBS. Please type INFO HOMEBBS and verify that\n");
 PRINT("have indeed made a proper choice.\n");
@@ -618,7 +618,7 @@ PRINT("have indeed made a proper choice.\n");
 
 PRINT("All bbs users have to claim a home bbs. This is necessary for you\n");
 PRINT("to reliably receive mail. You have to choose a full service bbs not\n");
-PRINT("your personal tnc. If you are located in the south bay you are\n");
+PRINT("your personal tnc. If you are located in the San Francisco area you are\n");
 PRINTF("welcome to take %s as your home. If you are confused go ahead\n", Bbs_Call);
 PRINTF("and accept %s for now and do the following at the prompt:\n", Bbs_Call);
 PRINT("  INFO HOMEBBS\n\n");
