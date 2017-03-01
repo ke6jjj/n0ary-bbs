@@ -70,12 +70,14 @@ parse_status(struct active_processes *me, char *s)
 			if(ap->verbose == TRUE) {
 				long t = time(NULL);
 				sprintf(buf, "%d %s %s %d %d %ld %ld %s %s\n",
-					ap->proc_num, ap->call, ap->via->name,
+					ap->proc_num, ap->call, ap->via ?
+					ap->via->name : "(none)",
 					ap->chat_port, ap->pid, t - ap->t0, t - ap->idle,
 					ap->chat?"YES":"NO", ap->text ? ap->text:".");
 			} else {
 				sprintf(buf, "%d %s %s %d %d %ld %ld %s %s\n",
-					ap->proc_num, ap->call, ap->via->name,
+					ap->proc_num, ap->call, ap->via ?
+					ap->via->name : "(none)",
 					ap->chat_port, ap->pid, ap->t0, ap->idle,
 					ap->chat?"YES":"NO", ap->text ? ap->text:".");
 			}
