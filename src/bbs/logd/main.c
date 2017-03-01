@@ -23,6 +23,7 @@ int
 
 char
     *Bbs_Call,
+	*Logd_Bind_Addr = NULL,
 	*Logd_Dir,
 	*Logd_File;
 
@@ -35,6 +36,7 @@ struct ConfigurationList ConfigList[] = {
 	{ "BBS_CALL",			tSTRING,	(int*)&Bbs_Call },
 	{ "",					tCOMMENT,	NULL },
 	{ "LOGD_PORT",			tINT,		(int*)&Logd_Port },
+	{ "LOGD_BIND_ADDR",		tSTRING,	(int*)&Logd_Bind_Addr },
 	{ "LOGD_FILE",			tFILE,		(int*)&Logd_File },
 	{ "LOGD_DIR",			tDIRECTORY,	(int*)&Logd_Dir },
 	{ NULL, 0, NULL}};
@@ -130,58 +132,12 @@ remove_proc(struct processes *ap)
     return tap;
 }
 
-
-void
-write_config_file(void)
-{
-	printf("HOST %s\n", Bbs_Host);
-	printf("PORT %d\n", Logd_Port);
-	printf("LOGFILE %s\n", Logd_File);
-}
-
-void
-read_config_file(char *fn)
-{
-	FILE *fp = fopen(fn, "r");
-	char buf[80];
-
-	if(fp == NULL) {
-		printf("Could not open configuration file %s\n", fn);
-		return;
-	}
-
-	while(fgets(buf, 80, fp)) {
-		char *s = buf;
-		char *field = get_string(&s);
-
-		if(!strcmp(field, "LOGFILE")) {
-			char *val = get_string(&s);
-			Logd_File = (char *)malloc(strlen(val)+1);
-			strcpy(Logd_File, val);
-			printf("LOGFILE = %s\n", Logd_File);
-			continue;
-		}
-		if(!strcmp(field, "HOST")) {
-			char *val = get_string(&s);
-			Bbs_Host = (char *)malloc(strlen(val)+1);
-			strcpy(Bbs_Host, val);
-			printf("HOST = %s\n", Bbs_Host);
-			continue;
-		}
-		if(!strcmp(field, "PORT")) {
-			Logd_Port = get_number(&s);
-			printf("PORT = %d\n", Logd_Port);
-			continue;
-		}
-	}
-	fclose(fp);
-}
-
 int
 main(int argc, char *argv[])
 {
 	int listen_port;
 	int listen_sock;
+	char *listen_addr;
 	int bbsd_sock;
 	struct processes *ap;
 
@@ -200,7 +156,8 @@ main(int argc, char *argv[])
 	bbsd_sock = bbsd_socket();
 
 	listen_port = Logd_Port;
-	if((listen_sock = socket_listen(&listen_port)) == ERROR)
+	listen_addr = Logd_Bind_Addr;
+	if((listen_sock = socket_listen(listen_addr, &listen_port)) == ERROR)
 		exit(1);
 
 	bbsd_port(Logd_Port);

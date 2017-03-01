@@ -293,10 +293,41 @@ SMTP_PORT	25
 BIN_DIR			bin
 BBS_SID			[ARY-4.1-H$]
 
+; DAEMONS AND NETWORK PORTS
+;
+; The BBS is split into several components, each of which is serviced by
+; a different daemon. The BBS and these daemons communicate with each other
+; through network connections. Each daemon establishes itself on a well-known
+; port number, configured here, by which it can be contacted.
+;
 ; This is the port number that bbsd listens on. You are free to change
 ; all the port numbers but it would be nice if we all used the same
 ; ports. It would allow us to maintain each others code easier when
 ; someone goes on vacation.
+;
+; A WORD ON NETWORK INTERFACES
+;
+; In general, since each daemon implcitly trusts the commands from any
+; network connection it receives, it can be quite a security threat to the BBS
+; if a connection is allowed to a daemon from a non-BBS process. To alieviate
+; these problems each daemon only listens for connections on the local
+; loopback interface (127.0.0.1). If this is not what you, as an administrator,
+; would like, you can force a daemon to listen on a different specific
+; interface or on all interfaces by specifying a "BIND_ADDR" for that daemon.
+;
+; For example, if you wish the LOGD daemon to be reachable from outside
+; the BBS host on any of the host's available interfaces, you can specify
+;
+;  LOGD_BIND_ADDR *
+;
+; If you wish LOGD to be reachable only on the interface with the address
+; 192.168.1.1 you can specify
+;
+;  LOGD_BIND_ADDR 192.168.1.1
+;
+; If you do not specify a bind address for a daemon, it will use the default
+; address, 127.0.0.1.
+;
 
 BBSD_PORT	44510
 LOGD_PORT	44511

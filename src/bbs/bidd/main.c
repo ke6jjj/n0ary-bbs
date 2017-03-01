@@ -27,6 +27,7 @@ int
 
 char
     *Bbs_Call,
+	*Bidd_Bind_Addr = NULL,
 	*Bidd_File;
 
 char output[4096];
@@ -44,6 +45,7 @@ struct ConfigurationList ConfigList[] = {
 	{ "BBS_CALL",           tSTRING,    (int*)&Bbs_Call },
 	{ "", 					tCOMMENT,	NULL},
 	{ "BIDD_PORT",			tINT,		(int*)&Bidd_Port },
+	{ "BIDD_BIND_ADDR",		tSTRING,	(int*)&Bidd_Bind_Addr },
 	{ "", 					tCOMMENT,	NULL},
 	{ "BIDD_FILE",			tFILE,		(int*)&Bidd_File },
 	{ "BIDD_FLUSH",			tTIME,		(int*)&Bidd_Flush},
@@ -53,12 +55,15 @@ struct ConfigurationList ConfigList[] = {
 static void
 display_config(void)
 {
-	printf("  Bbs_Host = %s\n", Bbs_Host);
-	printf(" Bbsd_Port = %d\n", Bbsd_Port);
-	printf(" Bidd_Port = %d\n", Bidd_Port);
-	printf(" Bidd_File = %s\n", Bidd_File);
-	printf("Bidd_Flush = %"PRTMd"\n", Bidd_Flush);
-	printf("  Bidd_Age = %"PRTMd"\n", Bidd_Age);
+	printf("      Bbs_Host = %s\n", Bbs_Host);
+	printf("     Bbsd_Port = %d\n", Bbsd_Port);
+	printf("     Bidd_Port = %d\n", Bidd_Port);
+	printf("Bidd_Bind_Addr = %s\n", Bidd_Bind_Addr != NULL
+		? Bidd_Bind_Addr
+		: "(none)");
+	printf("     Bidd_File = %s\n", Bidd_File);
+	printf("    Bidd_Flush = %"PRTMd"\n", Bidd_Flush);
+	printf("      Bidd_Age = %"PRTMd"\n", Bidd_Age);
 	fflush(stdout);
 	exit(0);
 }
@@ -158,7 +163,7 @@ main(int argc, char *argv[])
 		return 1;
 	}
 
-	if((listen_sock = socket_listen(&Bidd_Port)) == ERROR)
+	if((listen_sock = socket_listen(Bidd_Bind_Addr, &Bidd_Port)) == ERROR)
 		return 1;
 
     bbsd_port(Bidd_Port);

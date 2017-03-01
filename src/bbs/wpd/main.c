@@ -39,6 +39,7 @@ int
 char
 	*Bbs_Call,
 	*Bin_Dir,
+	*Wpd_Bind_Addr = NULL,
 	*Wpd_Update_Subject,
 	*Wpd_Global_Server,
 	*Wpd_Local_Distrib,
@@ -55,6 +56,7 @@ struct ConfigurationList ConfigList[] = {
 	{ "",					tCOMMENT,	NULL },
 	{ "WPD_PORT",			tINT,		(int*)&Wpd_Port },
 	{ "WPD_GLOBAL_SERVER",	tSTRING,	(int*)&Wpd_Global_Server },
+	{ "WPD_BIND_ADDR",	tSTRING,	(int*)&Wpd_Bind_Addr },
 	{ "WPD_LOCAL_DISTRIB",	tSTRING,	(int*)&Wpd_Local_Distrib },
 	{ "WPD_UPDATE_SUBJECT",	tSTRING,	(int*)&Wpd_Update_Subject },
 	{ "WPD_USER_FILE",		tFILE,		(int*)&Wpd_User_File },
@@ -166,86 +168,6 @@ calc_wp_time(time_t current)
 }
 
 void
-write_config_file(void)
-{
-	printf("HOST %s\n", Bbs_Host);
-	printf("PORT %d\n", Wpd_Port);
-	printf("USERFILE %s\n", Wpd_User_File);
-	printf("BBSFILE %s\n", Wpd_Bbs_File);
-	printf("WPFILE %s\n", Wpd_Dump_File);
-	printf("REFRESH %"PRTMd" (days)\n", Wpd_Refresh / tDay);
-	printf("AGE %"PRTMd" (months)\n", Wpd_Age / tMonth);
-	printf("FLUSH %"PRTMd" (minutes)\n", Wpd_Flush / tMin);
-}
-
-void
-read_config_file(char *fn)
-{
-	FILE *fp = fopen(fn, "r");
-	char buf[80];
-
-	if(fp == NULL) {
-		printf("Could not open configuration file %s\n", fn);
-		return;
-	}
-
-	while(fgets(buf, 80, fp)) {
-		char *s = buf;
-		char *field = get_string(&s);
-
-		if(!strcmp(field, "WPFILE")) {
-			char *val = get_string(&s);
-			Wpd_Dump_File = (char *)malloc(strlen(val)+1);
-			strcpy(Wpd_Dump_File, val);
-			printf("WPFILE = %s\n", Wpd_Dump_File);
-			continue;
-		}
-		if(!strcmp(field, "USERFILE")) {
-			char *val = get_string(&s);
-			Wpd_User_File = (char *)malloc(strlen(val)+1);
-			strcpy(Wpd_User_File, val);
-			printf("USERFILE = %s\n", Wpd_User_File);
-			continue;
-		}
-		if(!strcmp(field, "BBSFILE")) {
-			char *val = get_string(&s);
-			Wpd_Bbs_File = (char *)malloc(strlen(val)+1);
-			strcpy(Wpd_Bbs_File, val);
-			printf("BBSFILE = %s\n", Wpd_Bbs_File);
-			continue;
-		}
-		if(!strcmp(field, "HOST")) {
-			char *val = get_string(&s);
-			Bbs_Host = (char *)malloc(strlen(val)+1);
-			strcpy(Bbs_Host, val);
-			printf("HOST = %s\n", Bbs_Host);
-			continue;
-		}
-		if(!strcmp(field, "PORT")) {
-			Wpd_Port = get_number(&s);
-			printf("PORT = %d\n", Wpd_Port);
-			continue;
-		}
-		if(!strcmp(field, "FLUSH")) {
-			Wpd_Flush = (time_t)get_number(&s) * tMin;
-			printf("FLUSH = %"PRTMd"\n", Wpd_Flush/tMin);
-			continue;
-		}
-		if(!strcmp(field, "AGE")) {
-			Wpd_Age = (time_t)get_number(&s) * tMonth;
-			printf("AGE = %"PRTMd"\n", Wpd_Age/tMonth);
-			continue;
-		}
-		if(!strcmp(field, "REFRESH")) {
-			Wpd_Refresh = (time_t)get_number(&s) * tDay;
-			printf("REFRESH = %"PRTMd"\n", Wpd_Refresh/tDay);
-			continue;
-		}
-	}
-	fclose(fp);
-}
-
-void
 usage(char *pgm)
 {
 	printf("usage: %s [-a] [-l] [-d#] [-?|h] [-w] [-f config.file]\n", pgm);
@@ -258,9 +180,10 @@ usage(char *pgm)
 	printf("          -d#\tdebugging options (hex)\n");
 	printf("              1     verbose\n");
 	printf("              100   leave daemon in foreground\n");
-	printf("              200   ignore host\n");
+	printf("              200   ignore host (now default)\n");
 	printf("              400   don't connect to other daemons\n");
 	printf("              800   inhibit mail\n");
+	printf("	     1000   test host (check hostname)\n");
 	printf("\n");
 }
 
@@ -269,6 +192,7 @@ main(int argc, char *argv[])
 {
 	int listen_port;
 	int listen_sock;
+	char *listen_addr;
 	int bbsd_sock;
 	struct timeval t;
 	struct active_processes *ap;
@@ -290,7 +214,8 @@ main(int argc, char *argv[])
 	startup();
 
 	listen_port = Wpd_Port;
-	if((listen_sock = socket_listen(&listen_port)) == ERROR)
+	listen_addr = Wpd_Bind_Addr;
+	if((listen_sock = socket_listen(listen_addr, &listen_port)) == ERROR)
 		error_print_exit(1);
 
 	bbsd_port(Wpd_Port);

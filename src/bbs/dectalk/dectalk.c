@@ -32,13 +32,12 @@ main(int argc, char *argv[])
 {
 	int fdlimit = getdtablesize();
 	int port = DECTALK_PORT;
-	int sock = socket_listen(&port);
+	char *host = DECTALK_BIND_ADDR;
+	int sock = socket_listen(host, &port);
 	int cnt;
 	int state = IDLE;
 	struct timeval t;
 	char out[256];
-
-	test_host(DECTALK_HOST);
 
 #ifndef DEBUG
 	daemon(1, 1);

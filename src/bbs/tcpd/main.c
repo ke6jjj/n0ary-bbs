@@ -27,6 +27,7 @@ int
 char
     *version,
     *Bbs_Call,
+	*Tcpd_Bind_Addr = NULL,
 	*Bin_Dir,
 	output[4096];
 
@@ -45,15 +46,19 @@ struct ConfigurationList ConfigList[] = {
 	{ "GATED_PORT",			tINT,		(int*)&Gated_Port },
 	{ "", 					tCOMMENT,	NULL},
 	{ "TCPD_PORT",			tINT,		(int*)&Tcpd_Port },
+	{ "TCPD_BIND_ADDR",		tSTRING,	(int*)&Tcpd_Bind_Addr },
 	{ "BIN_DIR",			tDIRECTORY,	(int*)&Bin_Dir},
 	{ NULL, 				tEND,		NULL}};
 
 static void
 display_config(void)
 {
-	printf("  Bbs_Host = %s\n", Bbs_Host);
-	printf(" Bbsd_Port = %d\n", Bbsd_Port);
-	printf(" Tcpd_Port = %d\n", Tcpd_Port);
+	printf("       Bbs_Host = %s\n", Bbs_Host);
+	printf("      Bbsd_Port = %d\n", Bbsd_Port);
+	printf("      Tcpd_Port = %d\n", Tcpd_Port);
+	printf(" Tcpd_Bind_Addr = %s\n", Tcpd_Bind_Addr == NULL
+		? "(none)"
+		: Tcpd_Bind_Addr);
 	fflush(stdout);
 	exit(0);
 }
@@ -232,7 +237,7 @@ main(int argc, char *argv[])
 	if(VERBOSE)
 		display_config();
 
-	if((listen_sock = socket_listen(&Tcpd_Port)) == ERROR)
+	if((listen_sock = socket_listen(Tcpd_Bind_Addr, &Tcpd_Port)) == ERROR)
 		exit(1);
 
     bbsd_port(Tcpd_Port);

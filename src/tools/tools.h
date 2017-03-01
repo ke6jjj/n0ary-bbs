@@ -112,9 +112,11 @@ int
 	socket_read_line(int fd, char *line, int len, int timeout),
 	socket_accept(int sock),
 	socket_open(char *host, int port),
-	socket_listen(int *port),
+	socket_listen(const char *bind_addr, int *port),
 	socket_read_pending(int fd),
 	socket_close(int fd),
+	socket_parse_bindspec(const char *spec, char *buf, size_t bfsz,
+		int *port, char **host),
 	IsPrintable(char *s);
 
 extern short

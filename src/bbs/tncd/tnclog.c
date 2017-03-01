@@ -35,7 +35,7 @@ parse_tnclog_options(int argc, char *argv[])
 	if(argc == 2)
 		while(pd != NULL) {
 			if(!strcmp(argv[1], pd->name)) {
-				monitor = tnc_monitor(pd->name);
+				monitor = tnc_monitor_port(pd->name);
 				Tncd_Name = pd->name;
 				Tncd_Host = tnc_host(pd->name);
 				return;

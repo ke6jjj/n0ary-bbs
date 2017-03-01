@@ -67,16 +67,16 @@ static int cntrl_socket;
  */
 
 int
-init_ax_control(int c_port, int m_port)
+init_ax_control(char *c_bindaddr, int c_port, char *m_bindaddr, int m_port)
 {
 	int port = c_port;
-	if((cntrl_socket = socket_listen(&port)) < 0) {
+	if((cntrl_socket = socket_listen(c_bindaddr, &port)) < 0) {
 		fprintf(stderr,
 		"init_ax_control: Problem opening control socket ... aborting\n");
 		return ERROR;
 	}
 	port = m_port;
-	if((monitor_socket = socket_listen(&port)) < 0) {
+	if((monitor_socket = socket_listen(m_bindaddr, &port)) < 0) {
 		fprintf(stderr,
 		"init_ax_control: Problem opening monitor socket ... aborting\n");
 		return ERROR;
@@ -561,8 +561,8 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 			while(mbp != NULLMBS && axp != mbp->axbbscb)
 				mbp = mbp->next;
 			if(mbp == NULLMBS) {
-			if(dbug_level & dbgVERBOSE)
-				printf("couldn't find the process\n");
+				if(dbug_level & dbgVERBOSE)
+					printf("couldn't find the process\n");
 				exit(1);
 			}
 			write(mbp->fd, "~C\n", 3);
@@ -572,11 +572,11 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 			return;
 
 		case CONNECTED:
-				/* we are already CONNECTED but received another SABM
-				 * this means they probably didn't get our UA
-				 */
-		if(dbug_level & dbgVERBOSE)
-			printf("Another SABM received, they must be deaf.\n");
+			/* we are already CONNECTED but received another SABM
+			 * this means they probably didn't get our UA
+			 */
+			if(dbug_level & dbgVERBOSE)
+				printf("Another SABM received, they must be deaf.\n");
 			if(base == NULLMBS)
 				break;
 
@@ -599,10 +599,10 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 			break;
 		}
 
-			if(!calleq(axp,&bbscall)) { /*not for the mailbox*/
-				axp->s_upcall = NULL;
-				return;
-			}
+		if(!calleq(axp,&bbscall)) { /*not for the mailbox*/
+			axp->s_upcall = NULL;
+			return;
+		}
 	
 		if(dbug_level & dbgVERBOSE)
 			printf("mbx_state(isCONNECTED)\n");
@@ -626,15 +626,15 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 		if(mbp->pid == 0) {
 			mbp->fd = ERROR;
 			mbp->port = 0;
-			mbp->socket = socket_listen(&(mbp->port));
+			mbp->socket = socket_listen(NULL, &(mbp->port));
 			sprintf(port, "%d", mbp->port);
 
-		if(dbug_level & dbgVERBOSE) {
-			printf("Starting bbs process [1]:\n");
-			printf("\t%s/b_bbs -v %s -s %s %s\n",
-				Bin_Dir, Tncd_Name, port, call);
-		}
-										/*now, fork and exec the bbs*/
+			if(dbug_level & dbgVERBOSE) {
+				printf("Starting bbs process [1]:\n");
+				printf("\t%s/b_bbs -v %s -s %s %s\n",
+					Bin_Dir, Tncd_Name, port, call);
+			}
+			/*now, fork and exec the bbs*/
 			if((pid=fork()) == 0){			/*if we are the child*/
 				char cmd[256];
 
@@ -696,7 +696,7 @@ mbx_incom(struct ax25_cb *axp, int cnt)
 
 	mbp->fd = ERROR;
 	mbp->port = 0;
-	mbp->socket = socket_listen(&(mbp->port));
+	mbp->socket = socket_listen(NULL, &(mbp->port));
 	sprintf(port, "%d", mbp->port);
  
 	if(dbug_level & dbgVERBOSE) {

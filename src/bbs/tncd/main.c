@@ -27,6 +27,8 @@ char
 	*Bbs_Fwd_Call,
 	*Bbs_Dir,
 	*Bin_Dir,
+	*Tncd_Control_Bind_Addr = NULL,
+	*Tncd_Monitor_Bind_Addr = NULL,
 	*Tncd_Device;
 
 int
@@ -60,7 +62,9 @@ struct ConfigurationList ConfigList[] = {
 	{ " Replace the TNCxD below with a entry for each of the",tCOMMENT,NULL },
 	{ " valid TNC ports, ie. TNC2D_DEVICE.",	tCOMMENT,	NULL },
 	{ "",						tCOMMENT,	NULL },
+	{ "TNCxD_CONTROL_BIND_ADDR",	tSTRING,	(int*)&Tncd_Control_Bind_Addr },
 	{ "TNCxD_CONTROL_PORT",		tINT,		(int*)&Tncd_Control_Port },
+	{ "TNCxD_MONITOR_BIND_ADDR",	tSTRING,	(int*)&Tncd_Monitor_Bind_Addr },
 	{ "TNCxD_MONITOR_PORT",		tINT,		(int*)&Tncd_Monitor_Port },
 	{ "TNCxD_DEVICE",			tSTRING,	(int*)&Tncd_Device },
 	{ "",						tCOMMENT,	NULL },
@@ -83,8 +87,10 @@ preload(char *name)
 	int i = 0;
 	struct Tnc_ax25 *tax = tnc_ax25(name);
 
+	Tncd_Control_Bind_Addr = tnc_control_bind_addr(name);
 	Tncd_Control_Port = tnc_port(name);
-	Tncd_Monitor_Port = tnc_monitor(name);
+	Tncd_Monitor_Bind_Addr = tnc_monitor_bind_addr(name);
+	Tncd_Monitor_Port = tnc_monitor_port(name);
 	Tncd_Device = tnc_device(name);
 	Tncd_Name = name;
 	Tncd_Host = tnc_host(name);
@@ -165,7 +171,8 @@ main(int argc, char *argv[])
 
 	build_bbscall();
 
-	if(init_ax_control(Tncd_Control_Port, Tncd_Monitor_Port) == ERROR)
+	if(init_ax_control(Tncd_Control_Bind_Addr, Tncd_Control_Port,
+		Tncd_Monitor_Bind_Addr, Tncd_Monitor_Port) == ERROR)
 		return 1;
 
 	tnc[0].inuse = FALSE;

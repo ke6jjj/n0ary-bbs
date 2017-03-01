@@ -82,7 +82,7 @@ chain_bbs(struct active_processes *ap, char *call)
 {
 	int port = 0;
 
-	if((ap->listen = socket_listen(&port)) == ERROR)
+	if((ap->listen = socket_listen(NULL, &port)) == ERROR)
 		return Error("Couldn't open listen socket for bbs");
 
 	uppercase(call);
@@ -103,7 +103,7 @@ spawn_program(struct active_processes *ap, char *prog)
 {
 	int port = 0;
 
-	if((ap->listen = socket_listen(&port)) == ERROR)
+	if((ap->listen = socket_listen(NULL, &port)) == ERROR)
 		return Error("Couldn't open listen socket for program");
 
 	if(fork() == 0) {

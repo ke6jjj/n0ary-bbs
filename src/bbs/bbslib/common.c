@@ -128,12 +128,41 @@ build_tncs(char *s)
 	struct TncDefinition
 		**tmp = &TD,
 		*td = malloc_struct(TncDefinition);
+	char *port_spec, *monitor_spec;
+	char *control_bind_addr, *monitor_bind_addr;
+	char addr_buf[128];
 
 	td->name = copy_string(get_string(&s));
-	td->port = get_number(&s);
-	td->monitor = get_number(&s);
+	port_spec = get_string(&s);
+	monitor_spec = get_string(&s);
 	td->device = copy_string(get_string(&s));
 	td->host = copy_string(get_string(&s));
+
+	/*
+	 * Parse the data port string to see if it asks for a
+	 * specific binding interface address.
+	 */
+	if (socket_parse_bindspec(port_spec, addr_buf, sizeof(addr_buf),
+		&td->control_port, &control_bind_addr) != 0)
+		goto BuildParseError;
+
+	if (control_bind_addr != NULL)
+		td->control_bind_addr = copy_string(control_bind_addr);
+	else
+		td->control_bind_addr = NULL;
+
+	/*
+	 * Parse the monitor port string to see if it asks for a
+	 * specific binding interface address.
+	 */
+	if (socket_parse_bindspec(monitor_spec, addr_buf, sizeof(addr_buf),
+		&td->monitor_port, &monitor_bind_addr) != 0)
+		goto BuildParseError;
+
+	if (monitor_bind_addr != NULL)
+		td->monitor_bind_addr = copy_string(monitor_bind_addr);
+	else
+		td->monitor_bind_addr = NULL;
 
 	td->ax25.t1 = get_number(&s);
 	td->ax25.t2 = get_number(&s);
@@ -151,6 +180,12 @@ build_tncs(char *s)
 	while(*tmp != NULL)
 		tmp = &((*tmp)->next);
 	*tmp = td;
+
+	return;
+
+BuildParseError:
+	free(td);
+	return;
 }
 
 static void
@@ -308,18 +343,32 @@ port_show(char *name)
 	return t->show;
 }
 
+char *
+tnc_control_bind_addr(char *name)
+{
+	struct TncDefinition *t = tnc_find(name);
+	return t->control_bind_addr;
+}
+
 int
 tnc_port(char *name)
 {
 	struct TncDefinition *t = tnc_find(name);
-	return t->port;
+	return t->control_port;
+}
+
+char *
+tnc_monitor_bind_addr(char *name)
+{
+	struct TncDefinition *t = tnc_find(name);
+	return t->monitor_bind_addr;
 }
 
 int
-tnc_monitor(char *name)
+tnc_monitor_port(char *name)
 {
 	struct TncDefinition *t = tnc_find(name);
-	return t->monitor;
+	return t->monitor_port;
 }
 
 char *

@@ -73,7 +73,7 @@ main(int argc, char *argv[])
 {
 	char c;
 	int port_number = 40001;
-	char *str, *host = NULL;
+	char *str, *host = NULL, *bind_addr = NULL;
 	char buf[1024];
 	int len;
 	fd_set ready;
@@ -83,8 +83,11 @@ main(int argc, char *argv[])
 	int listen_fd = ERROR;
 
 	extern char *optarg;
-	while((c = getopt(argc, argv, "p:s:h:")) != -1) {
+	while((c = getopt(argc, argv, "b:p:s:h:")) != -1) {
 		switch(c) {
+		case 'b':
+			bind_addr = optarg;
+			break;
 		case 'p':
 			port_number = atoi(optarg);
 			break;
@@ -97,7 +100,7 @@ main(int argc, char *argv[])
 		}
 	}
 
-	if((listen_sock = socket_listen(&port_number)) == ERROR)
+	if((listen_sock = socket_listen(bind_addr, &port_number)) == ERROR)
 		error_print_exit(1);
 
 	if(socket_number) {

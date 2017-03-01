@@ -32,7 +32,8 @@ int
 
 char
 	*Bbs_Call,
-	*Userd_Acc_Path;
+	*Userd_Acc_Path,
+	*Userd_Bind_Addr = NULL;
 
 struct active_processes *procs = NULL;
 int shutdown_daemon = FALSE;
@@ -45,6 +46,7 @@ struct ConfigurationList ConfigList[] = {
 	{ "BBSD_PORT",			tINT,		(int*)&Bbsd_Port },
 	{ "",					tCOMMENT,	NULL },
 	{ "USERD_PORT",			tINT,		(int*)&Userd_Port },
+	{ "USERD_BIND",			tSTRING,	(int*)&Userd_Bind_Addr },
 	{ "USERD_ACC_PATH",		tDIRECTORY,	(int*)&Userd_Acc_Path },
 	{ "USERD_AGE_INTERVAL",	tTIME,		(int*)&Userd_Age_Interval },
 	{ "USERD_AGE_SUSPECT",	tTIME,		(int*)&Userd_Age_Suspect },
@@ -123,58 +125,6 @@ remove_proc(struct active_processes *ap)
     return tap;
 }
 
-void
-write_config_file(void)
-{
-	printf("HOST %s\n", Bbs_Host);
-	printf("PORT %d\n", Userd_Port);
-	printf("USERFILEPATH %s\n", Userd_Acc_Path);
-	printf("AGE %"PRTMd" (minutes)\n", Userd_Age_Interval / tMin);
-}
-
-void
-read_config_file(char *fn)
-{
-	FILE *fp = fopen(fn, "r");
-	char buf[80];
-
-	if(fp == NULL) {
-		printf("Could not open configuration file %s\n", fn);
-		return;
-	}
-
-	while(fgets(buf, 80, fp)) {
-		char *s = buf;
-		char *field = get_string(&s);
-
-		if(!strcmp(field, "USERFILEPATH")) {
-			char *val = get_string(&s);
-			Userd_Acc_Path = (char *)malloc(strlen(val)+1);
-			strcpy(Userd_Acc_Path, val);
-			printf("USERFILEPATH = %s\n", Userd_Acc_Path);
-			continue;
-		}
-		if(!strcmp(field, "HOST")) {
-			char *val = get_string(&s);
-			Bbs_Host = (char *)malloc(strlen(val)+1);
-			strcpy(Bbs_Host, val);
-			printf("HOST = %s\n", Bbs_Host);
-			continue;
-		}
-		if(!strcmp(field, "PORT")) {
-			Userd_Port = get_number(&s);
-			printf("PORT = %d\n", Userd_Port);
-			continue;
-		}
-		if(!strcmp(field, "AGE")) {
-			Userd_Age_Interval = (time_t)get_number(&s) * tMin;
-			printf("AGE = %"PRTMd"\n", Userd_Age_Interval/tMin);
-			continue;
-		}
-	}
-	fclose(fp);
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -184,6 +134,7 @@ main(int argc, char *argv[])
 	struct timeval t;
 	struct active_processes *ap;
 	time_t age_time = Time(NULL) + Userd_Age_Interval;
+	char *bind_addr;
 
 	parse_options(argc, argv, ConfigList, "USERD - User Daemon");
 
@@ -207,7 +158,8 @@ main(int argc, char *argv[])
 		printf("UP\n");
 
 	listen_port = Userd_Port;
-	if((listen_sock = socket_listen(&listen_port)) == ERROR)
+	bind_addr = Userd_Bind_Addr;
+	if((listen_sock = socket_listen(bind_addr, &listen_port)) == ERROR)
 		return 1;
 
     bbsd_port(Userd_Port);

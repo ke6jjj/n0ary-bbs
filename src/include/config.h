@@ -14,16 +14,25 @@
 #define SOLA_PORT		44400
 #define SOLA_DEVICE		"/dev/ttyr1"
 #define SOLA_HOST		"solahost"
+/* "*" = Be available on network, not just locally */
+#define SOLA_BIND_ADDR          "*"
 
 #define DECTALK_PORT	44401
 #define DECTALK_DEVICE	"/dev/ttyr9"
 #define DECTALK_HOST	"dectalkhost"
+/* "*" = Be available on network, not just locally */
+#define DECTALK_BIND_ADDR "*"
 
 #define DTMF_PORT		44402
 #define DTMF_DEVICE		"/dev/ttyr8"
 #define DTMF_HOST		"dtmfhost"
+/* "*" = Be available on network, not just locally */
+#define DTMF_BIND_ADDR "*"
 
 #define METCON_PORT		44420
 #define METCON_DEVICE	"/dev/ttyb"
 #define METCON_HOST		"metconhost"
+/* "*" = Be available on network, not just locally */
+#define METCON_BIND_ADDR "*"
+
 #endif

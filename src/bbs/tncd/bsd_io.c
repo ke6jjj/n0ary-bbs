@@ -42,7 +42,7 @@ asy_init(int dev, char *ttydev)
 		fd_set ready;
 		int fdlimit;
 
-		if((sock = socket_listen(&ReceiveSocket)) == ERROR) {
+		if((sock = socket_listen(NULL, &ReceiveSocket)) == ERROR) {
 			error_log("tncd: ReceiveSocket open failed on %d", ReceiveSocket);
 			error_print_exit(1);
 		}

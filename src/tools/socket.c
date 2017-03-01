@@ -4,11 +4,14 @@
 #include <sys/time.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <ctype.h>
 #include <unistd.h>
+#include <stddef.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "tools.h"
@@ -80,9 +83,8 @@ unlink_fd(int fd)
 	return ERROR;
 }
 
-
 int
-socket_listen(int *port)
+socket_listen(const char *bind_addr, int *port)
 {
 	struct sockaddr_in server;
 	socklen_t length = sizeof(server);
@@ -90,7 +92,37 @@ socket_listen(int *port)
 	int linger = 0;
 
 	server.sin_family = AF_INET;
-	server.sin_addr.s_addr = htonl(INADDR_ANY);
+
+	/*
+	 * Choose the network interface(s) to listen on by consulting the
+	 * supplied bind address, which will be one of three things:
+	 *
+	 *  1. If the address is "*" then the caller would like to bind
+	 *     to all IP interfaces on this machine.
+	 *
+	 *  2. Otherwise, if the address is non-NULL, treat it as an
+	 *     IP address and bind specifically to the interface with that
+	 *     address.
+	 *
+	 *  3. Otherwise, and finally, if the address is NULL, bind only
+	 *     to the loopback interface.
+	 */
+	if (bind_addr == NULL) {
+		/* No address provided. Bind locally */
+		server.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+	} else if (strcmp(bind_addr, "*") == 0) {
+		/* Bind to all (the old default behavior for this code */
+		server.sin_addr.s_addr = htonl(INADDR_ANY);
+	} else {
+		/* Bind to a specific address, in dotted quad form */
+		if (inet_aton(bind_addr, &server.sin_addr) != 1) {
+			/* Badly formatted address */
+			return error_log(
+				"socket_listen.inet_aton(%s)): "
+				"Bad IP address", bind_addr);
+		}
+	}
+
 	server.sin_port = htons(*port);
 
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -105,9 +137,6 @@ socket_listen(int *port)
 	setsockopt(sock, SOL_SOCKET, SO_LINGER, (char *)&linger, sizeof(linger));
 	listen(sock, 5);
 
-#if 0
-	*port = server.sin_port;
-#endif
 	*port = ntohs(server.sin_port);
 	return sock;
 }
@@ -380,3 +409,55 @@ socket_close(int fd)
 	return OK;
 }
 
+/*
+ * Given a string [<addr>:]portnum parse it into a host:port pair suitable
+ * for socket_listen(). The host portion of the spec, if present, will be
+ * copied into the "host_buf" buffer (up to host_buf_sz characters) and
+ * a pointer to it will be provided on return in "host".
+ *
+ * If no address is detected, host will be set to NULL.
+ * If no port is detected, function will return -1.
+ *
+ * Returns 0 on success.
+ */
+int
+socket_parse_bindspec(const char *spec, char *host_buf, size_t host_buf_sz,
+	int *port, char **host)
+{
+	char *colon, *end;
+	ptrdiff_t cnt;
+
+	/*
+	 * If there's a colon in the string, use it to split the host
+	 * portion from the port portion.
+	 */
+	if ((colon = index(spec, ':')) != NULL) {
+		/*
+		 * There's a colon, capture the IP/host.
+		 */
+		cnt = colon - spec;
+		if (cnt > host_buf_sz - 1) {
+				return error_log("socket_parse_bindspec: "
+					"Host address too big '%s'", spec);
+		}
+		strncpy(host_buf, spec, cnt);
+		host_buf[cnt] = '\0';
+
+		/* Return the host portion in caller's pointer */
+		*host = host_buf;
+
+		/* Continue processing to find port number */
+		spec = colon + 1;
+	} else {
+		/* No host provided, continue processing with port number */
+		*host = NULL;
+	}
+
+	*port = (int) strtoul(spec, &end, 10);
+	if (end == colon + 1) {
+		/* Parse error, no port given! */
+		return -1;
+	}
+
+	return 0;
+}

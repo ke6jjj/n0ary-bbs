@@ -34,6 +34,7 @@ int
 
 char 
 	*Bbs_Call,
+	*Msgd_Bind_Addr = NULL,
 	*Msgd_Body_Path,
 	*Msgd_Fwd_Dir,
 	*Msgd_Route_File,
@@ -47,6 +48,7 @@ struct ConfigurationList ConfigList[] = {
 	{ "BBSD_PORT",			tINT,		(int*)&Bbsd_Port },
 	{ "",					tCOMMENT,	NULL },
 	{ "MSGD_PORT",			tINT,		(int*)&Msgd_Port },
+	{ "MSGD_BIND_ADDR",		tSTRING,	(int*)&Msgd_Bind_Addr },
 	{ "MSGD_BODY_PATH",		tDIRECTORY,	(int*)&Msgd_Body_Path },
 	{ "MSGD_FWD_DIR",		tDIRECTORY,	(int*)&Msgd_Fwd_Dir },
 	{ "MSGD_ROUTE_FILE",	tFILE,		(int*)&Msgd_Route_File },
@@ -156,6 +158,7 @@ int
 main(int argc, char *argv[])
 {
 	int listen_port;
+	char *listen_addr;
 	int listen_sock;
 	int bbsd_sock;
 	struct timeval t;
@@ -190,7 +193,8 @@ main(int argc, char *argv[])
 	}
 
 	listen_port = Msgd_Port;
-	if((listen_sock = socket_listen(&listen_port)) == ERROR)
+	listen_addr = Msgd_Bind_Addr;
+	if((listen_sock = socket_listen(listen_addr, &listen_port)) == ERROR)
 		exit(1);
 
 	if(bbsd_port(Msgd_Port))

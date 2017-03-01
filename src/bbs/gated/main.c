@@ -31,6 +31,7 @@ int
 
 char
 	*Bbs_Call,
+	*Gated_Bind_Addr = NULL,
 	*Gated_File;
 
 char output[4096];
@@ -43,6 +44,7 @@ struct ConfigurationList ConfigList[] = {
 	{ "BBSD_PORT",			tINT,		(int*)&Bbsd_Port },
 	{ "",					tCOMMENT,	NULL },
 	{ "GATED_PORT",			tINT,		(int*)&Gated_Port },
+	{ "GATED_BIND_ADDR",            tSTRING,        (int*)&Gated_Bind_Addr },
 	{ "GATED_FILE",			tFILE,		(int*)&Gated_File },
 	{ "",					tCOMMENT,	NULL },
 	{ "GATED_AGE_WARN",		tTIME,		(int*)&Gated_Age_Warn },
@@ -153,62 +155,11 @@ check_users(struct active_processes *ap, int create)
 	}
 }
 
-void
-write_config_file(void)
-{
-	printf("HOST %s\n", Bbs_Host);
-	printf("PORT %d\n", Gated_Port);
-	printf("GATEFILE %s\n", Gated_File);
-	printf("FLUSH %"PRTMd" (minutes)\n", Gated_Flush / tMin);
-}
-
-void
-read_config_file(char *fn)
-{
-	FILE *fp = fopen(fn, "r");
-	char buf[80];
-
-	if(fp == NULL) {
-		printf("Could not open configuration file %s\n", fn);
-		return;
-	}
-
-	while(fgets(buf, 80, fp)) {
-		char *s = buf;
-		char *field = get_string(&s);
-
-		if(!strcmp(field, "GATEFILE")) {
-			char *val = get_string(&s);
-			Gated_File = (char *)malloc(strlen(val)+1);
-			strcpy(Gated_File, val);
-			printf("GATEFILE = %s\n", Gated_File);
-			continue;
-		}
-		if(!strcmp(field, "HOST")) {
-			char *val = get_string(&s);
-			Bbs_Host = (char *)malloc(strlen(val)+1);
-			strcpy(Bbs_Host, val);
-			printf("HOST = %s\n", Bbs_Host);
-			continue;
-		}
-		if(!strcmp(field, "PORT")) {
-			Gated_Port = get_number(&s);
-			printf("PORT = %d\n", Gated_Port);
-			continue;
-		}
-		if(!strcmp(field, "FLUSH")) {
-			Gated_Flush = (time_t)get_number(&s) * tMin;
-			printf("FLUSH = %"PRTMd"\n", Gated_Flush/tMin);
-			continue;
-		}
-	}
-	fclose(fp);
-}
-
 int
 main(int argc, char *argv[])
 {
 	int listen_port;
+	char *listen_addr;
 	int listen_sock;
 	int bbsd_sock;
 	struct timeval t;
@@ -236,7 +187,8 @@ main(int argc, char *argv[])
 
 	bbsd_msg(" ");
 	listen_port = Gated_Port;
-	if((listen_sock = socket_listen(&listen_port)) == ERROR)
+	listen_addr = Gated_Bind_Addr;
+	if((listen_sock = socket_listen(listen_addr, &listen_port)) == ERROR)
 		exit(1);
 	bbsd_port(Gated_Port);
 

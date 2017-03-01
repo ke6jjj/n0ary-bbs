@@ -14,7 +14,7 @@ struct mboxsess{			/*mailbox session structure*/
 
 	int bytes;				/*number of bytes for bbs to send at one time*/
 	int byte_cnt;
-    struct ax25_cb *axbbscb; /*axp associated with this structure*/
+	struct ax25_cb *axbbscb; /*axp associated with this structure*/
 	struct ax25_addr *orig;
 	char *p, buf[1024];
 	char call[7];
@@ -29,8 +29,10 @@ struct mboxsess{			/*mailbox session structure*/
 
 extern struct mboxsess
 	*base;
+
 extern int
-	init_ax_control(int c_port, int m_port);
+	init_ax_control(char *c_bindaddr, int c_port, char *m_bindaddr,
+		int m_port);
 
 extern void
 	ax_control(void),

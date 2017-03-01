@@ -21,7 +21,8 @@ int
 	proc_num = 1;
 
 char
-    *Bbs_Call,
+	*Bbs_Call,
+	*Bbsd_Bind_Addr = NULL,
 	*dummy_str,
 	output[4096];
 
@@ -34,6 +35,7 @@ struct ConfigurationList ConfigList[] = {
 	{ "",					tCOMMENT,	NULL },
 	{ "BBS_HOST",			tSTRING,	(int*)&Bbs_Host },
 	{ "BBSD_PORT",			tINT,		(int*)&Bbsd_Port },
+	{ "BBSD_BIND_ADDR",		tSTRING,	(int*)&Bbsd_Bind_Addr },
 	{ "",					tCOMMENT,	NULL },
 	{ " Used by libbbs",	tCOMMENT,	NULL },
 	{ "",					tCOMMENT,	NULL },
@@ -233,6 +235,8 @@ fetch_configuration(void)
 		} else
 			Bbsd_Port = atoi(s);
 	}
+	if ((s = config_fetch("BBSD_BIND_ADDR")) != NULL)
+		Bbsd_Bind_Addr = s;
 
 	return fail;
 }
@@ -241,6 +245,7 @@ int
 main(int argc, char *argv[])
 {
 	int listen_port;
+	char *listen_addr;
 	int listen_sock;
 	int ping_interval = PING_INTERVAL;
 	struct active_processes *ap;
@@ -275,8 +280,11 @@ main(int argc, char *argv[])
 	lock_all("Bring up in progress");
 
 	listen_port = Bbsd_Port;
-	if((listen_sock = socket_listen(&listen_port)) == ERROR)
+	listen_addr = Bbsd_Bind_Addr;
+	if((listen_sock = socket_listen(listen_addr, &listen_port)) == ERROR) {
+		printf("Unabled to listen on bbsd port.\n");
 		return 1;
+	}
 
 	build_daemon_list();
 	while(TRUE) {

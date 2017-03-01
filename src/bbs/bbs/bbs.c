@@ -101,7 +101,7 @@ static int
 int
 monitor_setup()
 {
-	if((monitor_sock = socket_listen(&monitor_port)) == ERROR)
+	if((monitor_sock = socket_listen(NULL, &monitor_port)) == ERROR)
 		monitor_port = ERROR; 
 	return monitor_port;
 }

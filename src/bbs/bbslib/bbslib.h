@@ -595,8 +595,10 @@ struct Tnc_ax25 {
 struct TncDefinition {
 	struct TncDefinition *next;
 	char *name;
-	int port;
-	int monitor;
+	char *control_bind_addr;
+	int   control_port;
+	char *monitor_bind_addr;
+	int   monitor_port;
 	char *device;
 	char *host;
 	struct Tnc_ax25 ax25;
@@ -716,7 +718,7 @@ int
 	tnc_port(char *name),
 	tnc_connect(char *host, int port, char *dest, char *mycall),
 	tnc_set_ax25(struct ax25_params *ax25),
-	tnc_monitor(char *name),
+	tnc_monitor_port(char *name),
 	bbsd_socket(void),
 	bbsd_msg(char *str),
 	bbsd_get_configuration(struct ConfigurationList *cl),
@@ -752,6 +754,8 @@ char
 	*port_alias(char *name),
 	*tnc_device(char *name),
 	*tnc_host(char *name),
+	*tnc_control_bind_addr(char *name),
+	*tnc_monitor_bind_addr(char *name),
 	*phone_device(char *name),
 	*phone_init(char *name),
 	*bbsd_read(void),

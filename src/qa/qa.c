@@ -373,8 +373,17 @@ open_socket(char *s)
 int
 exec_listen(char *s)
 {
-	int num = get_number(&s);
-	int port = get_number(&s);
+	int num, port;
+	char *spec, *host, host_buf[128];
+
+	num = get_number(&s);
+	spec = get_string(&s);
+
+	if (socket_parse_bindspec(spec, host_buf, sizeof(host_buf), &port,
+		&host) != 0) {
+		error_print();
+		return ERROR;
+	}
 
 	if(Socket[num].sock != ERROR) {
 		printf("Socket[%d].sock is not closed\n", num);
@@ -386,7 +395,7 @@ exec_listen(char *s)
 	}
 
 
-	if((Socket[num].sock = socket_listen(&port)) == ERROR) {
+	if((Socket[num].sock = socket_listen(host, &port)) == ERROR) {
 		error_print();
 		return ERROR;
 	}
