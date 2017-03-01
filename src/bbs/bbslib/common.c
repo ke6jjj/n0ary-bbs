@@ -133,10 +133,9 @@ build_tncs(char *s)
 	char addr_buf[128];
 
 	td->name = copy_string(get_string(&s));
+
+	/* Control port */
 	port_spec = get_string(&s);
-	monitor_spec = get_string(&s);
-	td->device = copy_string(get_string(&s));
-	td->host = copy_string(get_string(&s));
 
 	/*
 	 * Parse the data port string to see if it asks for a
@@ -151,6 +150,9 @@ build_tncs(char *s)
 	else
 		td->control_bind_addr = NULL;
 
+	/* Monitor port */
+	monitor_spec = get_string(&s);
+
 	/*
 	 * Parse the monitor port string to see if it asks for a
 	 * specific binding interface address.
@@ -163,6 +165,9 @@ build_tncs(char *s)
 		td->monitor_bind_addr = copy_string(monitor_bind_addr);
 	else
 		td->monitor_bind_addr = NULL;
+
+	td->device = copy_string(get_string(&s));
+	td->host = copy_string(get_string(&s));
 
 	td->ax25.t1 = get_number(&s);
 	td->ax25.t2 = get_number(&s);

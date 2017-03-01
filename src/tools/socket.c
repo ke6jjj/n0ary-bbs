@@ -454,7 +454,7 @@ socket_parse_bindspec(const char *spec, char *host_buf, size_t host_buf_sz,
 	}
 
 	*port = (int) strtoul(spec, &end, 10);
-	if (end == colon + 1) {
+	if (end == spec) {
 		/* Parse error, no port given! */
 		return -1;
 	}
