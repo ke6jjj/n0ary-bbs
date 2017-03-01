@@ -1,15 +1,10 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = b_msgd
-OBJS =	main.o read.o rfc822.o list.o parse.o edit.o fwd.o
-CFILES =	main.c read.c rfc822.c list.c parse.c edit.c fwd.c
-HDRS = msgd.h
-SUPPORT = Makefile
+all: MSGD_APP
 
-all:	$(PROD)
+include $(THIS_SRCDIR)/../../top.mk
 
-$(OBJS):	msgd.h\
-			$(INCLUDE)/c_cmmn.h $(INCLUDE)/tools.h $(INCLUDE)/bbslib.h
+MSGD_APP: $(MSGD_APP)
 
-include ../common.mk
+clean: MSGD_APP_CLEAN
+install: MSGD_APP_INSTALL

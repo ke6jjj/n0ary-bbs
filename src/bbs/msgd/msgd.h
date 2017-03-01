@@ -72,9 +72,9 @@ struct groups {
 
 #define TIME	(Time(NULL) + 2)
 
-extern long
+extern time_t
 	time_now,
-	Time(long *t),
+	Time(time_t *t),
 	Msgd_Age_Interval,
 	Msgd_Age_Active[3],
 	Msgd_Age_Killed[3],
@@ -160,7 +160,8 @@ extern int
 	rfc822_skip_to(FILE *fp),
 	rfc822_append_tl(int num, int token, struct text_line *tl),
 	rfc822_append(int num, int token, char *s),
-	rfc822_append_complete(int num, char *s);
+	rfc822_append_complete(int num, char *s),
+	rfc822_decode_fields(struct msg_dir_entry *m);
 
 extern FILE
 	*open_message(int num),

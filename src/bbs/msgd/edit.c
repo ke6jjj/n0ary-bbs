@@ -4,6 +4,7 @@
 #include "config.h"
 #include "tools.h"
 #include "bbslib.h"
+#include "rfc822.h"
 #include "msgd.h"
 
 void
@@ -41,7 +42,7 @@ SetMsgKilled(struct msg_dir_entry *m)
 	m->kdate = Time(NULL);
 	fwddir_kill(m->number, NULL);
 
-	sprintf(buf, "%d", m->kdate);
+	sprintf(buf, "%"PRTMd, m->kdate);
 	rfc822_append(m->number, rKILL, buf);
 }
 
@@ -64,7 +65,7 @@ SetMsgRefresh(struct msg_dir_entry *m)
 	m->odate = 0;
 	m->kdate = 0;
 
-	sprintf(buf, "%d", m->cdate);
+	sprintf(buf, "%"PRTMd, m->cdate);
 	rfc822_append(m->number, rCREATE, buf);
 }
 
@@ -199,7 +200,7 @@ edit_message(struct active_processes *ap, struct msg_dir_entry *msg, char *s)
 		break;
 	case rBID:
 		if(!strcmp(msg->bid, "$")) {
-			sprintf(msg->bid, "%d_%s", msg->number, Bbs_Call);
+			sprintf(msg->bid, "%ld_%s", msg->number, Bbs_Call);
 			rfc822_gen(rBID, msg, buf, 80);
 			s = buf;
 		}

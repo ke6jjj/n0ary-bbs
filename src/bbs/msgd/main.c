@@ -5,11 +5,11 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <fcntl.h>
-#include <sys/termios.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -72,7 +72,7 @@ service_port(struct active_processes *ap)
 	if(socket_read_line(ap->fd, buf, 256, 10) == ERROR)
 		return ERROR;
 
-	logf("msgd", "R:", buf);
+	log_f("msgd", "R:", buf);
 	s = buf;
 	NextChar(s);
 	if(*s) {
@@ -84,7 +84,7 @@ service_port(struct active_processes *ap)
 	if(socket_raw_write(ap->fd, c) == ERROR)
 		return ERROR;
 
-	logf("msgd", "S:", c);
+	log_f("msgd", "S:", c);
 	return OK;
 }
 
@@ -152,6 +152,7 @@ usage(char *pgm)
 	printf("\n");
 }
 
+int
 main(int argc, char *argv[])
 {
 	int listen_port;
@@ -168,7 +169,7 @@ main(int argc, char *argv[])
 	error_clear();
 
 	Logging = logON;
-	logf("msgd", "******", "Coming UP");
+	log_f("msgd", "******", "Coming UP");
 	Logging = logOFF;
 
 	bbsd_get_configuration(ConfigList);
@@ -180,7 +181,7 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgIGNOREHOST))
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
-		daemon();
+		daemon(1, 1);
 
 	build_msgdir();
 
@@ -271,6 +272,8 @@ main(int argc, char *argv[])
 
 		wait3(NULL, WNOHANG, NULL);
 	}
+
+	return 0;
 }
 
 char *

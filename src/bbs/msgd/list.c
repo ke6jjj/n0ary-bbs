@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <sys/time.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
 #include "bbslib.h"
+#include "rfc822.h"
 #include "msgd.h"
 
 struct msg_dir_entry
@@ -236,18 +238,18 @@ check_msgdir(void)
 		if(oops != NULL) {
 			char buf[256];
 	
-			logf("msgd", "TERMINAL:", oops);
-			sprintf(buf, "msg #%d [0x%x]", msg->number, msg);
-			logf("msgd", "TERMINAL:", buf);
+			log_f("msgd", "TERMINAL:", oops);
+			sprintf(buf, "msg #%ld [0x%p]", msg->number, msg);
+			log_f("msgd", "TERMINAL:", buf);
 			if(msg->next != NULL) {
-				sprintf(buf, "next: 0x%x, next->last: 0x%x", msg->next, msg->next->last);
-				logf("msgd", "TERMINAL:", buf);
+				sprintf(buf, "next: 0x%p, next->last: 0x%p", msg->next, msg->next->last);
+				log_f("msgd", "TERMINAL:", buf);
 			}
 			if(msg->last != NULL) {
-				sprintf(buf, "last: 0x%x, last->next: 0x%x", msg->last, msg->last->next);
-				logf("msgd", "TERMINAL:", buf);
+				sprintf(buf, "last: 0x%p, last->next: 0x%p", msg->last, msg->last->next);
+				log_f("msgd", "TERMINAL:", buf);
 			}
-			logf("msgd", "ABORTING", "bye");
+			log_f("msgd", "ABORTING", "bye");
 			exit(1);
 		}
 
@@ -265,7 +267,7 @@ compress_messages(struct active_processes *ap)
 	fwddir_open();
 
 	bbsd_msg("Begin Compress");
-	logf("msgd", "AGING:", "Start");
+	log_f("msgd", "AGING:", "Start");
 
 	while(msg) {
 		fwddir_rename(msg->number, number);
@@ -348,10 +350,10 @@ age_messages(void)
 	fwddir_open();
 
 	bbsd_msg("Begin Aging");
-	logf("msgd", "AGING:", "Start");
+	log_f("msgd", "AGING:", "Start");
 
 	while(msg) {
-		sprintf(log_buf, "%05d [0x%x last: 0x%x next: 0x%x]", 
+		sprintf(log_buf, "%05ld [0x%p last: 0x%p next: 0x%p]", 
 			msg->number, msg, msg->last, msg->next);
 
 		switch(msg->flags & MsgTypeMask) {
@@ -366,14 +368,14 @@ age_messages(void)
 		}
 
 		if(IsMsgImmune(msg) || fwddir_check(msg->number)) {
-			logf("msgd", "IMMUNE:", log_buf);
+			log_f("msgd", "IMMUNE:", log_buf);
 			NEXT(msg);
 			continue;
 		}
 
 		if(IsMsgKilled(msg)) {
 			if((now - msg->kdate) > Msgd_Age_Killed[type]) {
-				logf("msgd", "DELETE:", log_buf);
+				log_f("msgd", "DELETE:", log_buf);
 				msg_body_kill(msg->number);
 				msg = unlink_msg_list(msg);
 				if(msg == NULL) {
@@ -381,7 +383,7 @@ age_messages(void)
 					continue;
 				}
 			} else
-				logf("msgd", "killed:", log_buf);
+				log_f("msgd", "killed:", log_buf);
 				
 		} else
 			if(IsMsgActive(msg)) {
@@ -390,28 +392,28 @@ age_messages(void)
 					msg->time2live ? msg->time2live : Msgd_Age_Active[type];
 
 				if(delta > live) {
-					logf("msgd", "KILL:", log_buf);
+					log_f("msgd", "KILL:", log_buf);
 					SetMsgKilled(msg);
 					build_list_text(msg);
 				} else
 					if(delta > (live - Msgd_Age_Old)) {
-						logf("msgd", "old:", log_buf);
+						log_f("msgd", "old:", log_buf);
 						if(!IsMsgOld(msg)) {
 							SetMsgOld(msg);
 							build_list_text(msg);
 						}
 					} else
-						logf("msgd", "active:", log_buf);
+						log_f("msgd", "active:", log_buf);
 
 			} else
-				logf("msgd", "not_active:", log_buf);
+				log_f("msgd", "not_active:", log_buf);
 
 		NEXT(msg);
 	}
 	bbsd_msg("Validate");
 	check_msgdir();
 	bbsd_msg("");
-	logf("msgd", "AGING:", "End");
+	log_f("msgd", "AGING:", "End");
 }
 
 int
@@ -484,12 +486,12 @@ build_list_text(struct msg_dir_entry *msg)
 	msg->flags &= ~MsgReadByMe;
 
 	if(msg->passwd[0])
-		sprintf(msg->list_text, "%d %d %d !%s $%s %s@%s %s %d %d %s\n",
+		sprintf(msg->list_text, "%ld %ld %ld !%s $%s %s@%s %s %d %ld %s\n",
 			msg->number, msg->size, msg->flags, msg->passwd, msg->bid,
 			msg->to.name.str, msg->to.at.str, msg->from.name.str,
 			msg->cdate, msg->read_cnt, msg->sub);
 	else
-		sprintf(msg->list_text, "%d %d %d $%s %s@%s %s %d %d %s\n",
+		sprintf(msg->list_text, "%ld %ld %ld $%s %s@%s %s %d %ld %s\n",
 			msg->number, msg->size, msg->flags, msg->bid,
 			msg->to.name.str, msg->to.at.str, msg->from.name.str,
 			msg->cdate, msg->read_cnt, msg->sub);
@@ -512,7 +514,7 @@ build_display(struct active_processes *ap, struct msg_dir_entry *msg)
 
 	switch(ap->disp_mode) {
 	case dispBINARY:
-		sprintf(buf, "BINARY %d\n", msg->number);
+		sprintf(buf, "BINARY %ld\n", msg->number);
 		break;
 	case dispVERBOSE:
 		if(IsMsgSecure(msg)) stat[0] = 'S';
@@ -545,7 +547,7 @@ build_display(struct active_processes *ap, struct msg_dir_entry *msg)
 		stat[4] = 0;
 
 		strftime(datebuf, 10, "%m%d/%H""%M", dt);
-		sprintf(buf, "%5d %s %5d %6s@%-6s %-6s%3d %9s %-.28s\n",
+		sprintf(buf, "%5ld %s %5ld %6s@%-6s %-6s%3ld %9s %-.28s\n",
 			msg->number, stat, msg->size, msg->to.name.str,
 			msg->to.at.str, msg->from.name.str, msg->read_cnt,
 			datebuf, msg->sub);
@@ -557,12 +559,12 @@ build_display(struct active_processes *ap, struct msg_dir_entry *msg)
 			sprintf(password, " !%s", msg->passwd);
 
 		if(ap->list_mode == SysopMode)
-			sprintf(buf, "%d %d %d%s $%s %s@%s %s %d %d %s\n",
+			sprintf(buf, "%ld %ld %ld%s $%s %s@%s %s %d %ld %s\n",
 				msg->number, msg->size, msg->flags, password, msg->bid,
 				msg->to.name.str, msg->to.at.str, msg->from.name.str,
 				msg->cdate, msg->read_cnt, msg->sub);
 		else
-			sprintf(buf, "%d %d %d%s $ %s@%s %s %d %d %s\n",
+			sprintf(buf, "%ld %ld %ld%s $ %s@%s %s %d %ld %s\n",
 				msg->number, msg->size, msg->flags, password, 
 				msg->to.name.str, msg->to.at.str, msg->from.name.str,
 				msg->cdate, msg->read_cnt, msg->sub);
@@ -584,14 +586,14 @@ show_message(struct active_processes *ap, struct msg_dir_entry *msg)
 			char buf[256];
 			strcpy(buf, msg->list_text);
 			buf[strlen(buf)-1] = 0;
-			logf("msgd", "L:", buf);
+			log_f("msgd", "L:", buf);
 		}
 	} else {
 		char *buf = build_display(ap, msg);
 		socket_raw_write(ap->fd, buf);
 
 		buf[strlen(buf)-1] = 0;
-		logf("msgd", "L:", buf);
+		log_f("msgd", "L:", buf);
 	}
 }
 
@@ -679,7 +681,7 @@ send_message(struct active_processes *ap)
 			return ERROR;
 		}
 
-		logf("msgd", "r:", buf);
+		log_f("msgd", "r:", buf);
 
 		if(!strcmp(buf, ".\n"))
 			break;
@@ -693,7 +695,7 @@ send_message(struct active_processes *ap)
 			switch(rfc822_parse(msg, rfc)) {
 			case rBID:
 				if(!strcmp(msg->bid, "$\n")) {
-					sprintf(msg->bid, "%d_%s", msg->number, Bbs_Call);
+					sprintf(msg->bid, "%ld_%s", msg->number, Bbs_Call);
 					rfc822_gen(rBID, msg, buf, 80);
 					strcat(buf, "\n");
 				}

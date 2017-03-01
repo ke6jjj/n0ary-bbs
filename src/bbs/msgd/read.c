@@ -2,6 +2,8 @@
 #include <time.h>
 #include <fcntl.h>
 #include <dirent.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -10,8 +12,10 @@
 #include "msgd.h"
 
 static int
-compar(int *i, int *j)
+compar(const void *x, const void *y)
 {
+	const int *i = x, *j = y;
+
 	return (*i - *j);
 }
 
@@ -125,6 +129,7 @@ msg_body_kill(int num)
 	unlink(fn);
 }
 
+int
 msg_body_rename(int orig, int new)
 {
 	char ofn[80], nfn[80];

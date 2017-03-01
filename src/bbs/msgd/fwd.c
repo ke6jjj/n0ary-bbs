@@ -3,6 +3,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -22,7 +24,7 @@ struct FwdDir {
 	struct FwdDir *next;
 	char type;
 	int number;
-	long ctime;
+	time_t ctime;
 	char alias[20];
 } *FwdDir = NULL;
 
@@ -310,7 +312,7 @@ fwd_check_name(struct active_processes *ap, struct msg_dir_entry *m,
 
 	if(check == TRUE) {
 		sprintf(output, "%s\n", bbs);
-		logf("msgd", "F:", output);
+		log_f("msgd", "F:", output);
 		socket_raw_write(ap->fd, output);
 	} else {
 		while(tl) {
@@ -341,7 +343,7 @@ read_message_path(struct msg_dir_entry *m)
 	char buf[1024];
 	FILE *fp;
 
-	sprintf(buf, "%s/%05d", Msgd_Body_Path, m->number);
+	sprintf(buf, "%s/%05ld", Msgd_Body_Path, m->number);
 	if((fp = fopen(buf, "r")) == NULL)
 		return NULL;
 
@@ -460,7 +462,7 @@ set_forwarding(struct active_processes *ap, struct msg_dir_entry *m, int check)
 		if(message_matches_criteria(buf, m, now) == TRUE) {
 			if(check == TRUE) {
 				sprintf(output, "FwdOn: %s\n", buf);
-				logf("msgd", "F:", output);
+				log_f("msgd", "F:", output);
 				socket_raw_write(ap->fd, output);
 			}
 			forward_message_to(ap, m, list, check);
@@ -499,7 +501,7 @@ pending_fwd_num(struct active_processes *ap, int num)
 		char buf[80];
 		if(fwddir->number == num) {
 			sprintf(buf, "%s\n", fwddir->alias);
-			logf("msgd", "F:", buf);
+			log_f("msgd", "F:", buf);
 			socket_raw_write(ap->fd, buf);
 		}
 		NEXT(fwddir);
@@ -522,13 +524,13 @@ pending_fwd(struct active_processes *ap, char *call, char msgtype)
 		char buf[80];
 		if(call == NULL) {
 			sprintf(buf, "%c.%05d.%s\n", fwddir->type, fwddir->number, fwddir->alias);
-			logf("msgd", "F:", buf);
+			log_f("msgd", "F:", buf);
 			socket_raw_write(ap->fd, buf);
 		} else
 			if(!strcmp(call, fwddir->alias)) {
 				if(msgtype == 0 || msgtype == fwddir->type) {
 					sprintf(buf, "%05d\n", fwddir->number);
-					logf("msgd", "F:", buf);
+					log_f("msgd", "F:", buf);
 					socket_raw_write(ap->fd, buf);
 				}
 			}
@@ -541,7 +543,7 @@ fwd_stats(void)
 {
 	struct FwdDir *fwddir;
 	struct FwdPool *fp;
-	long delta, now = Time(NULL);
+	time_t delta, now = Time(NULL);
 	int i;
 
 	fwddir_open();
