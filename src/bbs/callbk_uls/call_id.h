@@ -30,5 +30,7 @@
 int call2id(const char *call, uint32_t *r_id);
 char *id2call(uint32_t id, char call[7]);
 int   id2region(uint32_t id);
+char *id2prefix(uint32_t id, char prefix[3]);
+char *id2suffix(uint32_t id, char suffix[4]);
 
 #endif

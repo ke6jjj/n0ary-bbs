@@ -135,6 +135,73 @@ id2call(uint32_t id, char call[7])
 	return o;
 }
 
+char *
+id2prefix(uint32_t id, char prefix[3])
+{
+	int digit;
+	char *o;
+
+	/* Remove suffix and number */
+	id /= 27 * 27 * 27 * 10;
+
+	o = &prefix[2];
+	*o = '\0';
+
+	digit = id % 27;
+	if (!digit)
+		return o;
+
+	*(--o) = 'A' + digit - 1;
+	id /= 27;
+
+	digit = id % 27;
+	if (!digit)
+		return o;
+
+	*(--o) = 'A' + digit - 1;
+	id /= 27;
+
+	digit = id % 27;
+	if (!digit)
+		return o;
+
+	*(--o) = 'A' + digit - 1;
+
+	return o;
+}
+
+char *
+id2suffix(uint32_t id, char suffix[4])
+{
+	int digit;
+	char *o;
+
+	o = &suffix[3];
+	*o = '\0';
+
+	digit = id % 27;
+	if (!digit)
+		return o;
+
+	*(--o) = 'A' + digit - 1;
+	id /= 27;
+
+	digit = id % 27;
+	if (!digit)
+		return o;
+
+	*(--o) = 'A' + digit - 1;
+	id /= 27;
+
+	digit = id % 27;
+	if (!digit)
+		return o;
+
+	*(--o) = 'A' + digit - 1;
+
+	return o;
+}
+
 int
 id2region(uint32_t id)
 {
