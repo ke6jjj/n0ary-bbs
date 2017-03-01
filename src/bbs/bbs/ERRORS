@@ -1,0 +1,19 @@
+|diff --recursive -c /home/rwp/progs/n0ary/bbs/src/bbs/parsetbl.h ./bbs/parsetbl.h
+|*** /home/rwp/progs/n0ary/bbs/src/bbs/parsetbl.h       Mon Aug 23 21:45:19 1993
+|--- ./bbs/parsetbl.h   Sun Sep 19 00:38:36 1993
+--------------------------
+Patching file ./bbs/parsetbl.h using Plan A...
+Hunk #1 failed at 12.
+Hunk #2 succeeded at 427.
+Hunk #3 succeeded at 436.
+Hunk #4 succeeded at 457.
+Hunk #5 succeeded at 472.
+Hunk #6 succeeded at 525.
+Hunk #7 succeeded at 533.
+Hunk #8 succeeded at 565.
+Hunk #9 succeeded at 576.
+Hunk #10 succeeded at 588.
+Hunk #11 succeeded at 613.
+Hunk #12 failed at 622.
+2 out of 12 hunks failed--saving rejects to ./bbs/parsetbl.h.rej
+

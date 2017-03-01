@@ -1,0 +1,7 @@
+6/19/94
+  Altered msgd to not handle changed messages in the same fashion.
+  The result is that we will no longer be getting the +-* keys to
+  tell what happened to a message. We will simply get the message
+  entry again. We will therefore have to scan the message list to
+  see if it is a new message or a change to an existing one.
+

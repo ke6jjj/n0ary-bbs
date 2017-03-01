@@ -1,0 +1,9 @@
+main.c
+read.c
+rfc822.c
+list.c
+msgd.h
+parse.c
+edit.c
+fwd.c
+Makefile

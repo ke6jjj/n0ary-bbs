@@ -1,0 +1,86 @@
+BBS COMMANDS
+Prefix = 11
+
+110	bbs stats
+
+1101	forward stats
+1102	current time
+1103	nts message count
+1104*	connect count (* and who)
+1105	held message count
+
+111*n	unread messages for user n
+112*n	last login by user n
+113nnn	find user number
+
+117	how to access the bbs
+
+CONTROL COMMANDS
+Prefix = 304
+
+304n0	switch n off
+304n1	switch n on
+304n01	switch n off then on
+304n10   switch n on then off
+
+SYSTEM COMMANDS
+Prefix = 22
+
+220	ping machines
+221	UPS status
+222	respawn daemons
+223	Uutry
+224	lockout bbs ports
+2288	hang up phone line
+2299	shutdown/reboot system
+
+
+RESPAWN
+	222x...
+
+	2220	echo only don't execute
+	2221	ntncd 144
+	2222	ntncd 220
+	2223	ntncd 440
+	2224	dtmf
+	2225	sola
+	2226	dectalk
+
+UUTRY
+	2230	baycom
+	2231	video
+
+LOCK_BBS
+	224sx...
+		s = 0 clear
+		s = 1 set
+
+	224s0	tnc 144
+	224s1	tnc 220
+	224s2	tnc 440
+	224s3	phone 1950
+	224s4	phone 0605
+	224s5	console
+	224s6	servers
+	224s7	cron
+	224s8	smtp
+
+DROP_PHONE
+	2288xxxx
+
+	22881950	drop 749-1950
+	22880605	drop 749-0605
+	22889788	drop 749-9788
+	22880501	drop 749-0501
+
+SHUTDOWN
+	2299sx
+		s = 7 halt
+		s = 8 reboot
+		s = 9 shutdown
+
+	2299s192*135*76*n
+		n = 1 araengr
+		n = 2 suny
+		n = 3 arrow
+		n = 5 violet

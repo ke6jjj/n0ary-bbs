@@ -1,0 +1,164 @@
+Version 4.1.1
+ *	b_bbs: Removed message generated when a message isn't found during
+	a forwarding run. The message is just skipped, try again next
+	time.
+
+ *	b_bbs: There was a problem with displaying routing headers when they
+	had been corrupted. The code does an index() call to locate the
+	'@' identifying the bbs call. If it wasn't present the bbs
+	looped, forgot to go to the next line :(
+
+ *	b_gateway: For some reason, yet to be determined, when certain messages
+	bounce there is no To: field defined. This should be picked up from
+	the From: line in the original message. So far this only seems to 
+	occur on messages from unregistered users. For now I have fixed this
+	by looking for no To: address and then sending it to "postmaster"
+	instead. Maybe I can spot a correlation and fix it right later.
+
+Version 4.1.0
+ *	Daa I forgot.
+
+Version 4.0.13
+ *  Purified portions of the code. Found some memory leaks in the
+	textline_free() routine.
+
+ *  Changed WX definitions so that the weather functions can find the
+	weather files. Mt. Umunuhum weather is now available to all our
+	bbss via another process. This process will be in the next release.
+
+ *  Altered mechanism of /CC command to abort when a /EX command is 
+	received as a recipient.
+
+ *	Better evaluation of the TO field when parsing a send command. Should
+	stop that problem with garbage in the headers when an @ is not provided.
+
+
+Version 4.0.12
+ *	Found the reason that some tncd processes were hanging. It had
+	to do with a race condition between a forward process, bbsd and 
+	an incoming connection from packet.
+
+	When a forward process attempts to connect to another bbs via
+	tncd it first checks to see if the bbs is currently connected. This
+	is done via a bbsd. Seeing nothing it issues a connect request
+	via the tncd control port. The problem occurs when the bbs is
+	indeed connected but tncd has not informed bbsd yet. This caused
+	a real problem in the ax_mbx module. I added an additional
+	check to the tncd process to do another check just prior to 
+	allocating the structures.
+
+ *	When a forward process is running it is no longer logged in as 
+	user FWD but rather the bbs that is being forwarded to at the time.
+
+ *	Created a second parser to be used when receiving messages from
+	another bbs. The user parser searches for tokens allowing the user
+	to input things in any order. When tokens appear in fields 
+	problems arise. Such as "SP AB$CD @ N0ARY" where the user would
+	assume we were defining a BID of "CD". The bbs mode parser must
+	have send command structured as defined in the BBS spec.
+
+ *	Added -u option to bbs code. Allows entry straight to sysop mode.
+	This is used as part of the tcpd code.
+
+ *	Stop the problem with replicating SIDs when forwarding to multiple
+	bbs' via the same port.
+
+ *	The gateway process now checks to see if the homebbs for a user
+	is known prior to accepting the message. If the home bbs is
+	needed the gateway will bounce the message.
+
+ *	Did some work on the socket_read commands to not be so verbose
+	with the socket timeout messages. Also found a bug that may have
+	been causing the duplicate lines in the message body problem.
+
+Version 4.0.11	9/3/94
+ *	Fixed problem with reading system file. Blanks appended to PORT
+	variable would cause mismatch in system scan. Also lengthened
+	the max line length in the system file to 256 characters, was
+	80.
+
+ *	Changed msg_send(), msg_send_dist() and msg_reply() to msg_snd(),
+	msg_snd_dist() and msg_rply() so as not to conflict with system
+	libs.
+
+ *	Added the ability to chain to other daemons and systems from
+	inside tcpd. For instance from inside tcpd you can jump to
+	msgd by typing "msgd". Typing "exit" will return you to tcpd
+	again. You can leap to another bbs by specifying the host, such
+	as, "tcpd lbc.com" which will connect you to the tcpd daemon
+	on Pat's machine. All daemons id now with the bbs version and 
+	call of the bbs.
+	
+ *	Added SID matching to Systems file. This allows the sysop to 
+	supply a SID that is expected from the remote system. If the
+	SID is does not match, regular expression supported, the
+	forwarding session is aborted.
+
+	N6QMY
+	  SID "[ARY-.*-H\$]"
+
+	WB0TAX
+	  SID "[FBB-5.15-AB1FHMR\$]"
+
+	Remember to escape the '$'. 
+
+	The reason this was added was because of problems with doing
+	tcp connections. Working your way through logging into a remote
+	system can falsely indicate success. Since you cannot put the
+	SID in the chat script (RECV) because it needs to be parsed
+	this method was used.
+
+ *	Added regular expression support to RECV fields in chat script.
+
+Version 4.0.10	9/2/94
+ *	Made tcpd make it's socket blocking before spawning bbs process.
+
+Version 4.0.9	9/2/94
+ *	Implemented tcpd to allow bbs entry from network socket.
+
+ *	Added BBS_VERSION to automatic bug reporting and removed copy sent
+	to root.
+
+ *	Added bug report and automatic hold when a message is being 
+	forwarded to a bbs that doesn't support BIDs and MIDs. This isn't
+	a problem but it shouldn't occur in my lan. This check was added
+	because I generated a batch of dups earlier this week and 
+	cannot figure out why.
+
+ *	Added bid to R: line.
+
+ *	Connie identifed the memory leak in b_tool and fixed it. Also
+	added hostname to list title bars. Makes it easier to keep track
+	of the bbs when monitoring multiple bbs'.
+
+ *	Added message type and status statistics to the msgd STAT command.
+
+ *	Changed socket_watch to only watch a single socket rather than 
+	all socket activity. This is still enabled via #if in the source.
+
+ *	Fixed the  b_bbs WRITE command, was creating zero length files.
+
+Version 4.0.8	8/31/94
+ *	Added ability to provide a timeout value in the RECV chat lines of
+	the Systems file. Pat was having a problem where the 60 second
+	timeout on RECV was not enough.
+
+Version 4.0.7	8/29/94
+ *	Fixed bug that caused REPLYs to old bulletins to take on the date
+	of the old bulletin temporarily. Pat saw this because he holds old
+	bulletins with this Translate entry:
+
+	  +14:	!HOLD
+
+	The result was that REPLYs would be held but following the scan of
+	the Translate file the date would be set correctly.
+
+ *	Added "DELAY seconds" to chat script in Systems file. This allows
+	the sysop to stipulate a delay between two SEND commands when no
+	RECV string is anticipated.
+
+ *	Modified the way version is kept. Added a new file called version.h
+	that contains just the bbs version string.
+
+Version 4.0.6	8/28/94
+ *	Initial release to KB6MER and N6QMY.

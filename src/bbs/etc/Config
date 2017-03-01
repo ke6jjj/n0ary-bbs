@@ -1,0 +1,481 @@
+;###
+;#  BBS Configuration Rules
+;###
+;
+; This file is read by bbsd to do runtime configuration of the
+; bbs. All values in this file can be changed dynamically by
+; connecting to bbsd.
+;
+; Entries in this file are keyword value pairs. The keyword is
+; a string that starts in column 1 and begins with a letter.
+; The value field is separted from the keyword by white space.
+;
+; Values have an associated type. The posible types are:
+;   STRING, NUMBER, DIRECTORY, FILE and TIME
+;
+; When specifying a DIRECTORY or FILE if the first character
+; is a slash '/' then the path is considered to be absolute.
+; If it begins with a character other than a slash the field
+; represented by BBS_DIR is prepended. DIRECTORY values should
+; not end with a slash.
+;
+; The TIME values are a number followed by the quantity
+; definition, ie. SECONDS, MINUTES, HOURS, DAYS, WEEKS,
+; MONTHS or YEARS.
+;
+; Comments are lines that begin with a ';'. Comments cannot
+; be appended to the end of KEYWORD/VALUE pairs.
+;
+;
+
+;===============================================================
+; We will begin with the variables that are often unique to a
+; bbs installation.
+;===============================================================
+
+; This is the list of daemons that bbsd will spawn and maintain. It
+; can also be used to start other programs as well. If the second
+; field is "IGNORE" then bbsd will simply exec the program and 
+; ignore it. Otherwise the program is exec'd and bbsd watches to
+; make sure it establishes a connection and continues to run. If
+; one of these programs dies bbsd will start another copy.
+; 
+
+;DAEMON IGNORE	/bbs/bin/your.program.here
+
+; These daemons have to be started
+
+DAEMON MSGD	/bbs/bin/b_msgd
+DAEMON LOGD	/bbs/bin/b_logd
+DAEMON WPD	/bbs/bin/b_wpd
+DAEMON BIDD	/bbs/bin/b_bidd
+DAEMON GATED	/bbs/bin/b_gated
+DAEMON USERD	/bbs/bin/b_userd
+
+; Just enable these for the RF links you have
+
+DAEMON TNC0	/bbs/bin/b_tncd TNC0
+DAEMON TNC1	/bbs/bin/b_tncd TNC1
+DAEMON TNC2	/bbs/bin/b_tncd TNC2
+
+; This variable defines the root location for all FILE variables. It
+; will automatically be prepended to all requests for FILE type vars.
+
+BBS_DIR         /bbs
+
+; Who and where are we? Change this to your call (without the -X) and
+; your hloc. For those of you that have to deal with a second hloc
+; add it as BBS_HLOC_COMP.
+
+BBS_CALL		N0ARY
+BBS_HLOC		#NOCAL.CA.USA.NA
+BBS_HLOC_COMP		#NOCAL.CA.USA.NA.NOAM
+BBS_DOMAIN		bbs.arasmith.com
+
+; These are for the tnc drivers. The MYCALL entry is the call
+; others will connect to. The FWDCALL is what your outgoing
+; connections will go as. They can be different calls if you
+; wish. At the minimum they should be different SSIDs.
+
+BBS_MYCALL		N0ARY-1
+BBS_FWDCALL		N0ARY-2
+
+; Call sign of the primary sysop and the sysop password
+
+BBS_SYSOP		N0AAA
+BBS_SYSOP_PASSWD	letmein
+
+; This is the stuff that is added to the end of your R: line.
+
+BBS_HEADER_COMMENT	Sunnyvale, CA
+
+; This is the internet address where people should send requests
+; for info on registering with your gateway. If you would like
+; just leave this the same and I will distribute the info. If you
+; choose to do this send me your address particulars, domain, etc.
+; I will modify my info file to show all of the gateways using
+; this code.
+
+GATE_INFO_ADDRESS	gateway_info@arasmith.com
+
+; The following are new user defaults. When a person first connects
+; you will setup his account as shown.
+
+USERD_DEF_MACRO0	list mine; list unread club
+USERD_DEF_MACRO1	read mine; kill mine
+USERD_DEF_MACRO2	list unread clubs
+USERD_DEF_MACRO3	list unread from N6ZFJ to USERS
+USERD_DEF_MACRO4
+USERD_DEF_MACRO5
+USERD_DEF_MACRO6
+USERD_DEF_MACRO7
+USERD_DEF_MACRO8
+USERD_DEF_MACRO9	help all
+
+; Although all the user fields are not shown here you can define
+; a default for any of the user account variables. You simply
+; prepend USER_DEF_ to the front of the userd variable name.
+; If a default is not present here it is just set to FALSE or NULL
+; in the new users account.
+
+; All users should be allowed on CONSOLE and SMTP. The others are
+; optional. In my case I don't allow users to connect on my 220
+; port that is used for forwarding, thus TNC1 is not in this list.
+
+USERD_DEF_ALLOWED	TNC0 TNC2 TNC3 PHONE0 CONSOLE SMTP
+USERD_DEF_LINES		20
+USERD_DEF_HELP		3
+USERD_DEF_LOGGING	TRUE
+USERD_DEF_APPROVED	TRUE
+
+; Now here we get a little muddy. This is where you define what
+; ports you have on your system. You can change these anyway you
+; like and in any order but make sure you have CONSOLE, SERVER,
+; DAEMON, SMTP and STATUS in the list. These are special ports
+; used by the bbs and daemons.
+
+;###
+;#	PORT DEFINITIONS
+;###
+;
+; Name:	The handle by which you refer to this port. This is used
+;	all over the bbs. For instance the starting of the tnc
+;	daemons above, the USERD_DEF_ALLOWED variable, etc.
+;
+; Type:	This just defines the kind of port. If it is TNC then the
+;	bbs knows it has to call the tnc daemon to make a connection,
+;	and so on.
+;
+;	  TNC		connects to tncd process
+;	  PHONE		opens a device
+;	  TCP		connects to a host/port
+;	  CONSOLE
+;	  SYSTEM
+;
+; Secure: This field specifies whether a user is allowed to become
+;	sysop while connect via this port. Since passwords would be
+;	passed as clear text over packet TNC ports should never be
+;	set as secure.
+;
+; Show: The user can display a list of ports from inside the bbs. 
+;	Rather than have to keep explaining to users what port
+;	TCP is and why they can't use it you simply set the SHOW
+;	field to FALSE. It will hide it's existance from the user.
+;
+; Alias: This is the name for this port in verbose text. When a user
+;	asks to see the ports TNC0 will probably not mean much to 
+;	him, but the ports frequency may. This field should be
+;	limited to 8 characters max.
+
+;	Name	Type	Secure	Show	Alias
+PORT	TNC0	TNC	FALSE	TRUE	144.93
+PORT	TNC1	TNC	FALSE	TRUE	223.62
+PORT	TNC2	TNC	FALSE	TRUE	433.37
+PORT	TNC3	TNC	FALSE	TRUE	441.50
+PORT	PHONE0	PHONE	TRUE	TRUE	749-1950
+PORT	PHONE1	PHONE	TRUE	TRUE	749-0605
+PORT	PHONE2	PHONE	TRUE	TRUE	749-9788
+PORT	CONSOLE	CONSOLE	TRUE	TRUE	Console
+PORT	SERVER	SYSTEM	FALSE	FALSE	Server
+PORT	DAEMON	SYSTEM	FALSE	FALSE	Daemon
+PORT	SMTP	SMTP	FALSE	TRUE	SMTP
+PORT	TCP	TCP	FALSE	TRUE	TCP
+PORT	STATUS	SYSTEM	FALSE	FALSE	Status
+
+; The table above defined the ports. But in some cases we will need
+; far more information to actually use them. For instance the tncs.
+
+;###
+;#	TNC DEFINITIONS
+;###
+;
+; Name: Must match "name" variable in PORT definitions above.
+;
+; dPort: This is the data port for the tnc daemon.
+; cPort: This is the control port for the tnc daemon.
+;	Refer to the manual on tncd for further explanation of what
+;	these are used for.
+;
+; Device:
+; Host: Where is the physical hardware located?
+;
+; The rest are AX25 definitions
+; T1: The number of seconds to wait for a response from the remote
+;	tnc confirming frame reception. Make this loose. Remember that
+;	tncd only knows when the frame was sent to the tnc, not when it
+;	was actually transmitted.
+;
+; T2: How long to wait after receiving a packet before you confirm.
+;
+; T3: How often to ping the remote station to see if it is still there
+;	when idle.
+;
+; MaxFrame: The maximum number of frames that will be sent without
+;	waiting for an acknoledgement. The maximum is 7, poor links
+;	should be lower.
+;
+; Paclen: The maximum size packet that can be sent. I believe the maximum
+;	is 256 but you have some overhead that AX25 adds. 220 is a good
+;	max value for me. Bad links should lower this, possibly as low
+;	as 64.
+;
+; N2: Retry count. If you issue something this many times and don't get
+;	thru, dump the connection.
+;
+; My strategy on the user ports is to dump as big of frames and as many
+; as possible. I figure the user must be hearing me pretty well, don't
+; waste a bunch of time with acknoledgments.
+
+;	Name	dPort	cPort	Device	   Host    T1 T2  T3 MaxFrame Paclen N2
+TNC	TNC0	44450	44460	/dev/ttyr5 bbshost 10  4 300    7       220  5
+TNC	TNC1	44451	44461	/dev/ttyr6 bbshost 10  4 300    3       128  5
+TNC	TNC2	44452	44462	/dev/ttyr7 bbshost 10  4 300    7       220  5
+TNC	TNC3	44453	44463	/dev/ttyb  bbshost 10  4 300    7       220  5
+
+;###
+;#	PHONE DEFINITIONS
+;###
+;
+; This defines where a modem is located and how to establish a connection
+; to it. As well as an initialization chat script. Since outgoing phone
+; connections are not supported at this time this is just preparation for
+; things to come.
+
+;	Name	Device		Host	Chat Script
+PHONE	PHONE0	/dev/ttyr0	bbshost	ATE1V1 OK
+PHONE	PHONE1	/dev/ttyr1	bbshost	ATE1V1 OK
+PHONE	PHONE2	/dev/ttyr2	bbshost	ATE1V1 OK
+
+; This is the WP stuff. Where do you want your updates sent
+
+WPD_GLOBAL_SERVER	WP@N6IYA.#NOCAL.CA.USA.NA
+
+; This is for something we use in northern CA. You have probably
+; noticed that WP is a write only database, you send updates in
+; but never get anything back. Well this bbs supports downstream
+; updating. It will generate an update of just USER supplied
+; data and send to this address. It doesn't distribute all the
+; guesses and assumptions that show up in the normal updates.
+; Comment this line out if you don't want to support this 
+; feature.
+
+WPD_LOCAL_DISTRIB	WP@NCWP
+
+;===============================================================
+; That should do it. If you don't change anything else in this
+; file you should still come up and run. Just review the rest of
+; the variables and alter to fit your individual tastes.
+;===============================================================
+
+; On the hosts you can use a host name rather than the aliases shown
+; here.
+
+BBS_HOST	bbshost
+MAIL_HOST	mailhost
+SMTP_PORT	25
+
+BIN_DIR			bin
+BBS_SID			[ARY-4.0-H$]
+
+; This is the port number that bbsd listens on. You are free to change
+; all the port numbers but it would be nice if we all used the same
+; ports. It would allow us to maintain each others code easier when
+; someone goes on vacation.
+
+BBSD_PORT	44510
+LOGD_PORT	44511
+WPD_PORT	44512
+BIDD_PORT	44514
+GATED_PORT	44515
+USERD_PORT	44516
+MSGD_PORT	44518
+ 
+;###
+;#  BIDD - Bid Daemon
+;###
+
+; If the memory image in b_bidd is dirty, the disk image will be 
+; updated after the daemon has been idle for BIDD_FLUSH. Bids are 
+; deleted from the bid database when they are BIDD_AGE old.
+
+BIDD_FILE	message/bid.db
+BIDD_FLUSH	2 minutes
+BIDD_AGE	3 months
+
+;###
+;#  GATED - Gateway Daemon
+;###
+
+; Internet users can have multiple addresses mapped into their call
+; for incoming messages. Of course they will never tell you when they
+; are not needed. A mail message is sent to a user at an address as
+; soon as that address hasn't been used for GATED_AGE_WARN time. If
+; the user doesn't use that address before GATED_AGE_KILL time the
+; entry will be deleted. If all users addresses are killed then when
+; userd runs it's aging the user will be purged.
+
+GATED_FILE	etc/gate.db
+GATED_AGE_WARN	4 months
+GATED_AGE_KILL	5 months
+
+GATE_SPOOL_DIR		spool
+
+;###
+;#  LOGD - Log Daemon
+;###
+; 
+LOGD_FILE		logd/bbslog
+LOGD_DIR		logd
+
+;###
+;#  MSGD - Message Daemon
+;###
+; 
+MSGD_BODY_PATH		message/Body
+MSGD_FWD_DIR		message/Forward
+MSGD_ROUTE_FILE		etc/Route
+MSGD_SYSTEM_FILE	etc/Systems
+MSGD_GROUP_FILE		etc/Group
+ 
+; msgd will age it's messages every MSGD_AGE_INTERVAL. Don't do this
+; too often or the daemon will always be busy. Users are locked out while
+; aging is being done. Of course if you don't age often enough then it
+; takes longer to do and the users are locked out for longer periods of
+; time.
+
+MSGD_AGE_INTERVAL	1 hour
+
+; The bbs displays a message as old when it is MSGD_AGE_OLD from being
+; killed. Just a little warning that it's hours are limited.
+
+MSGD_AGE_OLD		2 days
+
+; MSGD_AGE_?_ACTIVE defines the default time that a message of this type
+; will stay on the bbs. Even after a message has been killed it isn't
+; purged from the system. We keep it around for MSGD_AGE_?_KILLED to allow
+; the user to beg us to correct his mistake. Going rate $5 :)
+;
+; The ACTIVE setting can be overridden from the Translate file on a per
+; message basis. Such as SALE@ALLUS messages can be aged at 1 day while
+; all other bulletins are 3 days.
+
+MSGD_AGE_P_ACTIVE	14 days
+MSGD_AGE_P_KILLED	3 days
+
+MSGD_AGE_B_ACTIVE	7 days
+MSGD_AGE_B_KILLED	1 days
+
+MSGD_AGE_T_ACTIVE	21 days
+MSGD_AGE_T_KILLED	1 days
+
+;###
+;#  USERD - User Daemon
+;###
+; 
+USERD_ACC_PATH		user
+
+; USERD_AGE_INTERVAL is how often the user database is aged. To often
+; will cause users to be locked out often. Not often enough an it will
+; take longer to run. This may not make any difference to the average
+; bbs. If you only have 100 users you can just do this once a day, or
+; once a week. I have over 1300 users and it takes a long time to run
+; so I run it hourly.
+
+USERD_AGE_INTERVAL	1 hour
+
+; Users are killed after certain periods of inactivity. I age different
+; classes of users at different timeframes. Those using the bbs as HOME
+; are given more time, suspect calls are aged quick.
+;
+; Users can be made immune to aging as well as put themselves into a 
+; vacation mode that will protect them from aging.
+
+USERD_AGE_HOME		4 months
+USERD_AGE_NOTHOME	3 months
+USERD_AGE_NONHAM	1 month
+USERD_AGE_SUSPECT	1 week
+
+;###
+;#  WPD - White Pages Daemon
+;###
+; 
+
+; I think W0RLI requires this exact subject line on WP updates. Also
+; how often and how big the updates can be. Update larger than 
+; WPD_UPDATE_SIZE will be broken into smaller pieces. The WPD_HOUR
+; variable defines when the update is run.
+
+WPD_UPDATE_SUBJECT	WP Update
+WPD_UPDATE		1 day
+WPD_UPDATE_SIZE		4096
+WPD_HOUR		22
+
+WPD_USER_FILE		wp/user.db
+WPD_BBS_FILE		wp/bbs.db
+WPD_DUMP_FILE		wp/dump.db
+
+; WP entries are aged out of the database after WPD_AGE inactivity.
+; WPD_REFRESH is how often we will refresh an active user, add him
+; to the updates. A change in a user will force an update for the
+; next cycle automatically.
+
+WPD_AGE			6 months
+WPD_REFRESH		14 days
+
+; This is how often to write a changed memory image to disk.
+
+WPD_FLUSH		1 minute
+
+;###
+;#  BBS program
+;###
+; 
+Bbs_Motd_File		etc/MOTD
+Bbs_ZipCode_File	etc/ZipCodes
+Bbs_Translate_File	etc/Translate
+Bbs_NoSub_File		etc/NoSubject
+Bbs_History_File	history/log
+Bbs_History_Path	history
+Bbs_WxLog_File		wx/Log
+Bbs_WxData_File		wx/Data
+Bbs_WxOutdoor_File	wx/Outdoor
+Bbs_WxOutdoorYest_File	wx/OutdoorYest
+Bbs_WxIndoor_File	wx/Indoor
+Bbs_WxIndoorYest_File	wx/IndoorYest
+Bbs_Sign_Path		signatures
+Bbs_Callbk_Path		callbk
+Bbs_Info_Path		filesys/INFORMATION
+Bbs_Distrib_Path	distrib
+Bbs_Event_Path		event
+Bbs_Event_Dir		event/EventDir
+Bbs_Vacation_Path	vacation
+Bbs_FileSys_Path	filesys
+Bbs_HelpMsg_Index	etc/helpmsg.idx
+Bbs_HelpMsg_Data	etc/helpmsg.dat
+Bbs_Hloc_Script		etc/HlocScript
+Bbs_Personal_File	etc/Personal
+Bbs_Reject_File		etc/Reject
+Bbs_Log_Path		log
+
+; maximum size for an import file to be sent to another bbs.
+
+Bbs_Import_Size		40000
+
+; if you see your call this many times in the R: lines, hold the
+; message. You should at least allow 2 which allows a readdressed
+; message to come back.
+
+Bbs_Msg_Loop		3
+
+; This is how long to keep an idle bbs session around. Be carefull
+; not to set the tnc timer too low. Depending on your system buffering
+; the bbs can load the pipe with 20 minutes of data to be transmited
+; in a couple seconds. The timer is only kicked each time you receive
+; a bbs command from the user. You cannot see packet activity.
+
+Bbs_Timer_Tnc		30 minutes
+Bbs_Timer_Console	99 minutes
+
+; keep your phone timeout tight, not a multiuser resource.
+
+Bbs_Timer_Phone		10 minutes

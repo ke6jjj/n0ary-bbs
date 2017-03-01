@@ -1,0 +1,49 @@
+opening socket to msgd...
+
+static void
+msg_add(char *s)
+{
+	int msgnum;
+	struct msg_dir_entry *m;
+
+	switch(*s) {
+	case '-':
+		s+=2;
+		msgnum = atoi(s);
+		msg_delete(msgnum);
+		return;
+	case '+':
+		s+=2;
+		msgnum = atoi(s);
+		m = malloc_struct(msg_dir_entry);
+		if(msg_insert(m, msgnum) == ERROR)
+			return;
+		break;
+
+	default:
+		msgnum = atoi(s);
+		m = malloc_struct(msg_dir_entry);
+		msg_append(m);
+		break;
+		
+	case '*':
+		s+=2;
+		msgnum = atoi(s);
+		if((m = msg_locate(msgnum)) == NULL)
+			return;
+		break;
+	}
+
+	msg_parse(m, s);
+}
+
+
+	while(msgd_open())
+		sleep(10);
+	msg_cmd_string(msgd_xlate(mUSER), BBS_CALL);
+	msg_cmd(msgd_xlate(mSYSOP));
+	msg_cmd_string(msgd_xlate(mDISP), "VERBOSE");
+	msg_fetch_textline(msgd_xlate(mGROUP), &msg_tl);
+
+
+

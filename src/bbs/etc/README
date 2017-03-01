@@ -1,0 +1,69 @@
+This is a short description of the bbs configuration files. Each file
+contains a detailed explanation of it's contents as well as examples.
+I would suggest you review them in the order presented here. They will
+all have to be modified for your specific installation.
+
+Please direct any comments back to me as soon as possible. The most
+powerful, yet maybe confusing file is the Translate file. Please
+contact myself, n6qmy, kb6mer or kf0uw for realtime experiance
+working with this file. You will grow to love it... maybe :)
+
+Most of the files share a common format. This format is explained in
+the Translate file.
+
+Config
+   This is the master configuration file for the bbs system. It contains
+   configuration variables used by all daemons, servers and bbs processes.
+   It is read by the b_bbsd daemon. All of the other programs get to the
+   data by asking b_bbsd questions.
+
+Translate
+   When a message is received it is compared against the rules in this
+   file. The result can be readdressing the message, forwarding it via
+   email, placing a message on hold, killing it, etc. This is a very
+   powerful file that allows the sysop to do almost anything with a 
+   message.
+
+Systems
+   This file defines all of the bbss you to which you forward, how
+   to connect to them and configuration information.
+
+Route
+   This file is a rule based file just like Translate that defines
+   where messages are to be forwarded.
+
+Group
+   This file defines what groups to which a message belongs. Refer to
+   the users manual or architecture manual for a discussion on the
+   GROUP command. In the architecture manual it is in the msgd section.
+
+NoSubject
+   This bbs will abort message entry if the user doesn't supply a
+   subject. There are messages that are not supposed to have subjects.
+   This file contains a list of rules that if matched will allow the
+   message to be sent without a subject.
+
+Personal
+   The bbs warns users when they send a personal message to something
+   other than a callsign, ie. SP SYSOP. Again there are a number of
+   valid reasons for doing this. This file contains a list of rules that
+   if matched will allow the message to be sent as a personal without
+   picking on the user.
+
+Reject
+   If an incoming message matches any of the rules in this file it will
+   be rejected at the OK/NO exchange.
+
+HlocScript
+   When a user trys to send a message to a user at a bbs that we have
+   no knowledge of this script is run to lead the user through a 
+   series of questions that will result in us being able to tack on
+   a valid HLOC to get it at least to the state.
+
+MOTD
+   This is the Message of the Day file. It prints out on each
+   users screen the next time they login. When a bbs process starts-up
+   it checks the modification date on the MOTD file. If it is newer than
+   the last time the user logged in it is displayed.
+
+

@@ -1,0 +1,119 @@
+####
+##  BBS Configuration Rules
+####
+#
+# Entries in this file are keyword value pairs. The keyword is
+# a string that starts in column 1 and begins with a letter.
+# The value field is separted from the keyword by white space.
+#
+# Values have an associated type. The posible types are:
+#   STRING, NUMBER, DIRECTORY, FILE and TIME
+#
+# When specifying a DIRECTORY or FILE if the first character
+# is a slash '/' then the path is considered to be absolute.
+# If it begins with a character other than a slash the field
+# represented by BBS_DIR is prepended. DIRECTORY values should
+# not end with a slash.
+#
+# The TIME values are a number followed by the quantity
+# definition, ie. SECONDS, MINUTES, HOURS, DAYS, WEEKS,
+# MONTHS or YEARS.
+#
+# Comments are lines that begin with a '#'. Comments cannot
+# be appended to the end of KEYWORD/VALUE pairs.
+#
+#
+
+####
+##  MSGD - Message Daemon
+####
+# 
+BBS_CALL	[string]
+BBS_HOST	[string]
+# 
+MSGD_PORT	[number]
+MSGD_BODY_PATH	[directory_path]
+MSGD_FWD_DIR	[directory_path]
+MSGD_ROUTE_FILE	[path_filename]
+MSGD_SYSTEM_FILE	[path_filename]
+MSGD_GROUP_FILE	[path_filename]
+# 
+MSGD_AGE_INTERVAL	[time]
+MSGD_AGE_ACTIVE	[time]
+MSGD_AGE_KILLED	[time]
+MSGD_AGE_OLD	[time]
+
+####
+##  BIDD - Bid Daemon
+####
+# 
+BBS_HOST	[string]
+BBSD_PORT	[number]
+# 
+BIDD_PORT	[number]
+# 
+BIDD_FILE	[path_filename]
+BIDD_FLUSH	[time]
+BIDD_AGE	[time]
+
+####
+##  USERD - User Daemon
+####
+# 
+BBS_CALL	[string]
+BBS_HOST	[string]
+BBSD_PORT	[number]
+# 
+USERD_PORT	[number]
+USERD_ACC_PATH	[directory_path]
+USERD_AGE_INTERVAL	[time]
+USERD_AGE_SUSPECT	[time]
+USERD_AGE_HOME	[time]
+USERD_AGE_NONHAM	[time]
+USERD_AGE_NOTHOME	[time]
+
+####
+##  GATED - Gateway Daemon
+####
+# 
+BBS_CALL	[string]
+BBS_HOST	[string]
+BBSD_PORT	[number]
+# 
+GATED_PORT	[number]
+GATED_FILE	[path_filename]
+# 
+GATED_AGE_WARN	[time]
+GATED_AGE_KILL	[time]
+
+####
+##  WPD - White Pages Daemon
+####
+# 
+BBS_CALL	[string]
+BBS_HOST	[string]
+BBSD_PORT	[number]
+# 
+WPD_PORT	[number]
+WPD_GLOBAL_SERVER	[string]
+WPD_UPDATE_SUBJECT	[string]
+WPD_USER_FILE	[path_filename]
+WPD_BBS_FILE	[path_filename]
+WPD_DUMP_FILE	[path_filename]
+# 
+WPD_REFRESH	[time]
+WPD_AGE	[time]
+WPD_FLUSH	[time]
+WPD_UPDATE	[time]
+WPD_UPDATE_SIZE	[number]
+WPD_HOUR	[number]
+
+####
+##  LOGD - Log Daemon
+####
+# 
+BBS_HOST	[string]
+BBSD_PORT	[number]
+# 
+LOGD_PORT	[number]
+LOGD_FILE	[path_filename]

@@ -1,0 +1,53 @@
+#!/bin/sh
+
+TOOLDIR=/bbs/src/tools
+
+if [ "$1" = "" ]
+then
+	echo -n "Enter tag name: "
+	read bbs
+else
+	bbs=$1
+fi
+
+#sh ${TOOLDIR}/mkdiff
+#
+#if [ $? = 1 ]
+#then
+#	echo "some files have not been checked in"
+#	exit 1
+#fi
+
+changed="NO"
+
+tmpfile=.${bbs}.tmp
+rm -f ${tmpfile}
+touch ${tmpfile}
+
+for i in `cat .Inv`; do
+	src=`grep "^$i" .Inv.$bbs | cut -d' ' -f2`
+	dst=`sccs get -g $i`
+#	echo "      > $i  $src ? $dst"
+	if [ "${src}" != "${dst}" ]
+	then
+		changed="YES"
+		echo "    $i"
+		echo $i >> ${tmpfile}
+	fi
+done
+
+rm -f ${bbs}.tar
+
+if [ $changed = "YES" ]
+then
+	tar cf ${bbs}.tar `cat ${tmpfile}`
+fi
+
+rm -f ${tmpfile}
+
+if [ $changed = "YES" ]
+then
+	exit 1
+fi
+
+exit 0

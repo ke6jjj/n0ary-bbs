@@ -1,0 +1,252 @@
+; when a message is received on the system it is checked against this
+; file. Each line consists of a match criteria and an action to perform
+; if the criteria was met. The criteria and action are seperated by
+; a colon ':'.
+
+; MATCH CRITERIA
+;
+;  > string		TO field
+;  < string		FROM field
+;  . string		HLOC component
+;  @ string		AT field
+;  $ string		BID
+;  & string		Subject field
+;  + int		if older than x days
+;  - int		if younger than x days
+;  | char		message flags
+;			  |P personal message
+;			  |B bulletin
+;			  |T nts
+;			  |S secure
+;			  |W password
+;			  |L local message
+;			  |C to a callsign
+;			  |G to a category
+;			  |H sent from here
+;
+; All of the "string" fields can be regular expressions.
+;
+; Here are some examples of match criterias
+;
+;  >SALE @ALLUS |H		message to SALE@ALLUS sent from here
+;  |B +4			bulletin more than 4 days old
+;  <N6ZFJ			message sent by N6ZFJ
+;  <N6ZFJ |BH			bulletin from N6zfj sent from this bbs
+
+; ACTIONS
+;
+;  > string		TO field
+;  < string		FROM field
+;  @ string		AT field
+;  + int		message time to live
+;  | char		message flags
+;			  |P personal message
+;			  |B bulletin
+;			  |T nts
+;			  |S secure
+;  ! cmd		execute a command
+;			  !PRINT string
+;			  !HOLD ; string
+;			  !DONE
+;			  !NOFWD
+;			  !IMMUNE
+;			  !KILL
+;			  !INIT server
+;			  !COPY address
+;			  !MAIL address
+;			  !WRITE filename
+;
+; The replacement strings can be constants or other parts of the message
+; definition. For example you may recieve a message that you wish to
+; write into the filesystem. As the title you may want to use the TO
+; field. You specify the field you want to use as [field]. Possible 
+; fields are:
+;
+;  [TO] [AT] [FROM] [BID] [SUBJECT]
+;
+; The commands will need additional explanation. We will discuss them
+; one at a time. Look through my examples in the main body of this
+; file for clarification.
+;
+; !PRINT string
+;	The bbs will display this string to the user. Use it to tell
+;	him why you are doing something to his message. 
+;
+; !HOLD string
+;	Message is placed on hold. It remains in the listing but will
+;	not be forwarded nor will the average user be able to read it.
+;	The command READ WHY will tell the user why a message was
+;	placed on hold. When a message is held via the Translate file
+;	the text following the HOLD command becomes the reason.
+;
+; !DONE
+;	The file is traversed top to bottom. And a message can match
+;	multiple rules. This command will stop terminate the translate
+;	function, not check the rest of the file.
+;
+; !NOFWD
+;	Message will not be forwarded.
+;
+; !IMMUNE
+;	Message will be immune from aging.
+;
+; !KILL
+;	Message will be killed
+;
+; !INIT server
+;	Start a server, callbk, wp, etc. and feed this message to it.
+;
+; !COPY address
+;	Create a copy of the message and mail it to "address".
+;
+; !MAIL address
+;	Similar to COPY but sends the message via email. If no address
+;	is supplied the message body is checked for a valid To: line on
+;	the first line of the body.
+;
+; !WRITE filename
+;	Write a message to the filesystem area.
+;
+
+; Now for some examples. Let's start off with a complex one.
+
+; First we try to translate all the possible incarnations of FORSALE
+; into SALE. This simplifies pattern matching on later rules.
+
+>SELL:		>SALE
+>4SALE:		>SALE
+>FORSAL:	>SALE
+
+@ALLUSA:	@ALLUS
+@ALLBBS:	@ALLUS
+
+; This example take a message addressed to SALE@ALLUS and informs the
+; user that these are no longer accepted at this bbs. It then changes
+; the bulletin to a personal message, returns it to the sender with
+; BBS as the new originator and kills the original bulletin.
+
+>SALE @ALLUS$ |H:	!PRINT Messages to SALE@ALLUS are no longer supported
+>SALE @ALLUS$ |H:	!PRINT by the northern Ca BBSs. Please consider sending
+>SALE @ALLUS$ |H:	!PRINT your message again to a smaller distribution
+>SALE @ALLUS$ |H:	!PRINT such as ALLSCV (Santa Clara Valley) or
+>SALE @ALLUS$ |H:	!PRINT ALLCAN (California North).
+>SALE @ALLUS$ |H:	!PRINT Your message is being returned to you.
+>SALE @ALLUS$ |H:	!PRINT Please type INFO SALE for more info.
+>SALE @ALLUS$ |H:	|P >[FROM] <BBS @N0ARY !KILL !DONE
+
+@ALLUS &SALE |H:	!HOLD !DONE ; Possible SALE message to @ALLUS
+
+; That last one tries to catch SALE messages of the form ??@ALLUS with the
+; word SALE in the subject somewhere.
+
+; The !DONE keeps us from scanning down through the rest of the Translate
+; file and hitting other rules that may relate to @ALLUS messages in
+; general.
+
+@NOCAL:		@ALLCAN
+@NCAL:		@ALLCAN
+@ALLNCA:	@ALLCAN
+@SOCAL:		@ALLCAS
+
+; @ALLUS bulletins more than 5 days old should not be forwarded. Same with
+; @WW.
+
+@ALLUS |B +5:	!NOFWD 
+@WW |B +5:	!NOFWD 
+
+; Kill messages that should not have entered our area.
+
+@COCO:		!KILL !DONE
+
+; All messages to SYSOP will be mailed to my unix account and time-to-live
+; will be set to 2 days rather than the default of 5 days.
+
+>SYSOP:		+2 !MAIL bob@arasmith.com
+
+; BBS's and people that have changed calls
+
+>KC6SON:	>AB6OZ		; 10/1/92
+>KD6DIH:	>KM6RI		; 2/20/93
+>KA6BII:	>AB6QZ		; 3/1/93
+>N6ZPN:		>KN6NR		; 6/27/93
+
+; Hold all mail originated from certain users.
+
+<N6UUM:		!HOLD	; History of commercial traffic
+<KK6AN:		!HOLD	; Check content before releasing
+
+; Here is a guy that is using two bbss as his home. To make this work
+; he uses his wife's call at the other bbs. So we send duplicates of
+; each message to the other bbs.
+
+>N6FW:		!COPY KC6DLE@N6IYA
+
+; This fellow moved. This rule will cause all of his mail to be
+; readdressed to his new bbs. 
+
+>N2MZN:		@WB2ARS			; 12/4/93
+
+; Email certain bulletins to interested parties
+
+@NCPA:		!MAIL steveh@grafex.Cupertino.CA.US
+
+; Forward bbs status messages to special account where they will be
+; forwarded to my unix mailbox and deleted.
+>IPGATE @N0ARY:		!MAIL !KILL !DONE
+>IPGATE |H:		!MAIL !KILL !DONE
+>AUTHOR @N0ARY:		!MAIL bbs_authors@arasmith.com !KILL
+>CSBBS @N0ARY:		!MAIL csbbs@arasmith.com !KILL
+>HAMSRV @N0ARY:		!MAIL HAMSRV@grafex.Cupertino.CA.US !KILL
+>K3MC:			!MAIL cwi@netcom.com
+
+; Personal mailbox forwarding.
+
+>N6ZFJ:		@N6ZFJ
+>N6MWC:		@N6MWC
+>N6FZY:		@N6FZY
+>K6SDE:		@K6SDE
+
+; Make the following messages immune from automatic aging.
+>USERS <N0ARY:		!IMMUNE		; My to user messages
+>USERS <N0ARY:		!MAIL rwp@hprwp.fc.hp.com
+>EXAMS:		!IMMUNE		; Messages about local exams
+>FAQ:		!IMMUNE
+>WN1Z:		!IMMUNE		; Only checks in every few weeks, Big Sur area
+
+; Check for server operations
+
+>CALLBK:	!INIT CALLBK
+>WP:		!INIT WP
+
+; This is only marginally successful, the bid is used to try to
+; isolate just the mods server.
+
+<REQFIL:		!WRITE RADIO.MODS/[SUBJECT]
+>MODS $.*D1.RMD:	!WRITE RADIO.MODS/DIR.1
+>MODS $.*D2.RMD:	!WRITE RADIO.MODS/DIR.2
+>MODS $.*D3.RMD:	!WRITE RADIO.MODS/DIR.3
+>MODS $.*D4.RMD:	!WRITE RADIO.MODS/DIR.4
+>MODS $.*D5.RMD:	!WRITE RADIO.MODS/DIR.5
+>MODS $.*D6.RMD:	!WRITE RADIO.MODS/DIR.6
+>MODS $.*D7.RMD:	!WRITE RADIO.MODS/DIR.7
+>MODS $.*D8.RMD:	!WRITE RADIO.MODS/DIR.8
+>MODS $.*D9.RMD:	!WRITE RADIO.MODS/DIR.9
+>MODS $.*L1.RMD:	!WRITE RADIO.MODS/SERVERS.1
+>MODS $.*L2.RMD:	!WRITE RADIO.MODS/SERVERS.2
+>MODS $.*L3.RMD:	!WRITE RADIO.MODS/SERVERS.3
+
+$PACKET.*LOZ:		!WRITE PACKET/[BID]
+$PKTINFO.*:		!WRITE PACKET/[BID]
+$BANDPLAN.*:		!WRITE PACKET/[BID]
+
+$CPRL.*M01:		!WRITE CPRL/INDEX
+$CPRL.*M02:		!WRITE CPRL/INTRO
+$CPRL.*K01:		!WRITE CPRL/KEYBRD
+$CPRL.*T01:		!WRITE CPRL/2METER
+$CPRL.*N01:		!WRITE CPRL/TCPIP
+
+$VIPFREQ*:		!WRITE PUBLIC/VIPFREQ
+$VIPROST*:		!WRITE PUBLIC/VIPROST
+$BBSSYS.*A:		!WRITE NCPA/BBSSYS.1
+$BBSSYS.*B:		!WRITE NCPA/BBSSYS.2
+$BBSLST*:		!WRITE NCPA/BBSLIST

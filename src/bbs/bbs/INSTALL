@@ -1,0 +1,71 @@
+at the /bbs/src do a "make clean" that will kill all the .o's
+
+save off your existing /bbs/src and possibly your /bbs/message
+
+copy tape onto existing tree
+ cd /bbs/src
+ tar -xvf /dev/rst0  (or where ever your tape drive lives)
+
+copy /bbs/src/bbs/Group /bbs/etc/Group
+edit /bbs/src/config.h and /bbs/src/bbs/helpmsg.txt  Use the .N0ARY files
+ as template
+
+edit /bbs/src/config.mk to use gcc compiler 
+   # Complier choice
+   #CC = acc
+   #ANSI = -Xt
+   CC = gcc
+   ANSI = -ansi
+
+edit /bbs/src/config.mk to only use the basic directories
+
+  DIRS = common bbsd bbs bidd gated logd tncd userd wpd dial gateway bbstool
+
+do a "make" from /bbs/src
+  if all builds properly do a "make install"
+
+1)
+  You must delete all the EXCLUDE and INCLUDE lines from the user
+  accounts. This has changed significantly.
+
+  cat > /tmp/run
+  $1 != "EXCLUDE" && $1 != "INCLUDE" { print $0 }
+  ^D
+
+  cd /bbs/user
+  tar cf ../SAVE.USER .
+  foreach user (*)
+    awk -f /tmp/run $user > $user.tmp
+    mv $user.tmp $user
+  end
+
+2)
+  cd /bbs/message
+  ls -l MsgDir
+  rm MsgDir
+  touch MsgDir
+  chown and chmod to the old settings
+  restart userd and wpd
+
+3)
+  /bbs/bin/bbs n6qmy console
+  sysop
+  message custom
+    3) build message directory
+  exit
+
+4)
+  /bbs/bin/bbs n6qmy console
+  sysop
+  message custom
+    4) create newsgroups
+  exit
+
+5)
+  repeat steps 2 and 3
+
+6) 
+  call Bob when it breaks 555-1212
+
+
+

@@ -1,0 +1,9 @@
+main.c
+read.c
+hash.c
+date.c
+parse.c
+write.c
+edit.c
+bid.h
+Makefile

@@ -1,0 +1,292 @@
+; Systems
+;
+; This file defines all the bbss we can talk to. If there is a route
+; present in the Route file it has to be resolved here.
+; 
+; A bbs entry begins by putting the bbs call in column 1. All of the
+; subsequent lines, upto the next line that begins in column 1, define
+; options for that bbs.
+;
+; BBSCALL alias_list
+;   WHEN times dow
+;   OPTS string
+;   ORDER string
+;   PORT string
+;   CONNECT string
+;   AX25 parameters
+;   RECV string
+;   SEND string
+;
+;
+; Let's look at these individually. The BBS and alias list would look like
+; this:
+;
+; N6QMY GATEWAY NTSBBS
+;   PORT SMTP
+;   .....
+;
+; AA4RE GATEWAY
+;   PORT TNC1
+;   .....
+;
+;
+; In the above example both bbss have the alias of GATEWAY. This allows
+; either one of these to pick up the messages being forwarded to GATEWAY.
+; 
+; If N6QMY went off line unexpectedly then AA4RE will automatically
+; get all the GATEWAY stuff. We could also add the alias NTSBBS to another
+; bbs entry and it would be redirected.
+
+; WHEN defines when we are allowed to initiate a connection to a remote
+; bbs. It can take on any of the following forms:
+;
+;   WHEN NEVER			never connect, but we can be polled
+;   WHEN 0100 0600 		any day between 1am and 6am
+;   WHEN 0100 0600 135		between 1 and 6am on Mon, Wed, Fri
+;   WHEN * 12345		anytime on weekdays
+;   WHEN * *                    anytime, anyday (same as not having a WHEN)
+;
+; The TIMES field can be replaced by an '*' to mean anytime. The same
+; applies to the DOW (DayOfWeek) field. The DOW field is the day number
+; with Sunday being 0, Monday being 1, etc.
+;
+; OPTS is where we add configuration information to the bbs entry.
+;
+;   OPTS DUMBTNC		No SID or OK/NO responses expected
+;   OPTS POLL			Connect even if we have no mail for him
+;   OPTS NOREVFWD		Don't allow reverse forwarding
+;   OPTS MULTIPLE		On SMTP forward you can batch up messages
+;   OPTS AGE 4 DAYS		Forward if messages are over 4 days old
+;
+; Only the first letter of the options is important and multiple options
+; can be concatenated.
+;
+;   OPTS DUMBTNC NOREVFWD
+;   OPTS D N
+;
+; ORDER indicates in which order messages are to be forwarded. If the
+; field is missing messages will forward in chronological order, oldest
+; first. Otherwise you supply a string including the characters P, B and
+; T to show the order.
+;
+;   ORDER PTB			forward Personal then nTs then Bulletins
+;   ORDER PT			forward Personal then nTs, skip Bulletins
+;
+; PORT defines the method to be used to connect to the remote bbs. The
+; token must match one of those defined in the PORT entries in the 
+; Config file.
+;
+; CONNECT is used in conjunction with the PORT field. It takes on 
+; different meanings depending on PORT. Some examples will help.
+;
+;   N6LDL			Connect to N6LDL on TNC 1 as N6LDL-1
+;     PORT TNC1
+;     CONNECT N6LDL-1
+;
+;   N6QMY GATEWAY		Forward to N6QMY via email
+;     PORT SMTP
+;     CONNECT import@bbs.lbc.com
+;
+;   WB0TAX			Open a socket to machine wb0tax on port 54
+;     PORT TCP
+;     CONNECT wbotax.arasmith.com 54
+;
+; In the last example, the hostname must be in your hosts file and if a 
+; port number is not supplied 23 is the default, the telnet port. A
+; future enhancement will allow IP address to be used instead of
+; machine name.
+; 
+; AX25 is used to define tnc parameters on a per station basis.
+;
+;   AX25 T1 seconds
+;   AX25 T2 seconds
+;   AX25 T3 seconds
+;   AX25 MAXFRAME num
+;   AX25 PACLEN num
+;   AX25 N2 num
+;
+; Refer to the TNC definition portion of the Config file or your tnc
+; manual for explanation of these variables.
+;   
+; RECV and SEND define a chat script that is needed to login to the
+; remote machine/bbs.
+;
+;   WB0TAX
+;     OPTS POLL
+;     PORT TCP
+;     CONNECT wb0tax 23
+;     RECV ogin:
+;     SEND n0ary
+;     RECV assword:
+;     SEND letmein
+;     RECV >
+;     SEND C tna wb0tax
+;
+; Following the last RECV/SEND line in the script the input stream is
+; monitored looking for a SID string or the bbs prompt '>'. At that time
+; control is given to the bbs.
+;
+; There are some caveats with this scripting that I am still working
+; on. If you need to do this now please contact me.
+; 
+
+
+; Here are some examples of games that can be played.
+;
+;   N6QMY GATEWAY
+;     PORT TNC1
+;     CONNECT N6QMY-1
+;
+;   AA4RE GATEWAY
+;     ORDER B
+;     AGE 2 DAYS
+;     PORT TNC0
+;     CONNECT AA4RE
+;
+;   AA4RE
+;     PORT TNC0
+;     CONNECT AA4RE
+;
+; This will forward GATEWAY stuff to N6QMY until he is gone for more
+; than 2 days. At which time AA4RE will begin getting just the bulletins.
+; Messages destined for just AA4RE would be delayed 2 days if only the
+; first entry where present. The second entry for AA4RE will pass these
+; immediately.
+
+;   N6QMY GATEWAY
+;     PORT TCP
+;     CONNECT lbc.com
+;
+;   N6QMY GATEWAY
+;     AGE 8 HOURS
+;     PORT TNC1
+;     CONNECT N6QMY-1
+;
+; If we loose our IP link to lbc.com for 8 hours begin forwarding the
+; messages via TNC 1.
+
+
+N6QMY	GATEWAY OTHER
+  OPT MULTI
+  PORT SMTP
+  CONNECT import@bbs.lbc.com
+
+N6QMY	GATEWAY
+  WHEN NEVER
+  PORT TNC1
+  OPT POLL
+  CONNECT N6QMY-1
+
+KB6MER
+  OPT MULTI
+  PORT SMTP
+  CONNECT import@dixon-bbs.DeLong.SJ.CA.US
+
+KM6PX
+  OPT MULTI
+  PORT SMTP
+  CONNECT km6px!import@sactoh0.sac.ca.us
+
+N6LDL
+  OPT POLL
+  PORT TNC1
+  CONNECT N6LDL
+
+N6IIU
+  OPT POLL
+  PORT TNC1
+  CONNECT N6IIU-1
+
+W2XO	USEAST			; PA via internet
+  OPT MULTI
+  PORT SMTP
+  CONNECT import@w2xo.pgh.pa.us
+
+KF0UW	MIDWEST			; CO via internet
+  OPT MULTI
+  PORT SMTP
+  CONNECT import@hprwp.fc.hp.com
+
+KB2EAR	USEAST			; NJ via internet
+  OPT MULTI
+  PORT SMTP
+  CONNECT import@kb2ear.ampr.org
+
+K3MC		; Santa Clara
+  OPT POLL
+  PORT TNC1
+  CONNECT K3MC
+
+N6ZFJ				; personal tnc
+  WHEN NEVER
+  OPT DUMB NOREVFWD
+  PORT TNC0
+  CONNECT N6ZFJ-1
+
+KA6FUB
+  WHEN NEVER
+  OPT POLL
+  PORT TNC3
+  CONNECT N6MPW-3
+  SEND "C #SBAY4"
+  RECV "Connect"
+  SEND "C #BALD3"
+  RECV "Connect"
+  SEND "C CCCBB"
+
+WD6CMU
+  WHEN NEVER
+  OPT POLL
+  PORT TNC3
+  CONNECT N6MPW-3
+  SEND "C #SBAY4"
+  RECV "Connect"
+  SEND "C WD6CMU-2"
+  RECV "Connect"
+  SEND "C W6PW-10"
+  RECV "Connect"
+  SEND "C WD6CMU"
+
+KE6WZ
+  WHEN NEVER
+  OPT POLL
+  PORT TNC0
+  CONNECT KE6WZ-1
+
+N7FZY
+  WHEN 0200 0600 *
+  OPTS POLL
+  PORT TNC1
+  CONNECT N6LDL-1
+  SEND "C 1 N7FZY"
+
+WB0TAX
+  WHEN NEVER
+  OPTS POLL
+  PORT TNC1
+  CONNECT WB0TAX
+
+WB0TAX
+  OPTS POLL
+  PORT TCP
+  CONNECT wb0tax 23
+  RECV password.
+  SEND n0ary
+  RECV >
+  SEND C tna wb0tax
+
+KA6EYH
+  WHEN NEVER
+  PORT TNC1
+  CONNECT KA6EYH
+
+K6SDE
+  WHEN NEVER
+  PORT TNC0
+  CONNECT K6SDE-1
+
+AA4RE	OTHER
+  WHEN NEVER
+  PORT TNC0
+  CONNECT AA4RE
+

@@ -1,0 +1,23 @@
+
+------- Makefile -------
+0a1
+> include ../config.mk
+1a3,4
+> SRCS = Makefile chkall fulltar mkdiff mktag mktar
+> 
+4a8,9
+> 
+> include ../common.mk
+
+------- mkdiff -------
+17c17
+< if [ $found = "YES" ]
+---
+> if [ $found = "NO" ]
+19c19
+< 	exit 1
+---
+> 	rm -f diffs
+22,23d21
+< #echo "none found"
+< rm -f diffs

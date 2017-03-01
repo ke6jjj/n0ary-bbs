@@ -1,0 +1,77 @@
+# This file is the script to lead a user through the addressing of a
+# message that isn't in our White Pages and doesn't have a hloc supplied
+# by the user.
+#
+# Since this info is very particular to the area you are in it is simpler
+# to handle it here in a separate file rather than muddy up the help system.
+#
+# Lines that begin with a question mark will be asked of the user. If an
+# affirmative answer is received than the following lines up to the next
+# question line are displayed. If the answer is negative then the bbs will
+# scan forward to the next question.
+#
+# Since this is an if-else type of thing when you have asked the last
+# question you will probably want to display a canned response to a 
+# negative answer as well. This is identified by a line beginning with
+# a '!'. The rest of the file will be displayed for the user.
+#
+# Here is an example of what the user might see:
+#
+#   SEND N4ZZZ@W4AAA
+#	The HOMEBBS that has been specified is unknown to this bbs. I will
+#   need a additional information to figure out where to route the message.
+#	Is the BBS in California (Y/n/q)? N
+#   Is the BBS in the United States (Y/n/q)? Y
+#   Please supply the two letter state abbreviation.         
+#	CO
+#
+
+?Is the BBS in California?
+These are the regions within California
+
+   #NOCAL.CA.USA.NOAM  -- Northern California
+   #CENCA.CA.USA.NOAM  -- Central California
+   #SOCAL.CA.USA.NOAM  -- Southern California
+
+Please enter the correct HLOC for the target region: 
+#
+?Is the BBS in the United States?
+Routing to the state may be sufficient. With luck once in the state a
+bbs there will be able to complete the addressing. The HLOC will be
+the two letter state abbreviation with .USA.NOAM appended.
+
+   AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME
+   MD MA MI MN MS MO MT NE NV NY NJ NM NY NC ND OH OK OR PA RI
+   SC SD TN TX UT VT VA WA WV WI WY
+
+Please enter HLOC in the form XX.USA.NOAM: 
+#
+?Is the BBS in North America?
+This is getting pretty coarse. Supplying just the country and continent
+is probably not enough but you could give it a try.
+
+	CAN.NOAM -- Canada           CYM.NOAM -- Cayman Is.
+	CRI.NOAM -- Costa Rica       CUB.NOAM -- Cuba
+	GRL.NOAM -- Greenland        GTM.NOAM -- Guatemala
+	MEX.NOAM -- Mexico           PAN.NOAM -- Panama
+	PRI.NOAM -- Puerto Rico      VIR.NOAM -- US Virgin Is.
+
+Please enter HLOC of country: 
+!
+To send messages to other continents requires at least the country code
+and the continent code to stand a chance of making it. Depending on the
+area further info may be necessary. For instance if the bbs is in France
+you need at least FRA.EURO. The posible continent codes are:
+
+	NOAM -- North America          AUNZ -- Australia/New Zealand
+	CEAM -- Central America        NPAC -- Northern Pacific
+	CARB -- Caribbean              SPAC -- Southern Pacific
+	SOAM -- South America          WPAC -- Western Pacific
+
+	EURO -- Europe                 NAFR -- Northern Africa
+	INDI -- Indian Ocean           SAFR -- Southern Africa
+	MDLE -- Middle East
+	MEDR -- Mediterranean          ANTR -- Antarctica
+	ASIA -- The Orient
+
+Please enter HLOC if known: 

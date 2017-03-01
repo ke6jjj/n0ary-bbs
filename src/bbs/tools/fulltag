@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if [ "$1" = "" ]
+then
+	echo -n "Enter tag name: "
+	read bbs
+else
+	bbs=$1
+fi
+
+here=`pwd`
+
+for i in `cat .Dir.${bbs}`; do
+	echo === $i ===
+	cd $i
+
+	rm -f .Inv.${bbs};
+	touch .Inv.${bbs};
+	for i in `cat .Inv`; do
+		echo $i `sccs get -g $i` >> .Inv.${bbs};
+	done
+	cd $here
+done
+
+

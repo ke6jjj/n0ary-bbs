@@ -1,0 +1,4 @@
+
+voice_t(void)
+{
+}

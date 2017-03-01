@@ -1,0 +1,16 @@
+; Assume PERSONAL
+;
+; Many messages although not sent to a call are intended to be PERSONAL.
+; Examples are messages to SYSOP or those being sent to servers. There
+; are advantages to sending such messages as personal, they are deleted
+; after being forwarded for one thing. It also doesn't clutter up the
+; user listing.
+;
+
+>SYSOP
+>FILEX
+>REQFIL
+>REQDIR
+>IPGATE
+>CALLBK
+

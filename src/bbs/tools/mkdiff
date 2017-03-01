@@ -1,0 +1,22 @@
+#!/bin/sh
+
+rm -f diffs
+touch diffs
+found="NO"
+
+#echo -n "looking for edited files ..."
+for i in `cat .Inv`; do
+	if [ `sccs diffs $i | wc -l` != "2" ]
+	then
+		echo " $i"
+		sccs diffs $i >> diffs
+		found="YES"
+	fi
+done
+
+if [ $found = "NO" ]
+then
+	rm -f diffs
+fi
+
+exit 0

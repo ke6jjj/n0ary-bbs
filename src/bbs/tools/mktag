@@ -1,0 +1,15 @@
+#!/bin/sh
+
+if [ "$1" = "" ]
+then
+	echo -n "Enter tag name: "
+	read bbs
+else
+	bbs=$1
+fi
+
+rm -f .Inv.${bbs};
+touch .Inv.${bbs};
+for i in `cat .Inv`; do
+	echo $i `sccs get -g $i` >> .Inv.${bbs};
+done

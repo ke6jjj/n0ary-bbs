@@ -1,0 +1,27 @@
+6/19/94
+  The new code has been running now for a week or so without the
+  mysterious dying problem. I am not sure why it all of a sudden started
+  working. I did trace the cause to aging. When I disabled aging the 
+  problem went away. When I turned it back on the problem returned.
+  I then added a bunch of debugging code and the problem as again
+  disappeared.
+
+  I have noticed that when processes hang, such as a forward process,
+  that msgd eats up a tremendous amount of memory storing the user
+  update lists. Each user has a linked list of message pointers that
+  have been altered since the last LIST command received from the
+  active session.
+
+  My plan is to give each user a date stamp when the last LIST was
+  received. Each message entry will contain a similar stamp for the
+  last time the message was modified. When a user requests a LIST
+  the message database will be scanned for stamps more recent than
+  the users date stamp.
+
+  The only problem with this is messages that are purged. The user
+  will not be notified of these. This shouldn't be a serious problem
+  since KILLED messages are hidden from the users anyway. Also, the
+  listing will straighten out as soon as the user disconnects.
+
+
+

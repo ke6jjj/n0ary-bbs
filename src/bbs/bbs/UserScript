@@ -1,0 +1,19 @@
+#!/bin/csh
+#
+# This script written by N6QMY to modify the records the user
+# directory. Change to fit your needs.
+#
+unset noclobber
+set home="/bbs/user"
+set whereisi=`pwd`
+#
+cd $home
+#tar cf ../SAVE.USER .
+foreach user (*)
+	echo $user
+#	sed -e s/"PORT PHONE1 NO"/"PORT PHONE1 OK"/g $user > $user.tmp
+#	awk "$1 != "EXCLUDE" && $1 != "INCLUDE" { print $0 }" $user > $user.tmp
+#	awk -f /tmp/bob $user > $user.tmp
+#	mv $user.tmp $user
+end
+#cd $whereisi

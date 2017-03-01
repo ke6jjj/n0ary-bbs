@@ -1,0 +1,406 @@
+# DO NOT DELETE THIS LINE -- make depend depends on it.
+
+bbs.o: /usr/include/stdio.h /usr/include/string.h /usr/include/sys/stdtypes.h
+bbs.o: /usr/include/errno.h /usr/include/sys/errno.h /usr/include/fcntl.h
+bbs.o: /usr/include/sys/fcntlcom.h /usr/include/sys/stat.h
+bbs.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+bbs.o: /usr/include/sys/time.h /usr/include/sys/time.h /usr/include/signal.h
+bbs.o: /usr/include/sys/signal.h /usr/include/vm/faultcode.h
+bbs.o: /usr/include/sys/socket.h /usr/include/netinet/in.h
+bbs.o: /usr/include/netdb.h /usr/include/unistd.h
+bbs.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+bbs.o: /usr2/n0ary.bbs/build/include/config.h
+bbs.o: /usr2/n0ary.bbs/build/include/common.h
+bbs.o: /usr2/n0ary.bbs/build/include/tools.h
+bbs.o: /usr2/n0ary.bbs/build/include/bbslib.h tokens.h user.h message.h
+bbs.o: help.h callbk.h function.h history.h vars.h
+body.o: /usr/include/stdio.h /usr/include/sys/time.h /usr/include/string.h
+body.o: /usr/include/sys/stdtypes.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+body.o: /usr2/n0ary.bbs/build/include/config.h
+body.o: /usr2/n0ary.bbs/build/include/common.h
+body.o: /usr2/n0ary.bbs/build/include/tools.h
+body.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h body.h
+body.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h tokens.h vars.h
+callbk.o: /usr/include/stdio.h /usr/include/string.h
+callbk.o: /usr/include/sys/stdtypes.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+callbk.o: /usr2/n0ary.bbs/build/include/config.h
+callbk.o: /usr2/n0ary.bbs/build/include/common.h
+callbk.o: /usr2/n0ary.bbs/build/include/tools.h
+callbk.o: /usr2/n0ary.bbs/build/include/bbslib.h tokens.h callbk.h message.h
+callbk.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h function.h
+callbk.o: user.h server.h vars.h
+cmd_pend.o: /usr/include/stdio.h /usr/include/string.h
+cmd_pend.o: /usr/include/sys/stdtypes.h
+cmd_pend.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+cmd_pend.o: /usr2/n0ary.bbs/build/include/tools.h
+cmd_pend.o: /usr2/n0ary.bbs/build/include/config.h
+cmd_pend.o: /usr2/n0ary.bbs/build/include/common.h function.h pending.h
+cmd_pend.o: tokens.h /usr2/n0ary.bbs/build/include/bbslib.h message.h
+cmd_pend.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+common.o: /usr/include/stdio.h /usr/include/string.h
+common.o: /usr/include/sys/stdtypes.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+common.o: /usr2/n0ary.bbs/build/include/config.h
+common.o: /usr2/n0ary.bbs/build/include/common.h function.h
+common.o: /usr2/n0ary.bbs/build/include/bbslib.h user.h vars.h pending.h
+common.o: tokens.h /usr2/n0ary.bbs/build/include/tools.h
+config.o: /usr/include/stdio.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+config.o: /usr/include/string.h /usr/include/sys/stdtypes.h
+config.o: /usr2/n0ary.bbs/build/include/config.h
+config.o: /usr2/n0ary.bbs/build/include/common.h
+config.o: /usr2/n0ary.bbs/build/include/tools.h
+config.o: /usr2/n0ary.bbs/build/include/bbslib.h vars.h
+distrib.o: /usr/include/stdio.h /usr/include/string.h
+distrib.o: /usr/include/sys/stdtypes.h /usr/include/dirent.h
+distrib.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+distrib.o: /usr/include/sys/dirent.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+distrib.o: /usr2/n0ary.bbs/build/include/config.h
+distrib.o: /usr2/n0ary.bbs/build/include/common.h
+distrib.o: /usr2/n0ary.bbs/build/include/tools.h
+distrib.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h tokens.h
+distrib.o: body.h vars.h
+event.o: /usr/include/stdio.h /usr/include/string.h
+event.o: /usr/include/sys/stdtypes.h /usr/include/sys/types.h
+event.o: /usr/include/sys/sysmacros.h /usr/include/sys/time.h
+event.o: /usr/include/fcntl.h /usr/include/sys/fcntlcom.h
+event.o: /usr/include/sys/stat.h /usr/include/dirent.h
+event.o: /usr/include/sys/dirent.h /usr/include/unistd.h
+event.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+event.o: /usr2/n0ary.bbs/build/include/config.h
+event.o: /usr2/n0ary.bbs/build/include/common.h
+event.o: /usr2/n0ary.bbs/build/include/tools.h
+event.o: /usr2/n0ary.bbs/build/include/bbslib.h user.h function.h vars.h
+event.o: tokens.h event.h body.h
+file.o: /usr/include/unistd.h /usr/include/sys/types.h
+file.o: /usr/include/sys/stdtypes.h /usr/include/sys/sysmacros.h
+file.o: /usr/include/stdio.h /usr/include/sys/file.h
+file.o: /usr/include/sys/fcntlcom.h /usr/include/sys/stat.h
+file.o: /usr2/n0ary.bbs/build/include/c_cmmn.h /usr/include/string.h
+file.o: /usr2/n0ary.bbs/build/include/config.h
+file.o: /usr2/n0ary.bbs/build/include/common.h function.h file.h vars.h
+filesys.o: /usr/include/stdio.h /usr/include/string.h
+filesys.o: /usr/include/sys/stdtypes.h /usr/include/unistd.h
+filesys.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+filesys.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+filesys.o: /usr2/n0ary.bbs/build/include/config.h
+filesys.o: /usr2/n0ary.bbs/build/include/common.h
+filesys.o: /usr2/n0ary.bbs/build/include/tools.h
+filesys.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h tokens.h
+filesys.o: filesys.h user.h message.h vars.h body.h
+help.o: /usr/include/stdio.h /usr/include/sys/stat.h /usr/include/sys/types.h
+help.o: /usr/include/sys/stdtypes.h /usr/include/sys/sysmacros.h
+help.o: /usr/include/sys/file.h /usr/include/sys/fcntlcom.h
+help.o: /usr/include/unistd.h /usr/include/string.h /usr/include/errno.h
+help.o: /usr/include/sys/errno.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+help.o: /usr2/n0ary.bbs/build/include/config.h
+help.o: /usr2/n0ary.bbs/build/include/common.h
+help.o: /usr2/n0ary.bbs/build/include/tools.h
+help.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h tokens.h
+help.o: message.h help.h vars.h server.h history.h wp.h
+history.o: /usr/include/stdio.h /usr/include/string.h
+history.o: /usr/include/sys/stdtypes.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+history.o: /usr2/n0ary.bbs/build/include/tools.h
+history.o: /usr2/n0ary.bbs/build/include/config.h
+history.o: /usr2/n0ary.bbs/build/include/common.h
+history.o: /usr2/n0ary.bbs/build/include/bbslib.h tokens.h history.h
+history.o: function.h
+login.o: /usr/include/unistd.h /usr/include/sys/types.h
+login.o: /usr/include/sys/stdtypes.h /usr/include/sys/sysmacros.h
+login.o: /usr/include/stdio.h /usr/include/sys/time.h /usr/include/sys/file.h
+login.o: /usr/include/sys/fcntlcom.h /usr/include/sys/stat.h
+login.o: /usr/include/errno.h /usr/include/sys/errno.h
+login.o: /usr2/n0ary.bbs/build/include/c_cmmn.h /usr/include/string.h
+login.o: /usr2/n0ary.bbs/build/include/config.h
+login.o: /usr2/n0ary.bbs/build/include/common.h
+login.o: /usr2/n0ary.bbs/build/include/tools.h
+login.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h vars.h wp.h
+login.o: callbk.h tokens.h message.h
+load.o: /usr/include/stdio.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+load.o: /usr/include/string.h /usr/include/sys/stdtypes.h
+load.o: /usr2/n0ary.bbs/build/include/config.h
+load.o: /usr2/n0ary.bbs/build/include/common.h
+load.o: /usr2/n0ary.bbs/build/include/bbslib.h tokens.h vars.h function.h
+maintenance.o: /usr/include/stdio.h /usr/include/errno.h
+maintenance.o: /usr/include/sys/errno.h /usr/include/fcntl.h
+maintenance.o: /usr/include/sys/fcntlcom.h /usr/include/sys/stdtypes.h
+maintenance.o: /usr/include/sys/stat.h /usr/include/sys/types.h
+maintenance.o: /usr/include/sys/sysmacros.h /usr/include/sys/time.h
+maintenance.o: /usr/include/termio.h /usr/include/sys/ioccom.h
+maintenance.o: /usr/include/sys/termios.h /usr/include/sys/ttydev.h
+maintenance.o: /usr/include/sys/ttycom.h
+maintenance.o: /usr2/n0ary.bbs/build/include/c_cmmn.h /usr/include/string.h
+maintenance.o: /usr2/n0ary.bbs/build/include/config.h
+maintenance.o: /usr2/n0ary.bbs/build/include/common.h
+maintenance.o: /usr2/n0ary.bbs/build/include/tools.h
+maintenance.o: /usr2/n0ary.bbs/build/include/bbslib.h vars.h user.h tokens.h
+maintenance.o: message.h function.h
+message.o: /usr/include/stdio.h /usr/include/string.h
+message.o: /usr/include/sys/stdtypes.h /usr/include/sys/types.h
+message.o: /usr/include/sys/sysmacros.h
+message.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+message.o: /usr2/n0ary.bbs/build/include/config.h
+message.o: /usr2/n0ary.bbs/build/include/common.h
+message.o: /usr2/n0ary.bbs/build/include/tools.h
+message.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h tokens.h user.h
+message.o: message.h vars.h /usr2/n0ary.bbs/build/include/version.h
+msg_addr.o: /usr/include/stdio.h /usr/include/string.h
+msg_addr.o: /usr/include/sys/stdtypes.h
+msg_addr.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_addr.o: /usr2/n0ary.bbs/build/include/config.h
+msg_addr.o: /usr2/n0ary.bbs/build/include/common.h
+msg_addr.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_addr.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h tokens.h
+msg_addr.o: message.h /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+msg_addr.o: wp.h vars.h /usr2/n0ary.bbs/build/include/version.h
+msg_body.o: /usr/include/stdio.h /usr/include/string.h
+msg_body.o: /usr/include/sys/stdtypes.h /usr/include/sys/time.h
+msg_body.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_body.o: /usr2/n0ary.bbs/build/include/config.h
+msg_body.o: /usr2/n0ary.bbs/build/include/common.h
+msg_body.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_body.o: /usr2/n0ary.bbs/build/include/bbslib.h tokens.h function.h user.h
+msg_body.o: message.h /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+msg_body.o: vars.h body.h wp.h rfc822.h
+msg_body.o: /usr2/n0ary.bbs/build/include/version.h
+msg_edit.o: /usr/include/stdio.h /usr/include/string.h
+msg_edit.o: /usr/include/sys/stdtypes.h
+msg_edit.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_edit.o: /usr2/n0ary.bbs/build/include/config.h
+msg_edit.o: /usr2/n0ary.bbs/build/include/common.h
+msg_edit.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_edit.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h tokens.h user.h
+msg_edit.o: message.h /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+msg_edit.o: vars.h
+msg_fwd.o: /usr/include/stdio.h /usr/include/string.h
+msg_fwd.o: /usr/include/sys/stdtypes.h /usr/include/sys/time.h
+msg_fwd.o: /usr/include/sys/time.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_fwd.o: /usr2/n0ary.bbs/build/include/config.h
+msg_fwd.o: /usr2/n0ary.bbs/build/include/common.h
+msg_fwd.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_fwd.o: /usr2/n0ary.bbs/build/include/bbslib.h vars.h tokens.h function.h
+msg_fwd.o: user.h message.h /usr/include/sys/types.h
+msg_fwd.o: /usr/include/sys/sysmacros.h server.h system.h msg_fwddir.h
+msg_fwd.o: /usr2/n0ary.bbs/build/include/version.h
+msg_fwddir.o: /usr/include/stdio.h /usr/include/string.h
+msg_fwddir.o: /usr/include/sys/stdtypes.h /usr/include/dirent.h
+msg_fwddir.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+msg_fwddir.o: /usr/include/sys/dirent.h
+msg_fwddir.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_fwddir.o: /usr2/n0ary.bbs/build/include/config.h
+msg_fwddir.o: /usr2/n0ary.bbs/build/include/common.h
+msg_fwddir.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_fwddir.o: /usr2/n0ary.bbs/build/include/bbslib.h vars.h user.h tokens.h
+msg_fwddir.o: message.h system.h msg_fwddir.h function.h
+msg_gen.o: /usr/include/stdio.h /usr/include/string.h
+msg_gen.o: /usr/include/sys/stdtypes.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_gen.o: /usr2/n0ary.bbs/build/include/config.h
+msg_gen.o: /usr2/n0ary.bbs/build/include/common.h
+msg_gen.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_gen.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h tokens.h
+msg_gen.o: message.h /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+msg_gen.o: vars.h
+msg_group.o: /usr/include/stdio.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_group.o: /usr/include/string.h /usr/include/sys/stdtypes.h
+msg_group.o: /usr2/n0ary.bbs/build/include/config.h
+msg_group.o: /usr2/n0ary.bbs/build/include/common.h
+msg_group.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_group.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h
+msg_group.o: tokens.h message.h /usr/include/sys/types.h
+msg_group.o: /usr/include/sys/sysmacros.h vars.h pending.h rfc822.h
+msg_hold.o: /usr/include/stdio.h /usr/include/string.h
+msg_hold.o: /usr/include/sys/stdtypes.h
+msg_hold.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_hold.o: /usr2/n0ary.bbs/build/include/config.h
+msg_hold.o: /usr2/n0ary.bbs/build/include/common.h
+msg_hold.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_hold.o: /usr2/n0ary.bbs/build/include/bbslib.h vars.h user.h tokens.h
+msg_hold.o: message.h /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+msg_hold.o: rfc822.h function.h
+msg_immune.o: /usr/include/stdio.h /usr/include/sys/time.h
+msg_immune.o: /usr2/n0ary.bbs/build/include/c_cmmn.h /usr/include/string.h
+msg_immune.o: /usr/include/sys/stdtypes.h
+msg_immune.o: /usr2/n0ary.bbs/build/include/config.h
+msg_immune.o: /usr2/n0ary.bbs/build/include/common.h
+msg_immune.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_immune.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h tokens.h
+msg_immune.o: user.h message.h /usr/include/sys/types.h
+msg_immune.o: /usr/include/sys/sysmacros.h vars.h
+msg_kill.o: /usr/include/stdio.h /usr/include/sys/time.h
+msg_kill.o: /usr2/n0ary.bbs/build/include/c_cmmn.h /usr/include/string.h
+msg_kill.o: /usr/include/sys/stdtypes.h
+msg_kill.o: /usr2/n0ary.bbs/build/include/config.h
+msg_kill.o: /usr2/n0ary.bbs/build/include/common.h
+msg_kill.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_kill.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h tokens.h user.h
+msg_kill.o: message.h /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+msg_kill.o: vars.h
+msg_list.o: /usr/include/stdio.h /usr/include/sys/time.h
+msg_list.o: /usr2/n0ary.bbs/build/include/c_cmmn.h /usr/include/string.h
+msg_list.o: /usr/include/sys/stdtypes.h
+msg_list.o: /usr2/n0ary.bbs/build/include/config.h
+msg_list.o: /usr2/n0ary.bbs/build/include/common.h
+msg_list.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_list.o: /usr2/n0ary.bbs/build/include/bbslib.h vars.h tokens.h function.h
+msg_list.o: user.h message.h /usr/include/sys/types.h
+msg_list.o: /usr/include/sys/sysmacros.h pending.h
+msg_mail.o: /usr/include/stdio.h /usr/include/string.h
+msg_mail.o: /usr/include/sys/stdtypes.h /usr/include/fcntl.h
+msg_mail.o: /usr/include/sys/fcntlcom.h /usr/include/sys/stat.h
+msg_mail.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+msg_mail.o: /usr/include/sys/time.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_mail.o: /usr2/n0ary.bbs/build/include/config.h
+msg_mail.o: /usr2/n0ary.bbs/build/include/common.h
+msg_mail.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_mail.o: /usr2/n0ary.bbs/build/include/bbslib.h vars.h user.h tokens.h
+msg_mail.o: message.h system.h /usr2/n0ary.bbs/build/include/smtp.h
+msg_nts.o: /usr/include/stdio.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_nts.o: /usr/include/string.h /usr/include/sys/stdtypes.h
+msg_nts.o: /usr2/n0ary.bbs/build/include/config.h
+msg_nts.o: /usr2/n0ary.bbs/build/include/common.h
+msg_nts.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_nts.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h tokens.h
+msg_nts.o: message.h /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+msg_read.o: /usr/include/stdio.h /usr/include/string.h
+msg_read.o: /usr/include/sys/stdtypes.h /usr/include/fcntl.h
+msg_read.o: /usr/include/sys/fcntlcom.h /usr/include/sys/stat.h
+msg_read.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+msg_read.o: /usr/include/sys/time.h /usr/include/unistd.h
+msg_read.o: /usr/include/dirent.h /usr/include/sys/dirent.h
+msg_read.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_read.o: /usr2/n0ary.bbs/build/include/config.h
+msg_read.o: /usr2/n0ary.bbs/build/include/common.h
+msg_read.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_read.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h tokens.h user.h
+msg_read.o: message.h system.h msg_fwddir.h vars.h
+msg_read.o: /usr2/n0ary.bbs/build/include/version.h
+msg_send.o: /usr/include/stdio.h /usr/include/string.h
+msg_send.o: /usr/include/sys/stdtypes.h /usr/include/sys/time.h
+msg_send.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_send.o: /usr2/n0ary.bbs/build/include/config.h
+msg_send.o: /usr2/n0ary.bbs/build/include/common.h
+msg_send.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_send.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h tokens.h
+msg_send.o: message.h /usr/include/sys/types.h /usr/include/sys/sysmacros.h
+msg_send.o: wp.h vars.h server.h body.h callbk.h
+msg_trans.o: /usr/include/stdio.h /usr/include/string.h
+msg_trans.o: /usr/include/sys/stdtypes.h
+msg_trans.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_trans.o: /usr2/n0ary.bbs/build/include/config.h
+msg_trans.o: /usr2/n0ary.bbs/build/include/common.h
+msg_trans.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_trans.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h
+msg_trans.o: tokens.h message.h /usr/include/sys/types.h
+msg_trans.o: /usr/include/sys/sysmacros.h vars.h pending.h
+msg_util.o: /usr/include/stdio.h /usr/include/fcntl.h
+msg_util.o: /usr/include/sys/fcntlcom.h /usr/include/sys/stdtypes.h
+msg_util.o: /usr/include/sys/stat.h /usr/include/sys/types.h
+msg_util.o: /usr/include/sys/sysmacros.h /usr/include/sys/file.h
+msg_util.o: /usr/include/unistd.h /usr/include/string.h
+msg_util.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+msg_util.o: /usr2/n0ary.bbs/build/include/config.h
+msg_util.o: /usr2/n0ary.bbs/build/include/common.h
+msg_util.o: /usr2/n0ary.bbs/build/include/tools.h
+msg_util.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h tokens.h
+msg_util.o: message.h vars.h file.h system.h msg_fwddir.h rfc822.h
+parse.o: /usr/include/stdio.h /usr/include/string.h
+parse.o: /usr/include/sys/stdtypes.h /usr/include/ctype.h
+parse.o: /usr/include/unistd.h /usr/include/sys/types.h
+parse.o: /usr/include/sys/sysmacros.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+parse.o: /usr2/n0ary.bbs/build/include/config.h
+parse.o: /usr2/n0ary.bbs/build/include/common.h
+parse.o: /usr2/n0ary.bbs/build/include/tools.h
+parse.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h event.h tokens.h
+parse.o: server.h user.h message.h callbk.h wp.h wx.h history.h system.h
+parse.o: parsetbl.h
+process.o: /usr/include/stdio.h /usr/include/unistd.h
+process.o: /usr/include/sys/types.h /usr/include/sys/stdtypes.h
+process.o: /usr/include/sys/sysmacros.h
+process.o: /usr2/n0ary.bbs/build/include/c_cmmn.h /usr/include/string.h
+process.o: /usr2/n0ary.bbs/build/include/config.h
+process.o: /usr2/n0ary.bbs/build/include/common.h function.h
+process.o: /usr2/n0ary.bbs/build/include/bbslib.h tokens.h process.h
+remote.o: /usr/include/stdio.h /usr/include/fcntl.h
+remote.o: /usr/include/sys/fcntlcom.h /usr/include/sys/stdtypes.h
+remote.o: /usr/include/sys/stat.h /usr/include/sys/types.h
+remote.o: /usr/include/sys/sysmacros.h /usr/include/sys/time.h
+remote.o: /usr/include/sys/time.h /usr/include/signal.h
+remote.o: /usr/include/sys/signal.h /usr/include/vm/faultcode.h
+remote.o: /usr/include/termios.h /usr/include/sys/ioccom.h
+remote.o: /usr/include/sys/ttydev.h /usr/include/sys/ttycom.h
+remote.o: /usr/include/unistd.h /usr/include/string.h
+remote.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+remote.o: /usr2/n0ary.bbs/build/include/config.h
+remote.o: /usr2/n0ary.bbs/build/include/common.h
+remote.o: /usr2/n0ary.bbs/build/include/tools.h
+remote.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h tokens.h
+remote.o: message.h vars.h
+rfc822.o: /usr/include/stdio.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+rfc822.o: /usr/include/string.h /usr/include/sys/stdtypes.h
+rfc822.o: /usr2/n0ary.bbs/build/include/config.h
+rfc822.o: /usr2/n0ary.bbs/build/include/common.h
+rfc822.o: /usr2/n0ary.bbs/build/include/tools.h
+rfc822.o: /usr2/n0ary.bbs/build/include/bbslib.h user.h tokens.h message.h
+rfc822.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h vars.h
+rfc822.o: rfc822.h
+search.o: /usr2/n0ary.bbs/build/include/c_cmmn.h /usr/include/stdio.h
+search.o: /usr/include/string.h /usr/include/sys/stdtypes.h
+server.o: /usr/include/stdio.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+server.o: /usr/include/string.h /usr/include/sys/stdtypes.h
+server.o: /usr2/n0ary.bbs/build/include/config.h
+server.o: /usr2/n0ary.bbs/build/include/common.h
+server.o: /usr2/n0ary.bbs/build/include/tools.h
+server.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h tokens.h server.h
+server.o: user.h message.h /usr/include/sys/types.h
+server.o: /usr/include/sys/sysmacros.h vars.h
+system.o: /usr/include/stdio.h /usr/include/string.h
+system.o: /usr/include/sys/stdtypes.h /usr/include/sys/time.h
+system.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+system.o: /usr2/n0ary.bbs/build/include/config.h
+system.o: /usr2/n0ary.bbs/build/include/common.h
+system.o: /usr2/n0ary.bbs/build/include/tools.h vars.h
+system.o: /usr2/n0ary.bbs/build/include/bbslib.h system.h function.h user.h
+system.o: /usr2/n0ary.bbs/build/include/version.h
+tokens.o: /usr/include/stdio.h /usr2/n0ary.bbs/build/include/c_cmmn.h
+tokens.o: /usr/include/string.h /usr/include/sys/stdtypes.h
+tokens.o: /usr2/n0ary.bbs/build/include/config.h
+tokens.o: /usr2/n0ary.bbs/build/include/common.h
+tokens.o: /usr2/n0ary.bbs/build/include/bbslib.h tokens.h function.h
+user.o: /usr/include/stdio.h /usr/include/string.h
+user.o: /usr/include/sys/stdtypes.h /usr/include/sys/time.h
+user.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+user.o: /usr2/n0ary.bbs/build/include/config.h
+user.o: /usr2/n0ary.bbs/build/include/common.h
+user.o: /usr2/n0ary.bbs/build/include/tools.h
+user.o: /usr2/n0ary.bbs/build/include/bbslib.h tokens.h message.h
+user.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h user.h wp.h
+user.o: vars.h function.h /usr2/n0ary.bbs/build/include/version.h
+usr_disp.o: /usr/include/stdio.h /usr/include/sys/time.h
+usr_disp.o: /usr2/n0ary.bbs/build/include/c_cmmn.h /usr/include/string.h
+usr_disp.o: /usr/include/sys/stdtypes.h
+usr_disp.o: /usr2/n0ary.bbs/build/include/config.h
+usr_disp.o: /usr2/n0ary.bbs/build/include/common.h
+usr_disp.o: /usr2/n0ary.bbs/build/include/tools.h
+usr_disp.o: /usr2/n0ary.bbs/build/include/bbslib.h user.h function.h wp.h
+usr_disp.o: tokens.h
+usr_parse.o: /usr/include/stdio.h /usr/include/string.h
+usr_parse.o: /usr/include/sys/stdtypes.h /usr/include/sys/time.h
+usr_parse.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+usr_parse.o: /usr2/n0ary.bbs/build/include/config.h
+usr_parse.o: /usr2/n0ary.bbs/build/include/common.h
+usr_parse.o: /usr2/n0ary.bbs/build/include/tools.h
+usr_parse.o: /usr2/n0ary.bbs/build/include/bbslib.h tokens.h message.h
+usr_parse.o: /usr/include/sys/types.h /usr/include/sys/sysmacros.h user.h
+usr_parse.o: wp.h vars.h function.h system.h
+wp.o: /usr/include/stdio.h /usr/include/string.h /usr/include/sys/stdtypes.h
+wp.o: /usr2/n0ary.bbs/build/include/c_cmmn.h
+wp.o: /usr2/n0ary.bbs/build/include/config.h
+wp.o: /usr2/n0ary.bbs/build/include/common.h
+wp.o: /usr2/n0ary.bbs/build/include/tools.h
+wp.o: /usr2/n0ary.bbs/build/include/bbslib.h function.h user.h tokens.h
+wp.o: message.h /usr/include/sys/types.h /usr/include/sys/sysmacros.h wp.h
+wp.o: server.h vars.h
+wx.o: /usr/include/stdio.h /usr/include/sys/time.h
+wx.o: /usr2/n0ary.bbs/build/include/c_cmmn.h /usr/include/string.h
+wx.o: /usr/include/sys/stdtypes.h /usr2/n0ary.bbs/build/include/tools.h
+wx.o: /usr2/n0ary.bbs/build/include/config.h
+wx.o: /usr2/n0ary.bbs/build/include/common.h function.h
+wx.o: /usr2/n0ary.bbs/build/include/bbslib.h tokens.h vars.h wx.h

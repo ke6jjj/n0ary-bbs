@@ -1,0 +1,5 @@
+; This file is used to indicate under what criteria should the
+; bbs allow a message to be sent without a subject. Otherwise
+; it is an aborted message condition.
+
+>FILEX

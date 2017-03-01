@@ -1,0 +1,48 @@
+#!/bin/sh
+
+ROOT=/bbs/src
+
+if [ "$1" = "" ]
+then
+	echo -n "Enter tag name: "
+	read bbs
+else
+	bbs=$1
+fi
+
+here=`pwd`
+
+# check here first
+
+changed="NO"
+tmpfile=${ROOT}/${bbs}.tmp
+rm -rf ${tmpfile}
+touch ${tmpfile}
+
+
+for i in `cat .Dir.${bbs}`; do
+	echo === $i ===
+	cd $i
+
+	for j in `cat .Inv`; do
+		src=`grep "^$j" .Inv.$bbs | cut -d' ' -f2`
+		dst=`sccs get -g $j`
+		if [ "${src}" != "${dst}" ]
+		then
+			changed="YES"
+			echo "      $j"
+			echo $i/$j >> ${tmpfile}
+		fi
+	done
+	cd ${here}
+done
+
+if [ $changed = "YES" ]
+then
+	tar cf ${bbs}.tar `cat ${tmpfile}`
+	compress ${bbs}.tar
+	uuencode ${bbs}.tar.Z ${bbs}.tar.Z > ${bbs}.uu
+	rm -f ${bbs}.tar.Z
+	rm ${tmpfile}
+fi
+

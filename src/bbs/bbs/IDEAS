@@ -1,0 +1,117 @@
+* fix wp search command
+
+* allow multiple WHEN statements for a BBS.
+
+* setting email forwarding on alternate user doesn't reflect alternet user
+setting, shows your own. you also don't seem to be about to turn on an
+alternate user.
+
+* return undelivered mail
+
+* wp with no argument should give stats and altered
+
+* command to tell tnc driver to flush outgoing packets. This would
+  make it possible to interrupt long printouts.
+
+* "Your LIST request has resulted in xxx matches (Q/Page/Dump)"
+
+* ignore CR's at the main menu level?
+
+* The informing the user of bad distribution issue
+
+* run translation twice, first time to isolate ALLUS type stuff, no
+  real command execution.
+
+=====================
+SP N0ZZZ
+
+	see if user is in wp, if so address
+
+The bbs doesn't know which bbs this user uses
+Please supply homebbs: N0XXX
+
+	see if bbs is in wp, if so address
+
+This bbs doesn't know where the bbs N0XXX is located. You will have
+to supply a hiearchical address, CA.USA.NA is an example.
+Please supply hloc for N0XXX: MO.USA.NA
+
+============
+How about implementing the unix "talk" command on the bbs?  Here's
+a scenario:
+
+I'm logged in via. land-line or 440 and someone I know is logged in
+via. 144.  I want to chat with them in real-time.  It would be nice
+to be able to go into cross-band digipeat mode.
+
+Anyway, it's just a though.
+oops, thought.  (I gotta start editing my messages off-line...)
+
+   
+   - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   Steve Sergeant          Internet:  SteveSgt@torrent.sj.ca.us
+   San Jose, California       Radio:  KC6ZKT @N0ARY.#NOCAL.CA.USA.NA
+
+===========
+tickler, WD6CMU, when a message gets so old, inform the sysop if
+the user doesn't use the bbs as home normally.
+
+* sender of a HELD message should be able to kill it.
+
+* change ECHO to DUPLEX [FULL|HALF]
+
+* make ECHO just that, ECHO WHAT FOLLOWS. We can use that to check
+  the new pipe function.
+
+* do we have a problem with multiple connects from same user?
+
+======================
+
+QMY:
+chat script for forwarding should contain conditional branches, timeouts.
+
+if forwarding to a bbs fails x number of times route traffic automatically.
+
+
+ ==========
+
+use servers for wp.
+
+	struct {
+		int level;
+			#define UserSaid
+			#define FromWPupdate
+			#define FromHeaders
+
+		char *call;
+		char *homebbs;
+		char *name;
+		char *qth;
+		char *zip;
+	}
+
+	wpLookupUser	char *call;
+		wpFound
+		wpNotFound
+
+	wpLookupBbs		char *call;
+		wpFound		char *hloc;
+		wpNotFound
+
+	wpAddUser
+	wpAddBbs
+	wpChgUser
+
+
+> 
+> Other things (not knowing how much work it would be)
+> number of messages forwarded to other BBSs
+> number of "pass through" messages (useful for gateways)
+> number of total minutes forwarding
+> total connect count for BBSs you forward to
+> total number of connect attempts in your forwarding  (looking for trends)
+> total number of user connects
+> whatever else might be of interest
+> 
+
+* Allow multiple To: lines in IPGATE messages.

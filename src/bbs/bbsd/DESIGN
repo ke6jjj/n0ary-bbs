@@ -1,0 +1,121 @@
+this daemon should be changed to support the following features/commands.
+
+1. It should read a configuration file and supply configuration info
+   on request from attached processes. The structure should be like this:
+
+   The file, config.bbs, should be word string pairs:
+
+   BBS_DIR	/bbs
+   BBS_CALL	N0ARY
+   BBS_PORT0 FALSE tTNC	TNC0	" 144.93 " TRUE  0
+   BBS_PORT1 FALSE tTNC	TNC1	" 223.62 " TRUE  1
+   BBS_PORT2 FALSE tTNC	TNC2 	" 433.37 " TRUE  2
+   BBS_PORT3 TRUE  tPHONE	PHONE0	"749-1950" TRUE  0
+   BBS_PORT4 TRUE  tPHONE	PHONE1	"749-0605" TRUE  1
+   BBS_PORT5 TRUE  tCONSOLE	CONSOLE	"Console " TRUE  0
+   BBS_PORT6 TRUE  FALSE	SERVER	" Server " FALSE 0
+   BBS_PORT7 TRUE  FALSE	DAEMON	" Daemon " FALSE 0
+   BBS_PORT8 TRUE  tSMTP	SMTP	"  SMTP  " TRUE  0
+   BBS_PORT9 TRUE  FALSE	STATUS	" Status " FALSE 0
+   BBS_PORT10 FALSE  tTNC	TNC3	" 441.50 " TRUE	 3
+   etc.
+
+   bbsd should be provided with this file as a command line parameter.
+   It will parse the file and save the contents in a linked list.
+
+   Some of the fields will be used by bbsd but most will just be held
+   and distributed as requests are made. This allows configuration
+   fields to be added to the file without having to teach bbsd to
+   understand them.
+
+   bbsd will also allow all fields to be overridden during runtime but
+   continue to save the original value for comparison purposes.
+
+2. It should be changed to take the standard communications model
+   as the other daemons.
+
+3. bbsd should be responsible for starting and maintaining all the
+   daemons. Daemons should be changed to connect to bbsd before
+   initialization of databases. This will allow bbsd to know a 
+   restart has been successful.
+
+	DAEMON MSGD /bbs/bin/msgd
+	DAEMON USERD /bbs/bin/userd
+	DAEMON GATED /bbs/bin/gated
+	DAEMON TNC0 /bbs/bin/tncd TNC0
+	DAEMON TNC1 /bbs/bin/tncd TNC1
+	etc.
+
+   It will check for connections to each of these on a regular basis
+   and restart when absent.
+
+   All dameons daemons should be changed to expect a -hHOST and -pNUMBER
+   options to indicate where to find the bbsd socket.
+
+Command Set:
+
+    LOGIN <CALL> <VIA>
+		#
+		NO, <LOCK_STRING>
+	
+    PORT [<NUMBER>]
+		OK
+		<NUMBER>
+
+	CHECK <CALL> [<VIA>]
+		#
+		NO
+
+    MSG [<STRING>]
+		OK
+		<STRING>
+
+    NOTIFY [ON|OFF]
+		OK
+		[ON|OFF]
+    
+    LOCK <VIA> [<STRING>]
+		OK
+		
+    UNLOCK <VIA>
+		OK
+    
+    SET <VARIABLE> <STRING>    
+		OK
+
+    SHOW <VARIABLE>
+		<STRING>
+		NO, variable not set
+
+    ORIG <VARIABLE>
+		<STRING>
+		NO, variable not set
+
+	STATUS PROCS
+		# <CALL> <VIA> <PORT> <CTIME> <IDLE> <CHAT> <MSG>
+		<VIA> UNLOCK
+		<VIA> LOCK <STRING>
+		.
+
+	STATUS LOCK <VIA>
+		LOCK <STRING>
+		UNLOCK
+
+	STATUS LOCK
+		TNC0 LOCK <STRING>
+		TNC1 UNLOCK
+		...
+		STATUS UNLOCK
+		.
+		
+	CHAT [ON|OFF]
+
+Responses when in NOTIFY ON mode:
+
+! LOGIN # <CALL> <VIA> <CTIME>
+! LOGOUT #
+! PORT # <NUMBER>
+! MSG # <STRING>
+! CHAT # <NUMBER> ON|OFF
+! LOCK <VIA> <STRING>
+! UNLOCK <VIA>

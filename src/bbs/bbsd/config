@@ -1,0 +1,103 @@
+# config.bbs file
+#
+#   comment lines begin with '#', '\n' or white_space. Comments cannot
+#   be placed on the same line as a valid entry or it will become part of
+#   that entry.
+#
+# DAEMON <name> <command_line>
+#	This is the list of daemons that bbsd will spawn and restart if they
+#   should disappear.
+
+#DAEMON IGNORE	/u2/src/bbs/TEST/bin/b.tool
+#DAEMON	TNC0	/u2/bbs/src/tncd/tncd TNC0
+#DAEMON	TNC1	/u2/bbs/src/tncd/tncd TNC1
+#DAEMON	TNC2	/u2/bbs/src/tncd/tncd TNC2
+#DAEMON	TNC3	/u2/bbs/src/tncd/tncd TNC3
+#DAEMON	LOGD	/u2/bbs/src/logd/logd
+#DAEMON	WPD		/u2/bbs/src/wpd/wpd
+#DAEMON	BIDD	/u2/src/bbs/TEST/bin/b.bidd
+#DAEMON	GATED	/u2/bbs/src/gated/gated
+#DAEMON	USERD	/u2/bbs/src/userd/userd
+#DAEMON	MSGD	/u2/bbs/src/msgd/msgd
+
+# All daemons are assumed to be running on the same host.
+
+TIME			931105/1212
+
+BBS_HOST		suny
+MAIL_HOST		mail_host
+
+# The port numbers where the daemons can be found.
+
+BBSD_PORT		44510
+
+# Files and directory paths
+#
+# The entry BBSDIR is special. For the other files and directories if string
+# doesn't begin with a '/' then it is assumed that they are relative to
+# BBSDIR. This is just a short cut to aid in locating the tree with minimal
+# retyping.
+
+BBS_DIR			/u2/src/bbs/TEST
+LOG_DIR			LOG
+
+# msgd
+
+MSGD_PORT		44518
+
+MSGD_BODY_PATH		/bbs/tst_msgs/Body
+MSGD_FWD_DIR		/bbs/tst_msgs/Forward
+MSGD_ROUTE_FILE		etc/Route
+MSGD_SYSTEM_FILE	etc/System
+MSGD_GROUP_FILE		etc/Group
+MSGD_TRANS_FILE		etc/Translate
+
+MSGD_AGE_INTERVAL	1 hour
+MSGD_AGE_ACTIVE		2 days
+MSGD_AGE_KILLED		7 days
+MSGD_AGE_OLD		2 days
+
+# bidd
+
+BIDD_PORT		44514
+BIDD_FLUSH		2 minutes
+BIDD_FILE		message/bid.db
+BIDD_AGE		3 months
+
+# userd
+
+USERD_PORT		44516
+USERD_ACC_PATH		user
+USERD_AGE_INTERVAL	1 hour
+USERD_AGE_SUSPECT	1 week
+USERD_AGE_HOME		4 months
+USERD_AGE_NOTHOME	3 months
+USERD_AGE_NONHAM	1 month
+
+# gated
+
+GATED_PORT		44515
+GATED_AGE_WARN		4 months
+GATED_AGE_KILL		5 months
+GATED_FLUSH		10 minutes
+GATED_FILE		etc/gate.db
+
+# wpd
+
+WPD_PORT		44512
+WPD_REFRESH		14 days
+WPD_AGE			6 months
+WPD_FLUSH		1 minute
+WPD_UPDATE		1 day
+WPD_HOUR		22
+WPD_GLOBAL_SERVER	WP@N6QMY
+WPD_UPDATE_SUBJECT	WP Update
+WPD_UPDATE_SIZE		4096
+WPD_USER_FILE		wp/user.db
+WPD_BBS_FILE		wp/bbs.db
+WPD_DUMP_FILE		wp/dump.db
+
+# logd
+
+LOGD_PORT		44511
+LOGD_FILE		LOG/bbslog

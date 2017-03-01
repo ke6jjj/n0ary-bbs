@@ -1,0 +1,18 @@
+
+------- usr_parse.c -------
+73c73
+< 		PRINTF("%s\n",  user_get_field(uNEWLINE)); break;
+---
+> 		PRINTF("%s\n",  user_check_flag(uNEWLINE)); break;
+77c77
+< 		PRINTF("Regular Expression search is %s\n",  user_get_field(uREGEXP));
+---
+> 		PRINTF("Regular Expression search is %s\n",  user_check_flag(uREGEXP));
+82c82
+< 		PRINTF("Automatic signature is %s\n",  user_get_field(uCOMPUTER));
+---
+> 		PRINTF("Automatic signature is %s\n",  user_check_flag(uCOMPUTER));
+89c89
+< 		PRINTF("Vacation mode is %s\n",  user_get_field(uVACATION)); break;
+---
+> 		PRINTF("Vacation mode is %s\n",  user_check_flag(uVACATION)); break;

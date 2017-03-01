@@ -1,0 +1,46 @@
+####
+##  BBS Configuration Rules
+####
+#
+# Entries in this file are keyword value pairs. The keyword is
+# a string that starts in column 1 and begins with a letter.
+# The value field is separted from the keyword by white space.
+#
+# Values have an associated type. The posible types are:
+#   STRING, NUMBER, DIRECTORY, FILE and TIME
+#
+# When specifying a DIRECTORY or FILE if the first character
+# is a slash '/' then the path is considered to be absolute.
+# If it begins with a character other than a slash the field
+# represented by BBS_DIR is prepended. DIRECTORY values should
+# not end with a slash.
+#
+# The TIME values are a number followed by the quantity
+# definition, ie. SECONDS, MINUTES, HOURS, DAYS, WEEKS,
+# MONTHS or YEARS.
+#
+# Comments are lines that begin with a '#'. Comments cannot
+# be appended to the end of KEYWORD/VALUE pairs.
+#
+#
+
+####
+##  BBSTOOL - Motif GUI interface to bbs and daemons
+####
+# These entries appear in all daemons
+BBS_HOST	[string]
+BBSD_PORT	[number]
+# 
+BBS_CALL	[string]
+
+####
+##  BBSD - BBS Super Daemon
+####
+# 
+BBS_HOST	[string]
+BBSD_PORT	[number]
+# 
+#  Used by libbbs
+# 
+BBS_CALL	[string]
+BBS_DOMAIN	[string]

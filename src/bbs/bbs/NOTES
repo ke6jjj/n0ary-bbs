@@ -1,0 +1,26 @@
+message deleted message is gone. along with the prompt for deleting
+an unread message.
+
+messages coming into the gateway addressed to XXXX@ALLUS are lost. At
+least when mailed from an individual.
+
+When routing I look at the @BBS before evaluating the HLOC.
+
+Hold all messages that need a bid assigned that have arrived from a bbs
+not a user.
+
+More "q" doesn't work inside headers (READ HEADER)
+
+Need to have wp do a dump of database in human readible form.
+
+Add X-Time2Live to msg_trans.c
+
+make wpd more atomic with it's files. All daemons for that matter.
+
+Add the DELETE operand to EXCLUDE/INCLUDE
+
+Non-ham logins continuously prompt for first name.
+
+incoming messages of unknown type should be held.
+
+

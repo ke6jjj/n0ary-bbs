@@ -1,0 +1,6 @@
+; This file is used to quickly reject messages during the forward
+; process. This could easily be handled in the Translate file but
+; that would mean the message would have to be fully transfered.
+
+@WW
+>SALE @ALLUS

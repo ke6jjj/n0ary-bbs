@@ -1,0 +1,288 @@
+; The Route file is used to define where a message is to be
+; forwarded. There are two parts to the file, group definitions
+; and the routes themselves.
+;
+; Please be familiar with the Systems file prior to studying this
+; file. All the destinations found in this file must be defined
+; in the Systems file.
+
+; The group definitions are just short cuts to keep your typing
+; to a minimum. The groups are identified by the leading underscore.
+;
+
+_SBAY		N6QMY K3MC N6LDL N6IIU KB6MER WB0TAX
+_EAST		W2XO KB2EAR
+_MIDWEST	KF0UW
+_ALL		_SBAY _EAST _MIDWEST
+
+
+; The routes portion of the file is scanned from top to bottom looking
+; for a match to a message criteria, just like the Translate file.
+; If a match is found the scan is complete and the message is forwarded
+; to the list of aliases/calls/groups present on that line.
+;
+; Match criteria is the same as in the Translate file although many
+; of the available fields will go unused. I cannot imagine a reason
+; why you would want to route on a message subject but it is possible.
+; There maybe some value to routing on message age or message type.
+
+; First you have to handle your own bbs. I know I could have coded this
+; in but special casing the routine seemed wrong.
+
+@N0ARY:		N0ARY
+
+; Let's get the floods out of the way. If you use the short versions
+
+@NOAM:		_ALL
+@USA:		_ALL
+@CA:		_SBAY
+
+@NCPA:		_SBAY
+@ARES:		_ALL
+@RACES:		_ALL
+@SBAY:		_SBAY
+
+@ARRL:		_ALL
+@NASA:		_ALL
+@VIP:		_SBAY
+@ALLPA:		W2XO
+@ATLDIV:	W2XO
+@ALLOH:		W2XO
+@ALLWV:		W2XO
+
+@ALLSCV:	_SBAY
+@ALLCA:		_SBAY
+@ALLCAN:	_SBAY
+@ALLCAS:	_SBAY
+@ALLUSW:	_SBAY
+@ALLUSE:	_EAST
+@ALLUS:		_ALL
+@SBAY:		_SBAY
+@NBAY:		N6QMY
+@NCPA:		_SBAY
+@NCWP:		_SBAY
+@AMSAT:		_ALL
+@ARL:		_ALL
+@LOCAL:		N0ARY
+@WW:		_ALL
+
+@NCGATE:	N6QMY
+
+; Next lets address HLOCs. An HLOC should be parsed from right to
+; left ignoring any domain that you are a member of. Your HLOCs
+; where defined in the Config file as BBS_HLOC and BBS_HLOC_COMP.
+; Given @W2XO.#EPA.PA.USA.NOAM and I am @N0ARY.#NOCAL.CA.USA.NA the
+; process would first look at the right most element, N0AM. Since
+; I am also in NOAM it is ignored. The next component is USA. Again
+; I am in USA so ignore it. Now we reach PA, I'm not in PA so it is
+; a valid component to compare.
+
+; So begin by defining the right most tokens, the continents.
+; The two leter versions, notice NOAM and NA are not present.
+
+.AF:		GATEWAY		; Africa
+.AN:		GATEWAY		; Antarctica
+.AS:		GATEWAY		; Asia
+.EU:		W2XO		; Europe
+.OC:		GATEWAY		; Oceania
+.SA:		GATEWAY		; South America
+
+; And the new 4 letter codes.
+
+.ASIA:		GATEWAY		; Asia
+.EURO:		W2XO		; Europe
+.SOAM:		GATEWAY		; South America
+.CEAM:		GATEWAY		; Central America
+.MDLE:		GATEWAY		; Middle East
+.MEDR:		GATEWAY		; Mediterranean
+.INDI:		GATEWAY		; Indian Ocean
+.SEAS:		GATEWAY		; South-East Asia
+.CARB:		W2XO		; Caribbean
+.AUNZ:		GATEWAY		; Australia/New Zealand
+.EPAC:		GATEWAY		; Eastern Pacific
+.NPAC:		GATEWAY		; Northern Pacific
+.SPAC:		GATEWAY		; Southern Pacific
+.WPAC:		GATEWAY		; Western Pacific
+.NAFR:		GATEWAY		; Northern Africa
+.SAFR:		GATEWAY		; Southern Africa
+.CAFR:		GATEWAY		; Central Africa
+.ANTR:		GATEWAY		; Antarctica
+
+; Next we will identify the other countries that are in our domain of NOAM.
+; Countries not in our domain of NOAM should have had a continent codes
+; appended. Remember not to include USA, that's in our domain.
+
+; XX.NOAM
+
+.MEX:		AA4RE		; Mexico
+.CAN:		GATEWAY		; Canada
+.CAR:		W2XO		; Caribbean
+.PR:		W2XO		; Puerto Rico
+.VI:		W2XO		; Virgin Islands
+.MSA:		GATEWAY		; uh?
+.CARB:		W2XO		; Caribbean
+.GTM:		W2XO		; Guatemala
+.CUB:		W2XO		; Cuba
+
+; Next we do the states. In this example we will use regular expresions
+; just to confuss things a bit :) Remember don't define CA, that's us.
+
+; XX.USA.NOAM
+
+.AL:		GATEWAY
+.AK:		WB0TAX		; Alaska via WX3K
+.AZ:		KF0UW
+.AR:		GATEWAY
+.CO:		KF0UW
+.CT:		W2XO
+.DE:		W2XO
+.FL:		GATEWAY
+.GA:		GATEWAY
+.HA:		GATEWAY
+.I[ADL]:	GATEWAY		; Iowa, Idaho, Illinois
+.IN:		W2XO
+.KS:		N6QMY
+.KY:		W2XO
+.LA:		GATEWAY
+.M[ADEI]:	W2XO		; MA, MD, ME, MI
+.M[NOST]:	GATEWAY		; MN, MO, MS, MT
+.N[CD]:		GATEWAY
+.N[EM]:		KF0UW
+.NH:		W2XO
+.NJ:		KB2EAR
+.NV:		WB0TAX
+.NY:		W2XO
+.OH:		W2XO
+.OK:		KF0UW
+.OR:		WB0TAX
+.PA:		W2XO
+.RI:		W2XO
+.SC:		GATEWAY
+.SD:		KF0UW
+.TN:		GATEWAY
+.TX:		KF0UW
+.UT:		KF0UW
+.V[TA]:		W2XO		; VT and VA
+.W[AI]:		GATEWAY
+.WV:		W2XO
+.WY:		KF0UW
+
+; Now we address sections within CA. Luckily there are very few.
+; Again ignore #NOCAL, that's us.
+
+.#CENCA:	KM6PX
+.#SOCA.*:	AA4RE		; matches #SOCA and #SOCAL
+
+; Notice the use of ".*" to match any character any number of times.
+; Normally kind of dangerous. It would have also matched #SOCANADA
+; if that existed. But that would have been routed by the .CAN in
+; the country section.
+
+; Next we have to address each of the bbss that reside inside #NOCAL.
+; I won't put them all here, too many. They can be coded as either 
+; HLOC or AT. Either will work.
+
+; These guys are in my lan SBAY so contact them directly
+
+@N6IIU:		N6IIU
+@KB6MER:	KB6MER
+@N6LDL:		N6LDL
+@K3MC:		K3MC
+@N6QMY:		N6QMY
+@WB0TAX:	WB0TAX
+
+@KM6PX:		KM6PX
+
+@WD6CMU:	NBAY
+@W6PW:		NBAY
+@KA6FUB:	EBAY
+@WA6HAM:	EBAY
+
+; and so on, there are about 50 of these now.
+
+; Now here is an interesting problem. If you are given a address
+;   @N6QMY.#EPA.PA.USA.NOAM
+; but you think this bbs is actually
+;   @N6QMY.#NOCAL.CA.USA.NA
+; where do you send it. Do you trust the user or override with your
+; data? If you know you know where the bbs is just put the bbs entries
+; above the HLOC checks. If you leave them down here the message would
+; go to PA. Of course if the bbs moves you may be moving the message
+; in the wrong direction.
+
+
+; Now let's cover NTS, qualify the message as NTS these routes are
+; only valid if the user sent them as NTS.
+
+|T @NTSAL:	GATEWAY
+|T @NTSAK:	WB0TAX		; Alaska via WX3K
+|T @NTSAZ:	KF0UW
+|T @NTSAR:	GATEWAY
+|T @NTSCO:	KF0UW
+|T @NTSCT:	W2XO
+|T @NTSDE:	W2XO
+|T @NTSFL:	GATEWAY
+|T @NTSGA:	GATEWAY
+|T @NTSHA:	GATEWAY
+|T @NTSI[ADL]:	GATEWAY		; Iowa, Idaho, Illinois
+|T @NTSIN:	W2XO
+|T @NTSKS:	N6QMY
+|T @NTSKY:	W2XO
+|T @NTSLA:	GATEWAY
+|T @NTSM[ADEI]:	W2XO		; MA, MD, ME, MI
+|T @NTSM[NOST]:	GATEWAY		; MN, MO, MS, MT
+|T @NTSN[CD]:	GATEWAY
+|T @NTSN[EM]:	KF0UW
+|T @NTSNH:	W2XO
+|T @NTSNJ:	KB2EAR
+|T @NTSNV:	WB0TAX
+|T @NTSNY:	W2XO
+|T @NTSOH:	W2XO
+|T @NTSOK:	KF0UW
+|T @NTSOR:	WB0TAX
+|T @NTSPA:	W2XO
+|T @NTSRI:	W2XO
+|T @NTSSC:	GATEWAY
+|T @NTSSD:	KF0UW
+|T @NTSTN:	GATEWAY
+|T @NTSTX:	KF0UW
+|T @NTSUT:	KF0UW
+|T @NTSV[TA]:	W2XO		; VT and VA
+|T @NTSW[AI]:	GATEWAY
+|T @NTSWV:	W2XO
+|T @NTSWY:	KF0UW
+
+|T >9453[6-9]:	N6QMY
+|T >9454[0-6]:	N6QMY
+|T >94546:	N6QMY
+|T >94552:	N6QMY
+|T >94555:	N6QMY
+|T >94557:	N6QMY
+|T >94560:	N6QMY
+|T >9457[7-9]:	N6QMY
+|T >94580:	N6QMY
+|T >94587:	N6QMY
+|T >9402[2-4]:	N0ARY
+|T >9408[6-9]:	N0ARY
+|T >95002:	N0ARY
+|T >9500[8-9]:	N0ARY
+|T >95011:	N0ARY
+|T >9501[3-6]:	N0ARY
+|T >9503[5-6]:	N0ARY
+|T >9505[0-9]:	N0ARY
+|T >951[0-9][0-9]:	N0ARY
+|T >94002:	N6IIU
+|T >9401[0-1]:	N6IIU
+|T >94030:	N6IIU
+|T >94066:	N6IIU
+|T >94070:	N6IIU
+|T >94080:	N6IIU
+|T >9408[1-3]:	N6IIU
+|T >9409[0-9]:	N6IIU
+; tons of this deleted.
+
+|T >[0-2][0-9][0-9][0-9][0-9]:	W2XO	; all zips starting with 0,1,2
+|T >[3-9][0-9][0-9][0-9][0-9]:	GATEWAY	; all zips starting with 0,1,2
+
+; If we fall out the bottom here without finding any match then the
+; message will be held for a sysop to deal with.

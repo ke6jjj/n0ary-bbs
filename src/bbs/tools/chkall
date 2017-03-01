@@ -1,0 +1,22 @@
+#!/bin/sh
+
+TOOLDIR=/bbs/src/tools
+
+if [ "$1" = "" ]
+then
+	echo -n "Enter tag name: "
+	read bbs
+else
+	bbs=$1
+fi
+
+here=`pwd`
+
+# check here first
+
+for i in `cat .Dir.${bbs}`; do
+	echo === $i ===
+	cd $i
+	sh ${TOOLDIR}/mkdiff ${bbs}
+	cd ${here}
+done

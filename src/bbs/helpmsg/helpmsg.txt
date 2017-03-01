@@ -1,0 +1,2224 @@
+#
+#  Prompt and error message file
+#
+#  Comments begin with a '#' and are ignored from that
+#  point on. The structure of the file consists of:
+#     # MODULE:FUNCTION message description
+#     !MSGNUM
+#     XXXX MSG
+#
+#  XXXX is a vector that indicates which help levels get this command.
+#  This allows a statement to be display for only a single level or
+#  multiple levels.
+#     0001 - Help level 0 (BBS)
+#     0010 - Help level 1 (EXPERT)
+#     0100 - Help level 2 (FULL PROMPTING)
+#     1000 - Help level 3 (FULL EXPLAINATIONS)
+#
+#  Macro expansion is used to insert numbers and text into the static
+#  lines. These are indicated by a single '%'. The string "%%" prints
+#  a real '%' in the text. Current macros are:
+#     M - current_message_number
+#     B - bbs_callsign
+#     C - CurrentUser.call
+#     H - CurrentUser.home
+#     U - CurrentUser.number
+#     S - supplied string
+#     N - supplied number (decimal)
+#     L - CurrentUser.lname
+#     F - CurrentUser.fname
+#
+#  This file is passed thru a filter program that creates a compressed
+#  message file as well as an index file for quicker access of strings.
+#
+#  Ending a string in ">:?" will cause the message displayer to not append
+#  a [CR] to the string. This is used for prompting.
+#
+#========================================================================
+
+!0
+1111 ======== Message text not written =========
+
+!1
+1111 You should not have gotten here, please send the me a messages
+1111 stating how you did it. TNX %B
+
+!2
+1110 BBS maintenance in progress. This should only take a few minutes
+1110 if it takes longer than that please call me.
+0001 Busy .....
+
+!10 callbk.c
+1100 Interactive CALLBK searches requires a last name be specified.
+0010 Last name required.
+
+!11 callbk.c
+1110 Searching ....
+
+!12 callbk.c
+1100 Number of matches is in excess of 200, please narrow the search
+1100 by supplying additional fields and try again.
+0010 Matches exceeds 200, aborting search.
+
+!13 callbk.c
+1110
+1110 %N hams match your search criteria, list 'em (y/n)?
+
+!14 callbk.c
+1110 Expecting something other than what you gave me, check the manual for
+1110 exact syntax or type SEARCH and return and I will prompt you.
+
+!15 callbk.c
+1110 Call area is greater than 9.
+
+!16 callbk.c
+1110 Wasn't expecting anything here.
+
+!17 callbk.c
+1110 Was expecting to see a callarea (0-9) here.
+
+!18 callbk.c
+1110 You are not allowed to wildcard the suffix of a callsign.
+
+!19 callbk.c
+1110 Callsign %S not found in callbook
+1110
+
+!20 callbk.c
+1110 You must specify a callsign in the lookup request. Type HELP LOOKUP
+1110 if you have questions.
+
+!50 WELCOME
+1110
+1110 Hello %F,
+1100 Welcome to the Sunnyvale area packet BBS
+
+!51 NEW USER IN CALLBOOK
+1000 
+1000 This is the first time that you have logged on to this BBS.
+1000 I have checked the callbook and have identified you as: 
+1000
+1000        Name: %F %L
+1000         Qth: %S
+1000    Home BBS: %H
+
+!52 NEW USER NOT IN CALLBOOK BUT IN WP
+1000 
+1000 This is the first time that you have logged on to this BBS and
+1000 I have not been able to locate you in my copy of the callbook.
+1000 But you do have a WP entry in my database.
+1000
+1000        Name: %F
+1000         Qth: %S
+1000    Home BBS: %H
+
+!53 NEW USER NOT IN CALLBOOK OR WP
+1000 
+1000 This is the first time that you have logged on to this BBS and
+1000 I have not been able to locate you in my copy of the callbook.
+1000 Please answer a few questions so you can be entered into the
+1000 system.
+
+!54
+1000
+1000 Please enter your first name:
+!55
+1000 Please enter your last name:
+!56
+1000 Thanks %F
+
+!57
+1000 %F, this bbs is different than other packet bbs's. For the most
+1000 part it will answer to the W0RLI command set. I would advise you
+1000 to list the system messages on using this bbs, they can be found by
+1000 typing INFO BBSHELP at the prompt, read them by typing READ #.
+1000 Full help services are available by typing HELP.
+1000 Good Luck and welcome aboard.
+1000
+
+!58
+1000  Help Level: 3 (full menus, descriptions and prompting)
+0100  Help Level: 2
+
+!59
+1000  Current homebbs: %S
+0100  Homebbs: %S
+1100
+
+!60
+1110
+1000 (Type HELP A for menu of A commands, etc.)
+1100 %!) %C de %B [%M]>
+0010 %!) %B [%M]>
+0001 >
+
+!61
+1110
+0001 %!) SYSOP: >
+0110 %!) SYSOP: %B [%M]>
+1000 menu: Bye List Read Send Kill Help
+1000 %!) SYSOP: %C de %B [%M]>
+
+!70
+1100 This function can only be performed over a secure connection, phone or
+1100 computer console. You will also need to provide your password.
+0010 Not secure!
+
+!71
+1110 Function not implemented, [%S]
+
+!72
+1110 Not expecting a parameter.
+
+!73
+1100 Please enter your password:
+0010 Password?
+
+!75 common.c
+1100 Command cancelled, the packet world thanks you!
+0010 Cancelled
+
+!76 login.c
+1110 You are not authorized to connect via this method, sorry
+
+!77
+1000 The bbs will remember the last message number you acted on. It is
+1000 shown in (#) at the end of your menu. This number is used by default
+1000 if you don't supply a message number in the command.
+1100 No message number was supplied and there is no active message.
+
+!78
+1100 Sysop Only!
+
+!79
+1100 Expecting only numbers as operands
+
+!80
+1100 Bad parameter
+
+!81
+1110 Message can only be read over a secure channel, the phone line or
+1110 the bbs console.
+1000 If you are confused send a message to the SYSOP.
+
+!82
+1110 Password:
+
+!83
+1110 Invalid password!
+
+!101
+1000 Enter vacation response body (/EXit, /ABort, /?): 
+0100 Vacation (/EX /AB /?): 
+0010 Vac: 
+
+!102
+1110 VACATION ================================================================
+1110    VACation
+1110    VACation [Write|Kill]
+1110    VACation [ON|OFF]
+1110
+1110 The vacation facility can be used to inform people that send you mail
+1110 that you will be unavailable to reply. A response that you supply will be
+1110 generated automatically to each message you receive.
+1110 
+1110 Additionally your incoming mail will be immune to the natural aging of
+1110 messages.
+1110
+1110   VACATION WRITE
+1110   I will be on vacation until August 14th. I will respond to your message
+1110   at that time. Hope your summer is going well.
+1110     73, Tony
+1110   /ex
+1110
+1110   VACATION ON
+1110
+1110 When you return you must turn the VACATION feature off.
+1110   VACATION OFF
+
+!103
+1110 You have not created a vacation relpy yet, type HELP VACATION
+
+
+!401
+1000 The check command is used with NTS messages, type HELP CHECK
+1000 for more information.
+1000 CHECK must be followed by either IN or OUT and a message number
+0100 CHeck [In|Out] (msg_num_list)
+
+!402
+1000 Expecting to see only message numbers here.
+0100 CHeck [In|Out] (msg_num_list)
+
+!405
+1000 The copy command is send an existing message to another user. You can
+1000 only copy one message at a time and to only one user.
+0100 One call only per copy request.
+
+!406
+1000 The copy command is send an existing message to another user. You can
+1000 only copy one message at a time and to only one user.
+0100 One message only per copy request.
+
+!407
+1000 The copy command is send an existing message to another user. You can
+1000 only copy one message at a time and to only one user. Type HELP COPY
+1000 for further information.
+1100 COpy (msg_num) (call @ bbs)
+
+!408
+1111 You must specify the BBS to FORWARD to
+
+!430
+1111 Address is improperly formed
+
+!435
+1111 Only one message number is allowed in a COPY command
+
+!440
+1111 Only one message number should be supplied
+
+!450
+1111 Only message numbers or the keyword MINE is allowed in a KILL command
+
+!460
+1111 READ command must be all messages or all files, don't mix them
+
+!470
+1111 Only one type should be present, BULLETIN, PERSONAL, NTS, SECURE
+
+!475
+1111 Bad term in SEND command
+
+!480
+1111 Multiple comparisons requested
+
+!485
+1111 Maximum of two messages numbers to define range.
+ 
+!490
+1111 Bad term in LIST command
+
+###############################################################################
+# msg_list.c
+###############################################################################
+!110
+1110 Only one search pattern is allowed in a LIST command
+
+!111
+1110 The LIST command should not contain both FIRST and LAST keywords
+
+!112
+1110 Not a valid LIST command keyword
+
+!113
+1110 When using either the FIRST or LAST keywords you should only supply
+1110 a single number to represent count.
+
+!114
+1110 Only two numbers should be specified in a LIST command, they represent
+1110 the desired range of numbers.
+
+!115
+1110 You have alread defined a range.
+
+!116
+1110 No messages match the search criteria you supplied.
+
+!117
+1110 Your LIST request has resulted in %N matches, do you wish to list them?
+
+!118
+1110 Msg#  Stat  Size      To       From  Cnt Date/Time Subject
+
+!130
+1110 Operand is not legal for a READ command
+
+!131
+1110 Message READ requests cannot contain both the MINE keyword and message
+1110 numbers.
+
+!132
+1110 Message #%N not found
+
+!133
+1110 Message #%N is not active, it has either been killed or aborted during
+1110 the creation of the message.
+
+!134
+1110 Message # %N has a directory entry but the body is missing.
+
+!140
+1110 Operand is not legal for a KILL command
+
+!141
+1110 Message KILL requests cannot contain both the MINE keyword and message
+1110 numbers.
+
+!142
+1110 Message #%N has not been read, kill anyway (N/y)?
+
+!143
+1110 You are only allowed to kill mail that is addressed to you or sent by
+1110 you. The exception to this rule is NTS traffic.
+
+!144
+1110 Message #%N killed
+
+!145
+1110 You have no unread messages
+
+###############################################################################
+# msg_send.c
+###############################################################################
+
+!150
+1110 Only one message type my occur in a SEND command
+
+!151
+1110 Unexpected token in SEND command
+
+!152
+1110 Only one FROM (<) may appear in a SEND command
+
+!153
+1110 Only one BID ($) may appear in a SEND command
+
+!154
+1110 You can only send a message to one person at a time
+
+!155
+1110 Only one homebbs or distribution (@) should appear in the SEND command
+
+!156
+1110 Only one password is allowed per SECURE message
+
+!157
+1110 PASSWORD invalid on any message but SECURE
+
+!158
+1110 Error reserving message directory entry
+
+!159
+1000
+1000    This message is addressed to what looks like a callsign but you have
+1000    specified BULLETIN. Anyone will be able to read it.
+1000 => Do you want to change type to PERSONAL (y/N/q)?
+0100    Bulletin to a Callsign
+
+!160
+1100
+1100    This message is addressed to what looks like an NTS address.
+1000 => Do you want to change type to NTS (y/N/q)?
+
+!161
+1100
+1100    This is a PERSONAL message addressed to a category. The only people
+1100    that will be able to read this are sysops.
+1000 => Do you want to change type to a BULLETIN (Y/n/q)?
+
+!162
+1100
+1100    This message is not to addressed to a valid NTS destination which is
+1100    either a zipcode or NTSst (st is the 2 letter state CA, MO, etc).  
+1110 !! Aborting send.
+
+!163
+1100    Assuming PERSONAL [sp]
+!164
+1100    Assuming BULLETIN [sb]
+!165
+1100    Assuming NTS [st]
+
+!166
+1100
+1100    Password not allowed on BULLETINS, NTS or messages leaving this bbs,
+1100 !! ignoring it
+
+!167
+1100    Password found assuming SECURE [ss]
+
+!168
+1100    This message was said to be NTS but the address field is not of the
+1100    standard NTS format, ZIPCODE or NTSst.
+1110 !! Aborting send.
+
+!169
+1100    This message was said to be NTS but the @distribution field is not 
+1100    of the standard NTS format, @NTSst.
+1110 !! Aborting send.
+
+!170
+1100    This message is not to addressed to a valid NTS destination which is
+1100    either NTSst or left blank to indicate CA.
+1110 !! Aborting send.
+
+!171
+1100    This message was sent SECURE but is directed off this bbs.
+1100    I will change the message type to something more appropriate.
+
+!174
+1100 No, a message with this bid already exists on this system. Please
+1100 reenter with a new bid.
+0010 NO, duplicate bid, message aborted
+0001 NO (already have it)
+
+!175
+1000 Subject (60 characters max):
+0100 Subject:
+0010 Sj:
+0001 OK
+
+!176
+1100
+1100    The HOMEBBS that you specified is different than his entry in the
+1100    local White Pages database: %S
+1100 => Do you wish to override my default selection (y/N/q)?
+0010 => Override default home of %S (y/N/q)?
+
+!177
+1100
+1100    The HLOC of the HOMEBBS you specfied is different than the entry
+1100    in the local White Pages database: %S
+1100 => Do you wish to override my default selection (y/N/q)?
+0010 => Override default addr of %S (y/N/q)?
+
+!178
+1100
+1100    The HOMEBBS that has been specified is unknown to this bbs. I will
+1100    need a additional information to figure out where to route the message.
+
+#!146
+#!147
+
+!179
+1100    What you supplied didn't look like a state abbreviation to me. Please
+1100    look up the standard state abbreviations and re-enter you command.
+0010    Invalid state abbreviation
+1110 !! Aborting SEND command
+
+!180
+1000 Enter message body (/EXit, /ABort, /IN, /CC, /NU, /ED, /AD, /KI, /SI, /?): 
+0100 Msg (/EX /AB /IN /CC /NU /ED /AD /KI /SI /?): 
+0010 Msg: 
+
+!181
+1000 !! Aborting message, not sent.
+0110 !! Aborting
+
+!182
+1110 Unable to open body for message #%N, aborting send.
+
+!183
+1110 Error writing body for message #%N, aborting send.
+
+!184
+1110 Message could not be included
+
+!185
+1000 CC ([CR] to quit):
+0110 CC:
+
+!186
+1000    Home BBS identified as %S
+0110    Home BBS: %S
+
+!187
+1000 !! Message has no subject, assuming you want to abort send.
+0110 !! Aborting SEND command
+
+!188
+1110    Unable to link message body files
+1110 !! Aborting SEND command
+
+!189
+1100    Message #%N is not readable by you, you can therefore not include it.
+0010 !! Not your message, include cancelled.
+1100 !! INclude cancelled
+
+!190
+1110   Error %S message to include, request cancelled
+
+!191
+1100    Message #%N is not readable by you, you can therefore not COPY it.
+0010 !! Not your message, COPY cancelled.
+1100 !! COPY command cancelled
+
+!192
+1100    REPLY command expects a single message number only
+1110 !! REPLY command cancelled
+
+!193
+1100    Message #%N is not readable by you, you can therefore not REPLY to it.
+0010 !! Not your message, REPLY cancelled.
+1100 !! REPLY command cancelled
+
+!194
+1110 Message #%N to %S stored
+
+!195
+1100    Message was not addressed to a user or group
+1110 !! Aborting SEND command
+
+!196
+1110    +-------------------- Send Menu ----------------------------+
+1110    | /EX         terminate the message and send it             |
+1110    | /AB         abort the message, don't send                 |
+1110    | /CC         terminate message and send copies             |
+1110    | /IN #       include message #                             |
+1110    | /IN file    include file                                  |
+1110    | /SI         place your signature in body                  |
+1110    |                                                           |
+1110    | /NU         display message with line numbers             |
+1110    | /ED #       edit, retype line number #                    |
+1110    | /AD #       add line just before line #                   |
+1110    | /KI #       kill line number #                            |
+1110    +-----------------------------------------------------------+
+
+!199
+1110 This bbs has you identified as a NonHam. As a NonHam you are welcome to
+1110 experiment with the bbs but by FCC regulations I cannot allow any of your
+1110 messages to be transmitted over the radio. Your message is being changed
+1110 to SECURE which means that it can only be read by users that dial in via
+1110 the phone line. If you would like to send a message to someone on another
+1110 bbs, send the message to me, SYSOP, and I will forward it for you under
+1110 my callsign. If you are a ham drop me a note and I will alter your
+1110 account. Thanks, %B
+
+#
+!100
+1000 In not specifying a target for this send command it is
+1000 assumed that you wish to send the message to multiple
+1000 people. You will now be prompted for each destination.
+1100 [CR] to continue with message, /ab to abort
+
+# msg_send:get_message_body()
+!100
+1000 Please enter message #%NU body (/ex to send,  /ab to abort):
+0100 Please enter message #%NU body (/ex, /ab):
+0010 Msg:
+
+# msg_send:get_message_body() ABORT MSG
+# msg_send:get_message_subject() ABORT MSG
+!100
+1110 Message #%NU aborted
+
+# msg_send:get_message_body() WRITE FAILURE MSG BODY
+!100
+1110 Write failure, message body #%NU
+
+# msg_send:get_message_body() OPEN FAILURE MSG BODY
+!100
+1110 Unable to open message file
+
+# msg_send:prompt_for_multiple_calls()
+!100
+1110 Call:
+
+# msg_send:link_multiple_messages() LINK FAILURE
+!100
+1110 Failure linking files
+
+# msg_send:complete_message_entry() PERSON NOT IN WP
+!100
+1000 The CALL you entered was not found in the local WP database
+1000 and is not currently registered as a user of this bbs.
+1100 Enter homebbs, [CR] to leave on %BB:
+0010 Homebbs?
+
+# msg_send:complete_message_entry() HOMEBBS NOT IN WP
+!100
+1000 This bbs does not have knowledge of the home bbs you
+1000 have specifed. We will need additional information to locate it.
+1110 Enter state [CA]:
+
+
+# msg_send:complete_message_entry() REQUEST TO UPDATE WP
+!100
+1100 If you are sure your information is correct I will update my 
+1100 WP database entries to match those you supplied.
+1110 Update WP entry (y/n)?
+
+# msg_send:complete_message_entry() DIFFERENCE FOUND IN HOMEBBS
+!100
+1100 The home bbs you specified is different from the WP entry I have
+1100 for this user.
+1100 Do you wish to override my default selection (y/n)?
+0010 Override default (y/n)?
+
+# users:user_info_help() ?
+!200
+1110 USER INFO HELP
+1110 To alter one of your user info fields simply press the command letter
+1110 followed by the desired change:
+1110  
+1110 n John    (changes the first name)
+1110  
+1110 For information about the meaning of the different user info fields
+1110 press ? followed by the command letter in question.
+1110 
+1110 Any of these fields can be changed from the main menu by preceeding
+1110 any of the command letters by the letter n. From the main menu:
+1110 
+1110 ns 24     (pause every 24 lines)
+1110  
+1110 Typing a [CR] with out a command letter will cause your User Info list 
+1110 to be redisplayed.
+
+!201
+1100 User parameter %S has not been set.
+0010 Empty
+
+!202
+1100 LINES set to 0, the system will not pause.
+0010 LINES = 0
+
+!203
+1110 Now let's see. Before I can display privileged information I have to ask
+1110 you for your password, and if you provide it that proves you know it.
+1110 Oh I see, you're testing me.
+0010 And you're an "Expert" user, I should disconnect you!
+
+!204
+1110 Please type your password again to confirm the entry.
+
+!205
+1110 Passwords did not match, command cancelled, password unchanged.
+
+!206
+1110 Now that you have set your password you will no longer be able to
+1110 set, read or modify the variables PASSWORD, COMPUTER, PHONE, RIG,
+1110 SOFTWARE or TNC unless you connect over the phone via modem. You
+1110 can also send a message to the sysop (%B) indicating the action
+1110 you want performed, modifying fields or removing your password.
+
+!207
+1110 Expected a Macro number at this location.
+!208
+1100 Token number must be between 0 and 9, remember that MACRO 0 will
+1100 execute automatically each time you login.
+0010 Token number must be between 0 and 9.
+
+!208
+1110 %S is already in the list, continuing ...
+
+!209
+1110 No room left in list, aborting command.
+
+!210
+1110 %S is not in list, continuing ...
+
+!211
+1110 User %S does not have an account here.
+
+!212
+1110 User %S has %B as his/her homebbs, delete anyway (Y/n)?
+
+!213
+1110 User %S has been deleted
+
+# users:user_info_help() ?H
+# wp_util:
+!301
+1110 W> entire WP file
+1110 H> specify a homebbs
+1110 N> entires newer than a specific date
+1110 O> entires older than a specific date
+1110 U> users of %B
+1110 K> kill existing file, requests are normally appended
+1110
+
+# wp_util:
+!302
+1110 Cmd (b/w/h/n/o/u):
+
+# wp_util:
+!303
+1110 Feature not implemented
+
+# wp_util:
+!304
+1110 Unable to open WP file %ST
+
+!500
+1110 Requested file %S not found, check your directory.
+
+!800
+1110 You can only graph one weather parameter at a time, please
+1110 reissue your command.
+
+!801
+1110 GRAPH and DATA cannot appear in the same request.
+
+!802
+1110 INDOOR and YESTERDAY are invalid keywords when graphing.
+
+!803
+1110 DATA should not appear in a graph request.
+
+!804
+1110 INDOOR and YESTERDAY are invalid keywords when dumping data.
+
+# HELP and INFO MESSAGES
+!900
+1110 HOW TO USE THIS BBS ======================================================
+1110 This bbs was written to provide the most flexibility to the new user
+1110 unfamiliar with bbs operation. In the first version of the code all 
+1110 user keystrokes were logged. These logs were reviewed to see what 
+1110 mistakes were common. It was easy to see how people got discouraged by
+1110 repeated failed attempts at simple commands. Thus this bbs was born.
+1110
+1110 This bbs is compatible to older bbs's in the message commands. You may
+1110 still use the "LB" command to list bulletins but you may also issue any
+1110 number of variations that will result in the same objective: 
+1110    LIST BULLETINS
+1110    LIST BULL
+1110    LI BU
+1110    L B
+1110 
+1110 And in addition to the more flexible syntax you may also supply multiple
+1110 options that modify the result. Such as: 
+1110    LIST KILLED PERSONAL         LIST READ BULLETINS
+1110    LIST PERS KILL               LB READ
+1110    LP K                         LR B
+1110    L K P                        L B R
+1110
+1110 As you can see, the odds of happening across what you want are fairly good.
+1110 Or at least your odds are better. In the event that you do type a command
+1110 wrong, the system will show you the error in your ways as shown: 
+1110
+1110    KM 1254
+1110       ^--- Syntax Error
+1110       KILL MINE doesn't expect addional parameters
+1110
+1110    LB < %B KILLED "SALE"
+1110       ^--------------^--- Syntax Error
+1110       Two pattern matches not allowed.
+1110
+1110 Now you get the idea. This system has 4 levels of help. In the most
+1110 novice setting, 3, you will actually be led through improperly entered
+1110 commands and the error messages will be verbose.
+1110
+1110 At help level 2 you will no longer be prompted for the right answer but
+1110 you will still get the verbose error reports.
+1110
+1110 The expert user will end up in level 1. This gives very brief error
+1110 messages and assumes that the user knows the command but just made a typo.
+1110 It is not very user friendly at this level.
+1110
+1110 Level 0 is meant to be used only by incoming bbs's. There is no error
+1110 messages. You often will not be able to tell if a command you typed has
+1110 worked or not. I wouldn't advise using this level.
+1110
+1110 Throughout the bbs help screens and menus commands and instructions will
+1110 be shown as a mixture of upper and lower case letters. The upper case
+1110 portion is the required part to satisfy the parser. The lower case
+1110 portion can be stopped at any point. It is important that if you
+1110 supply more than the minimum number of characters that you continue to
+1110 spell the command properly. The parser will compare to the whole word
+1110 you supply.  The mixture of upper and lower case letters is for the
+1110 help screens,  when typing a command either upper or lower case is
+1110 allowed.
+1110
+1110 Commands and Keywords will always start with a upper case letter. Any
+1110 words that begin in lower case are variables that you supply. Words
+1110 enclosed in square braces [ ] are optional and need not be supplied.
+1110 When words are separated by a '|' you must choose only one of the list,
+1110 if they are separated by commas or spaces you can include as many as
+1110 you like. Here is an example of the definition of the READ command: 
+1110
+1110    Read [Mine | msg_num_list] [Header]
+1110    Read [File] file_name_list
+1110
+1110 The READ command is used to read files from the hard disk as well as
+1110 messages. The 'R' is all that is required of the READ to be understood.
+1110 Same goes for the optional operands MINE, HEADER and FILE. Let's look
+1110 closer at the first command.  You have three options when reading 
+1110 messages,
+1110 
+1110    Read Mine              read mail addressed to you
+1110    Read 5467 5500 5421    read message numbers
+1110    Read                   read the last message you accessed
+1110
+1110 The Mine and msg_num_list are optional but if you have one you are not
+1110 allowed to have the other. The HEADER operand can be added to any of
+1110 the forms shown.
+1110
+1110 This bbs can tell what you want to read, file or message, by the
+1110 supplied operands. Messages are numbers and files are words which can
+1110 contain numbers but must have at least one character or punctuation.
+1110 Therefore the FILE operand is optional. If it is supplied along with
+1110 a message number an error will result. It is allowed just to be more
+1110 flexible for the user.
+1110
+1110 With each one of the command definitions there are a few examples
+1110 supplied. These examples show a verbose form on the left and to the
+1110 right in the [] will show you an optional abbreviated form.
+1110
+1110    READ HEADER 5678            [RH 5678]
+1110    LIST MINE KILLED READ       [LM K R]
+1110
+1110 These short forms are by no means the only way to represent the command.
+1110 They are not necessarily even the optimum way. Just an example.
+1110
+1110 Now you are about ready to jump in. Whenever you have a question about a
+1110 command or a keyword you simply type HELP and the command name or
+1110 keyword. The HELP mechanism also supports requests for information other
+1110 than commands and keywords. Such as HELP FILESYS will describe the
+1110 file upload and download capability along with a menu of the file
+1110 system commands. Your help level will determine how much you are told
+1110 about a command.
+1110
+1110 There is a manual available for operating this bbs. It is available and
+1110 can be obtained by sending $9.50 to cover duplication costs and postage.
+1110 Or you can borrow another users copy and copy it yourself. Type
+1110 INFO MANUAL for more information.
+1110
+1110 Now get started and give it a try. If you have problems send me a 
+1110 message by typing: 
+1110
+1110    SEND SYSOP
+1110 
+1110 You will be prompted for everything else. By the way, BYE will log you
+1110 off, thanks for stopping in!
+1110
+1110 73, and happy packeting,
+1110 %B
+
+
+!901
+1100 A commands ----------------------------------------------
+1100    ACTivate     unkill a message  <= SYSOP ONLY
+1100    Add          (keyword: EVENT, CLUBS, SKIP), same as +
+1100    All          (keyword: LIST)
+1100    ASCENDing    (keyword: LIST)
+1100    Approved     (keyword: SET)
+0010 A     Cmd: none
+0010   Keyword: ACTivate Add All ASCENDing Approved
+
+!902
+1100 B commands ----------------------------------------------
+1100    Barometer    (keyword: WX)
+1100    Bulletin     (keyword: LIST, SEND)
+1100    Bye          quit the bbs
+0010 B     Cmd: Bye
+0010   Keyword: Barometer Bulletin
+
+!903
+1100 C commands ----------------------------------------------
+1100    CALLBK       (server)
+1100    CD           change directory on file system
+1100    CHeck        check in/out a NTS message for delivery, see NTS
+1100    CLubs        set/show current clubs (keyword: LIST)
+1100    COMPuter     set/show computer, see EQUIPMENT
+1100    COpy         send a copy of a message to another user
+0010 C     Cmd: CD CHeck CLubs COMPuter COpy
+0010   Keyword: CLubs
+
+!904
+1100 D commands ----------------------------------------------
+1100    Days         (keyword: EVENT)
+1100    DELete       (keyword: EVENT, CLUBS, SKIP), same as -
+1100    DESCENDing   (keyword: LIST)
+1100    DIr          display a directory of files, same as LS
+1100    DISTribution manipulate a distribution list
+1100    DOWN         (keyword: LIST)
+0010 D     Cmd: DIr DISTribution
+0010   Keyword: Days DELete DESCENDing DOWN
+
+!905
+1100 E commands ----------------------------------------------
+1100    EDit         edit a message header, see NTS
+1100    EMail        set/show your EMAIL forwarding address
+1100    EQuipment    show your current equipment list
+1100    EVent        add/delete/show calendar of events
+1100    EXit         same as BYE
+0010 E     Cmd: EDit EMail EQuipment EVent EXit
+0010   Keyword: none
+
+!906
+1100 F commands ----------------------------------------------
+1100    FILESYS      (server)
+1100    First        (keyword: LIST)
+1100    FName        set/show your first name, see WP
+1100    FORward      alter forwarding on a message (sysop)
+1100    Full         (keyword: )
+0010 F     Cmd: FName FORward
+0010   Keyword: First Full
+
+!907
+1100 G commands ----------------------------------------------
+1100    None at this time
+0010 G     Cmd: none
+0010   Keyword: none
+
+!908
+1100 H commands ----------------------------------------------
+1100    Header       (keyword: READ)
+1100    HELd         (keyword: LIST)
+1100    Help         request help on commands, change help level
+1100    HIstory      list the last command you executed
+1100    HOmebbs      set/show home bbs
+1100    HOLd         place a hold on a message, see RELEASE (sysop)
+1100    Humidity     (keyword: WX)
+0010 H     Cmd: Help HIstory HOmebbs HOLd
+0010   Keyword: Header HELd Humidity
+
+!909
+1100 I commands ----------------------------------------------
+1100    INItiate     start a server manually (sysop)
+1100    INFo         get information about the system
+1100    In           (keyword: CHECK, WX)
+0010 I     Cmd: INItiate INFo
+0010   Keyword: In Indoor
+
+!910
+1100 J commands ----------------------------------------------
+1100    None at this time
+0010 J     Cmd: none
+0010   Keyword: none
+
+!911
+1100 K commands ----------------------------------------------
+1100    Kill         kill a message (keyword: USER, SIGNATURE, VACATION)
+1100    KM           kill all of your messages
+0010 K     Cmd: Kill KM
+0010   Keyword: Kill
+
+!912
+1100 L commands ----------------------------------------------
+1100    Last         (keyword: LIST)
+1100    LA           list all, ignore SKIP variable
+1100    LB           list bulletins
+1100    LC           list messages matching your CLUBS list
+1100    LF           list first messages
+1100    LINes        set/show your screen size, pause function
+1100    List         list messages
+1100    LK           list killed messages
+1100    LL           list last messages
+1100    LM           list messages addressed to you
+1100    LN           list new messages, new since last list on previous login
+1100    LNAme        set/show your last name
+1100    LOAD         display graph of user load by hour
+1100    LOOkup       look a call up in the callbook
+1100    LOCal        (keyword: LIST)
+1100    LO           list old messages
+1100    LP           list personal messages
+1100    LR           list read messages
+1100    LS           display directory of files, same as DIR
+0010 L     Cmd: LA LB LC LF LINes List LK LL LM LN LNAme LOOkup LO LP LR LS 
+0010            LOAD
+0010   Keyword: Last LOCal
+
+!913
+1100 M commands ----------------------------------------------
+1100    MAcro        set/show macros
+1100    ME           show all of your user information
+1100    Mine         (keyword: LIST, KILL, READ)
+1100    Months       (keyword: EVENT)
+1100    MOtd         display the "message of the day", login message
+0010 M     Cmd: MAcro ME MOtd
+0010   Keyword: Mine Months
+
+!914
+1100 N commands ----------------------------------------------
+1100    New          (keyword: LIST)
+1100    None         (keyword: COMPUTER, RIG, SOFTWARE, TNC)
+1100    NOPrompt     (keyword: LIST, READ, KILL) see LINES
+0010 N     Cmd: none
+0010   Keyword: New None NOPrompt
+
+!915
+1100 O commands ----------------------------------------------
+1100    Old          (keyword: LIST)
+1100    Out          (keyword: CHECK)
+0010 O     Cmd: none
+0010   Keyword: Old Out
+
+!916
+1100 P commands ----------------------------------------------
+1100    PAssword     set user password, protects personal data
+1100    PENding      (keyword: LIST)
+1100    Personal     (keyword: LIST, SEND)
+1100    PHone        set/show your phone number, see PASSWORD
+1100    POrts        show who is currently connected to system
+1100    PROCess      (keyword: KILL)
+0010 P     Cmd: PAssword PHone POrts
+0010   Keyword: PENding Personal PROCess
+
+!917
+1100 Q commands ----------------------------------------------
+1100    QTh          set/show your QTH, city and state, see WP
+1100    Quit         same as BYE
+0010 Q     Cmd: QTh Quit
+0010   Keyword: none
+
+!918
+1100 R commands ----------------------------------------------
+1100    Rain         (keyword: WX)
+1100    RELease      remove a hold from a message, see HOLD (sysop)
+1100    RIG          set/show your radio used for packet, see EQUIPMENT
+1100    REPly        reply to a message, same as SR
+1100    Read         read a message or file
+1100    RH           read messages with full routing header, READ HEADER
+1100    RK           read message and kill it (sysop)
+1100    RM           read all messages addressed to you, READ MINE
+1100    RW           show users that have read a message, READ WHO
+0010 R     Cmd: RELease RIG REPly Read RH RM RW
+0010   Keyword: Rain
+
+!919
+1100 S commands ----------------------------------------------
+1100    SB           send a bulletin, SEND BULLETIN
+1100    SD           send a message to a distribution list
+1100    SEArch       search callbook for a callsign by name, see CALLBK
+1100    SECure       (keyword: SEND)
+1100    Send         send a message
+1100    SET          alter a user (sysop) and (keyword: WX)
+1100    SHell        shell out to UNIX (sysop)
+1100    SIGNature    create/kill/show a users signature entry
+1100    SKip         clubs and categories to hide in your list requests
+1100    SOFTware     set/show your packet software, see EQUIPMENT
+1100    SP           send a personal message, SEND PERSONAL
+1100    SPAWN        start a tnc server (sysop)
+1100    SR           send reply to a message, see REPLY
+1100    SS           send a secure message, SEND SECURE
+1100    ST           send an NTS message, SEND NTS
+0010 S     Cmd: SB SD SEArch Send SET SHell SKip SOFTware SP SPAWN SR SS ST SIGN
+0010   Keyword: SECure Set
+
+!920
+1100 T commands ----------------------------------------------
+1100    Talk         request to speak to the sysop, if around
+1100    Temperature  (keyword: WX)
+1100    TNC          (keyword: PORTS)
+1100    TNC144       (keyword: SPAWN)
+1100    TNC220       (keyword: SPAWN)
+1100    TNC440       (keyword: SPAWN)
+0010 T     Cmd: Talk
+0010   Keyword: Temperature TNC TNC144 TNC220 TNC440 
+
+!921
+1100 U commands ----------------------------------------------
+1100    Users        show recent connects (keyword: KILL)
+1100    UP           (keyword: LIST)
+0010 U     Cmd: Users
+0010   Keyword: UP
+
+!922
+1100 V commands ----------------------------------------------
+1100    VACation     create/kill/show a users vacation entry
+0010 V     Cmd: none
+0010   Keyword: none
+
+!923
+1100 W commands ----------------------------------------------
+1100    Weeks        (keyword: EVENT)
+1100    WHEreis      show the WP entry for call, same as WP
+1100    WHO          show information about a user
+1100    Wind         (keyword: WX)
+1100    WP           show the WP entry for call, same as WHEREIS
+1100    WRite        write a file to disk (keyword: SIGNATURE, VACATION)
+1100    WX           display weather statistics
+0010 W     Cmd: WHEreis WHO WP WRite WX
+0010   Keyword: Weeks Wind Write
+
+!924
+1100 X commands ----------------------------------------------
+1100    None at this time
+0010 X     Cmd: none
+0010   Keyword: none
+
+!925
+1100 Y commands ----------------------------------------------
+1100    None at this time
+0010 Y     Cmd: none
+0010   Keyword: none
+
+!926
+1100 Z commands ----------------------------------------------
+1100    ZIp          set/show your zip code, see WP
+0010 Z     Cmd: ZIp
+0010   Keyword: none
+
+!927
+1100 Punctuation ---------------------------------------------
+1110    <            from field, used in LIST, SEND
+1110    >            to field, used in LIST, SEND
+1110    @            at bbs field, used in LIST, SEND
+1110    !            assign a password to a message, see SEND
+1110    $            assign a bit to a message, see SEND
+
+!937
+1110 HISTORY command =========================================================
+1110 The HISTORY command can be used to replay commands you have already
+1110 executed. Actually the command itself is used to display your command
+1110 history stack.
+1110
+1110    HISTORY [cmd_cnt]
+1110
+1110 To replay a command off your history stack you need only type "!" and
+1110 the command number. To replay the last command executed you can use the
+1110 short cut of type "!!".
+1110
+1110    !12           execute command #12
+1110    !!            execute the last bbs command again
+1110
+1110 Type INFO SHELL for other features of the BBS shell.
+
+!938
+1110 LOAD command ============================================================
+1110 The LOAD command is used to give a use an idea of the best time to connect
+1110 to the bbs. By default it shows you the hourly load on the 2 meter RF port.
+1110 The user can optionally choose to see the load on any of the 6 bbs ports.
+1110 Some of these are not available to the average user.
+1110  
+1110    LOAD              show user load by hour
+1110    LOAD TNC144       same as above
+1110    LOAD TNC220
+1110    LOAD TNC440
+1110    LOAD PHONE
+1110    LOAD CONSOLE
+1110 
+1110 Type INFO LOAD for a detailed description.
+
+!939
+1110 DISTRIBUTION command =====================================================
+1110    DIST [List]       show possible distribution lists
+1110    DIST Write list   create a distribution list
+1110    DIST Kill list    delete a distribution list
+1110    DIST Read list    display the contents of a list
+1110
+1110 Distribution lists can be created to enable users to send a message
+1110 to multiple receipents that have something in common while only entering
+1110 the message once.
+1110
+1110 This is aimed primarily at clubs or groups. For instance when a user
+1110 issues a command SEND DIST LERA the bbs will open the distribution list
+1110 named LERA and send the message to everyone in the list automatically.
+1110 Type INFO DISTRIB for more information and examples.
+1110
+
+!940
+1110 @, ADDRESS, LOCALE tokens ================================================
+1110 When sending a message to another user not on the local bbs you will
+1110 need to specify an address for the user. The local WP database may
+1110 know the address already in which case you need not enter it. An
+1110 address consists of a homebbs and additional information necessary to
+1110 route a message to the homebbs.
+1110
+1110      @ %B.#NOCAL.CA.USA.NA
+1110
+1110 Addresses are started with an '@' and the homebbs call. The different
+1110 portions of the hierarchical address are separated by periods. As you
+1110 move from left to right you get broader in scope. The LOCALE parameter
+1110 is not used in all areas and begins with a '#'. It is also possible for 
+1110 2 LOCALE parameters to be present.
+1110
+1110 This bbs will attempt to fill in the remainder of an address if you
+1110 supply only a portions, for instance the .USA.NA will be appended
+1110 automatically upon parsing the CA.
+
+!941 ADD and DELete keywords ==================================================
+1110 These keywords are used in the EVENT, CLUBS, EQUIP and SKIP commands. They
+1110 are equivalent to using '+' and '-'. In the EVENT command there use
+1110 is very predictable, only a single ADD or DELETE may appear in the
+1110 command. In the CLUBS and SKIP command you may have multiple occurances: 
+1110
+1110     CLUBS ADD sale lera lprc DEL want + specs
+1110
+1110 This command would ADD sale, lera, lprc and specs to the list and
+1110 DELETE the category want. The operatino to be performed to each
+1110 club will be the last operation seen.
+
+!942
+1110 LIST command =============================================================
+1110    LIST [type] [options] [range] [pattern]
+1110    LIST ASCENDing|DESCENDing
+1110
+1110 The list command will display a list of messages that is a subset
+1110 of the total list messages that you are allowed to see and read.
+1110 Everyone can see BULLETINS, NTS and mail addressed to or sent by
+1110 you. Mail addressed to others is invisible.
+1110 
+1110 types -
+1110    Message types can be Personal, Bulletin or NTs. You should only use
+1110    one of these in any request. A message cannot match any two types.
+1110
+1110 options -
+1110    ALL, LAST, NEW, READ, PENDING, OLD, KILLED, HELD, MINE, CLUBS, LOCAL
+1110    At any time there are around 2000 messages on the system. You use
+1110    these options to scale down the request.
+1110       All     - ignore the SKIP list
+1110       Last x  - last messages to arrive, defaults to 10.
+1110       First x - oldest messages on the system, defaults to 10.
+1110       New     - new since previous LIST NEW on early login
+1110       Read    - messages that have been read by addressee
+1110       PENDing - those awaiting forwarding
+1110       Old     - messages about to be deleted by aging
+1110       Killed  - messages that have been killed, will remain 3 days
+1110       Held    - messages awaiting sysop action
+1110       Mine    - messages addressed to you
+1110       Clubs   - where your CLUBS list matches the To,From or @ field
+1110       LOCal   - messages left on this bbs for it's users
+1110
+1110    You may specify as many options as you like. The intersection of the 
+1110    request is displayed. For instance, LIST PER CLUBS READ KILLED,
+1110    will list any PERSONAL message that are in your CLUBS list, that you
+1110    have already READ and have been KILLED. It must satisfy all three
+1110    conditions, CLUBS, READ and KILLED.
+1110
+1110 range -
+1110    To further narrow the list you may specify message number ranges.
+1110    This is done in any of the following forms: 
+1110       1000-2000   between 1000 and 2000, '-' is optional could be space.
+1110       2000-       from 2000 to last message, '-' is optional
+1110       -1000       messages lower than 1000, '-' is required
+1110
+1110 pattern -
+1110    There are 4 different pattern matching commands. The first 3 are the
+1110    same as those used to match your CLUBS variable.
+1110       < XXXX      match pattern in FROM field
+1110       > XXXX      match pattern in TO field
+1110       @ XXXX      match pattern in @ field of FROM
+1110       XXXX        match pattern in any field, TO, FROM, @ and SUBJECT
+1110
+1110    The last version is the most powerful, it will check against all of
+1110    the three previous fields as well as search thru the SUBJECT field 
+1110    for the pattern. The pattern can appear anywhere in the field. If
+1110    the pattern you are searching for is a list keyword you will have 
+1110    to enclose it in " " so it isn't mistaken for the keyword.
+1110       LIST ALL "KILL"
+1110
+1110 The bbs has been written to allow you to run one option/type up against
+1110 the 'L' without including a space. This is for compatibility with earlier
+1110 bbs's. Putting multiple options together without a space will result
+1110 in a syntax error or the options being mistaken for a pattern. Here are
+1110 some examples, notice that the order of the parameters is not important.
+1110
+1100    LIST ALL KILLED READ         [LA K R] or [LK A R]
+1100    LIST BULLETIN READ "SALE"    [LB R SALE] or [LR SALE B]
+1100
+1110 For compatibility with older bbs's the LIST NTS command can be abbreviated
+1110 as LT.
+1110
+1110 This bbs also lets you control if messages are displayed in ascending
+1110 or descending order. Do you want to see the newest messages first,
+1110 descending, or the oldest messages first, ascending.
+1110
+1110    LIST DESCENDING
+1110    LIST ASCENDING
+
+
+!943
+1110 WEATHER command ==========================================================
+1110    WX [INDOOR]
+1110    WX Temperature|Humidity|Barometer|Rain|Wind
+1110    WX Data
+1110    WX SET Temperature|Humidity|Barometer|Rain|Wind value
+1110
+1110 This bbs connects at various times with a weather station operated on
+1110 Mt. Umunhum by BAYCOM (WA6YCZ). The WX command will display a page of
+1110 of weather statistics and the time that it was downloaded. You can 
+1110 request a crude graph of historical data on any of the weather
+1110 parameters listed by supplying the individual parameter.
+1110 You can also use this command to set the weather. Please be aware that
+1110 the weather station is located atop Mt. Umunhum and it make take a
+1110 while before your changes can be felt in your area. Also keep in mind
+1110 that there are people living up there. The INDOOR keyword refers to the
+1110 shack on the hill that houses the weather station, not your home.
+1100    WX
+1100    WX TEMPERATURE                     [WX T]
+1100    WX SET RAIN 1.2 (inches implied)   [WX SET R 1.2]
+
+!944
+1110 BYE command ==============================================================
+1110    Bye
+1110
+1110 Used to logoff the system when you are finished, preferable to 
+1110 simply disconnecting from your end.
+
+!945
+1110 CD command ===============================================================
+1110    CD path
+1110
+0000 Change directory, used to move around the bbs directories. Use the DIR
+1110 Change directory, used to move around the file system. Use the DIR
+1110 command to list the files and READ to read them.
+
+!946
+1110 CHECK command ============================================================
+1110    CHeck In|Out (msg_num_list)
+1110
+1110 When you plan to deliver an NTS message you check it out. This keeps the
+1110 message on the system and allows the NTS manager to see who is processing
+1110 the message. Once the message is delivered you KILL the message. If the
+1110 message was undeliverable you may either CHECK it back in or EDIT the
+1110 message header.
+1100    CHECK OUT 3456 3466 3470   [CH O 3456 3466 3470]
+1100    CHECK IN 3466              [CH I 3466]
+
+!947
+1110 CLUBS command ============================================================
+1110    CLubs [ADD|DELete|+|-] club_category_list
+1110
+1110 This bbs allows you to select a group of clubs or categories that you wish
+1110 to see as if they were addressed to you. They will be listed with the LIST
+1110 CLUBS command. Once you have listed each of the messages, it will be marked
+1110 to indicate you have seen it and will not be displayed as part of the list
+1110 the next time you log in. You have room to store 20 clubs. You add clubs to
+1110 your list by typing ADD or + and the list. To see your current list of
+1110 clubs type CLUBS alone. (See Also SKIP)
+1100    CLUBS ADD SPECS SALE       [CL + SPECS SALE]
+1100    CLUBS DELETE AMSAT         [CL - AMSAT]
+
+!948
+1110 EQUIPMENT ================================================================
+1110    TNC [None|your_computer] 
+1110    RIG [None|your_computer] 
+1110    SOFTware [None|your_computer] 
+1110    COMPuter [None|your_computer] 
+1110
+1110 This information is kept locked in the system and can only be displayed
+1110 by a sysop over a secure channel. It is used to help put newcomers with
+1110 problems in touch with experienced users with similar gear. If someone
+1110 asks me for help I will contact you and see if you are willing to lend
+1110 a hand. I will not volunteer you without your consent. If you change your
+1110 equipment you can simply overwrite the field by reentering the info. Or
+1110 you may delete your entry by using DELETE. (See Also PHONE, PASSWORD)
+1100    TNC aea pk88 and pk232
+1100    TNC NONE                   [TNC N]
+1100    COMPUTER macintosh se      [COMP mac se]
+
+!949
+1110 COPY command =============================================================
+1110    COpy msg_number user@bbs
+1110
+1110 The copy command is used to send a message to another user. If you are the
+1110 originator of the original message than it is merely duplicated. If you
+1110 are not, the message will be readdressed to show that it came from you and
+1110 the original message header will be added to the body of the message. You
+1110 are only allowed to copy one message to a single user per copy request.
+1110 If you know you are going to be sending a message to multiple users when
+1110 you enter the message the /CC command is a preferable method. (see SEND)
+1100    COPY 3456 n6zfj @ n0ary       [CO 3456 n6zfj@n0ary]
+
+!950
+1110 DIR command ==============================================================
+1110    DIR [path]
+1110    LS [path]    (for you UNIX users)
+1110
+1110 These two commands are used to list the files in the currently selected
+1110 directory. You can look in another directory by supplying a path. Your
+1110 path may use either forward slashs (/) unix style, or back slashs (\)
+1110 like dos. (See Also CD, READ, WRITE)
+1100    DIR radio.mods
+1100    LS nts
+1100    DIR
+
+!951
+1110 EDIT command =============================================================
+1110    EDit msg_number
+1110
+1110 If an NTS message needs to be readdressed you may do this directly. You
+1110 will be prompted for changes, the current state will be displayed in []
+1110 and to accept unchanged just press return. You can change the address
+1110 and the subject line.
+1100    EDIT 2034
+1100    to [94086 @ NTSCA]? type_change_here
+1100    sj [QTC 1 Mountain View, CA 415 249]? type_change_here
+
+!952
+1110 EVENT command ============================================================
+1110    EVent [ADD|DELete #]
+1110    EVent # [Days|Weeks|Months] [keyword] [NOPrompt]
+1110    EVent mo/yr [keyword] [NOPrompt]
+1110
+1110 The bbs has an events calendar to keep track of those important event
+1110 in every ham's life: flea markets, exam dates, conventions, etc. You
+1110 can list the events occuring in the next # of days, weeks or months, as
+1110 well as events scheduled for a particular month. Your CLUB variable will
+1110 be used to see what events to display to you. This keeps you from seeing
+1110 club meeting notices that you are not interested in. To add an event is
+1110 easy and you will be led through prompts for all the fields. Please
+1110 refer to the "NOARY/BBS Users Manual" for detailed info on this command.
+1100    EVENT 20 DAYS               [EV 20 D]
+1100    EVENT 5/91                  [EV 5/91]
+
+!953
+1110 CALLBK commands ==========================================================
+1110    LOOkup call_list
+1110    SEArch
+1110
+1110 The LOOKUP command is used to find callbook information about a person
+1110 when the callsign or portion of the callsign is known. The SEARCH command
+1110 is used to locate hams by last name, city, state, zip, etc.
+1110
+1110 LOOKUP
+1110    Callsigns consist of 3 parts, PREFIX, CALL AREA and SUFFIX. The PREFIX
+1110    and CALL AREA can be replaced with a wildcard character '?' which will
+1110    match anything in that field. If you wildcard the prefix it has to be
+1110    the entire prefix, ?6AAA not K?6AAA. Here are some examples: 
+1110       LOOKUP N0ARY N6ZFJ KB1AAA
+1110       LOOKUP ?0ARY KB?AAA ??ZFJ
+1110 
+1110 SEARCH
+1110    If you are trying to locate a ham but have forgotten the call you can
+1110    have the bbs search for possible matches to name, city, state and zip.
+1110    This is done by entering the SEARCH command and answering the prompts
+1110    that follow. If the last name in question is fairly unique you should
+1110    only supply the last name and leave the other fields blank. People are
+1110    not very diligent in informing the FCC when they move, so addresses
+1110    in the callbook are often out of date. First names are also a problem,
+1110    the FCC requires proper first names, which often differ from the handle
+1110    used on the air. In the event that the person has a common last name,
+1110    Smith, you will be required to supply additional information. As a
+1110    basic rule start broad and narrow your scope.
+1110
+1110    If more than 200 people match your request the bbs will abort and
+1110    inform you of the problem. You will then have to narrow the scope and
+1110    try again. The interactive SEARCH command also requires that the
+1110    last name be a required field. If you wish to search on other fields,
+1110    such as all the hams in a given zip code, you will have to make that
+1110    request of the CALLBK server.
+
+!954
+1110 FILESYS commands =========================================================
+1110    CD path
+1110    DIr [path]
+1110    LS [path]
+1110    Read [File] filename [NOPrompt]
+1110    WRite [File] filename
+1110
+1110 Files and directories can also be accessed via the server.
+
+!955
+1110 White Pages commands =====================================================
+1110    FName [first_name]
+1110    QTh [city_state]
+1110    ZIp [zip_code]
+1110    HOmebbs [homebbs]
+1110
+1110 These commands are used to display and set your White Pages entries in
+1110 the local database. Once every few days users changes are collected and
+1110 sent to the WP regional servers. 
+1110 When setting your homebbs please leave off the SSID of the bbs
+1110 call (-1). The QTH variable should be in the form "Sunnyvale, CA". And
+1110 the ZIP should be just 5 digits. For addition information type HELP WP.
+
+!956
+1110 FORWARD command (SYSOP) ==================================================
+1110    FOrward bbscall [msg_num_list]
+1110
+1110 This command allows a sysop to change the forwarding path for a list
+1110 of messages. This is typically used when a bbs that is normally used
+1110 for forwarding goes down. The sysop can force messages to be forwarded
+1110 to an alternate bbs. (See Also EDIT, MAINTENANCE)
+1110    FORWARD WA6LYZ 3423 3425 3466
+
+!957
+1110 HEADER keyword ===========================================================
+1110    Read [Header] [msg_num_list]
+1110
+1110 When you do a read command without the HEADER keyword a line will be
+1110 present that will show you the path that the message took to reach you.
+1110 This is a list of calls separated by '!'s. The call on the left is the
+1110 most recent bbs. If there are too many calls to fit on a single line the
+1110 bbs will display "..." at the end to indicate that the list is partial.
+1110    N6QMY!N6IYA!WA6RDH
+1110
+1110 If you desire more information about the routing of the message you can
+1110 use the HEADER keyword to display full routing information. This infor-
+1110 mation can vary between bbs's but what follows is fairly standard.
+1110
+1110       DATE  TIME      BBS @ ADDRESS        QTH    MSGNUM   ZIP
+1110    R:910208/1415 @:N6QMY.#NOCAL.CA.USA.NA Fremont #:4673 Z:94536
+1110    R:910208/2153 @:N6IYA.#NOCAL.CA.USA.NA Felton #:12621 Z:95018
+1110    R:910208/2152 @:WA6RDH.#NOCAL.CA.USA.NA Dixon #:63073 Z:95620
+
+!958
+1110 ACTIVATE, HOLD and RELEASE commands (SYSOP) ==============================
+1110    ACTivate [msg_num_list]
+1110    HOLd [msg_num_list]
+1110    RELease [msg_num_list]
+1110
+1110 ACTIVATE is used to restore a message that was killed by mistake.
+1110
+1110 HOLD and RELEASE are complimentary commands. Holding a message will
+1110 make it immune to all the automatic processing of the BBS. It will
+1110 not be deleted or forwarded until the RELEASE command has been issued.
+1110 This is used to hold messages that are addressed in error, or 
+1110 message that you don't want to be deleted due to aging.
+1110
+1100    ACTIVATE 4587 4599           [ACT 4587 4599]
+1100    HOLD 4563 4566               [HOL 4563 4566]
+1100    RELEASE 4563                 [REL 4563]
+
+!959
+1110 HELP command =============================================================
+1110    Help Help <-- Type this for general information on how to use this bbs
+1110    Help [command|keyword]
+1110    ? [command|keyword]
+1110    Help [0|1|2|3]
+1110
+1110 The '?' is a short cut for the keyword HELP. If you need help on a command
+1110 or a keyword you just type HELP and the command name. If you supply a
+1110 string that is too ambiguous to map to a single command or keyword you 
+1110 will be presented with a list of commands/keywords that start with the
+1110 first letter of the word you typed.
+1110
+1110    HELP SEND      will display information on SEND command
+1110    HELP NOPROMT   information on the NOPROMPT keyword and where used
+1110    HELP CO        matches COPY and COMPUTER, displays all C commands
+1110
+1110 Use HELP # to change your current help level.
+1110
+1110 Every command and keyword used in this bbs has a help message associated
+1110 with it. If you find one that is not please send me a message and I will
+1110 add it. It is very important to me that these helps be accurate and
+1110 helpful. Why else would we have them?
+1110
+1110 If you are going to capture a bunch of HELPs to disk then you will want
+1110 to disable your LINES variable while you are doing this. This is done by
+1110 typing: 
+1110    LINES 0
+1110    HELP whatever
+1110    LINES 20
+
+!960
+1110 INITIATE command (SYSOP) =================================================
+1110    INItiate [Wp|FIlesys|Callbk|Event|FOrwarding]
+1110
+1110 This command starts the desired server. This normally occurs auto-
+1110 matically but there may be the need to do it manually. If there are
+1110 no server functions pending the server will simply exit. For more
+1110 information on the servers use the INFO command.
+1100    INITIATE CALLBK             [INI C]
+
+!961
+1110 INFORMATION command ======================================================
+1110    INFO [topic]
+1110
+1110 This command is used to display information on various topics. To get a
+1110 list of current topics available you simply type INFO with no parameters.
+1110 To look at a particular topic you type INFO and the topic. You have supply
+1110 the entire topic name, don't abbreviate.
+1100    INFO              show list of topics
+1100    INFO HOMEBBS      show information definition and choosing a homebbs
+1100    INFO CALLBK    	  show info on using on-line callbook
+1110
+1110 If you have suggestions for other topics for the INFO command please send
+1110 a message to SYSOP.
+
+!962
+1110 KILL commands ============================================================
+1110    Kill [Mine] [msg_num_list]
+1110    Kill [FIle] [file_name_list]
+1110    Kill [PROCess] process_number  <- SYSOP ONLY
+1110    Kill msg_num_range [NOPrompt]  <- SYSOP ONLY
+1110    Kill User callsign_list        <- SYSOP ONLY
+1110
+1110 The KILL command is used to mark a message or file for deletion. It will
+1110 not be physically deleted for about 3 days. This gives you an opportunity
+1110 to get a sysop to restore it, if you killed something by mistake. In
+1110 general the keyword FILE is not necessary, if the supplied list is numbers
+1110 the bbs assumes you are killing messages, a list of words indicates files.
+1110 But if you want to be formal, go ahead. The keyword MINE will allow you
+1110 to kill all of your mail at once. If you attempt to KILL something that
+1110 hasn't been read you will be prompted for a confirmation. KM is a short
+1110 form for KILL MINE.
+1100    KILL MINE                   [KM]
+1100    KILL 3456 3556 2344         [K 3456 3556 2344]
+1100    KILL FILE ft470.mod         [K ft470.mod]
+1100    KILL USER N0ZZZ             [KU n0zzz]
+
+!963
+1110 LINES and NOPROMPT commands ==============================================
+1110    LINes [cnt]
+1110       NOPrompt keyword used in READ, LIST
+1110
+1110 Since some users are using dumb terminals or possibly do not have disk
+1110 capture in their communications software the bbs can be instructed to
+1110 pause every X lines during long listing to allow you to catch up. It 
+1110 also allows you the opportunity to abort the listing if you decide it
+1110 is not worth reading. Setting this variable to zero (0) will have turn
+1110 off the pause feature.
+1110 
+1110 Some commands that produce long listings can be instructed to ignore
+1110 this variable for the duration of the command. This is done by including
+1110 NOPROMPT (NOP) on the line with the command. It has the same affect as
+1110 typing LINES 0; YOUR_LONG_COMMAND; LINES 20.
+1100    LINES 18                    [LIN 18]
+1100    READ NOPROMPT 3465          [R 3465 NOP]
+
+!964
+1110 LNAME command ============================================================
+1110    LNAme [last_name]
+1110
+1110 Use this command to show or set your last name. This field is actually
+1110 not used for anything other than general information. The field will
+1110 typically be filled in on your initial contact by looking you up in
+1110 the callbook.
+
+!965
+1110 MACRO command ============================================================
+1110    MAcro
+1110    MAcro # [command_list]
+1110
+1110 A macro is similar to programmable function keys on your computer. They
+1110 allow you to perform a list of commands by typing a single character.
+1110 This bbs allows each user to specify up to 10 macros that can be invoked
+1110 by simply typing the macro number and returning. The command list can be
+1110 any number of commands up to a total of 80 characters per macro. Commands
+1110 must be separated by a semi-colon (;). Macro 0 has a special meaning. It
+1110 is executed automatically upon connection with the bbs, very similar to
+1110 an autoexec.bat or hello file. ***NOTE*** make sure you DO NOT put the
+1110 BYE command in your macro 0. You will no longer be able to login.
+1110
+1110 Issuing MACRO with no number will display all of your current macros.
+1110 Supplying a macro number but no string will clear the macro, setting it
+1110 to empty.
+1110    MACRO 0 READ MINE; KILL MINE; LIST    [MA 0 RM;KM;L]
+1110    MACRO 1 LIST LAST 100 "ICOM"          [MA 1 LL 100 ICOM]
+1110    MACRO 9 KILL MINE; BYE                [MA 9 KM;B]
+1110    MACRO 8                               [MA 8]
+
+!966
+1110 MESSAGE/MAIL commands ====================================================
+1110    List [type] [options] [range] [pattern]
+1110    Read [Mine|msg_num_list] [Header] [Kill]
+1110    Send type call [@address] [<from] [$bid] [!password]
+1110    Kill [Mine|msg_num_list]
+1110
+1110 The bbs remembers the last message number you referenced. If you don't
+1110 supply a message number explicitly in the command the bbs will assume
+1110 that you wish to perform the command on the earlier message. This can
+1110 reduce your chances of typing a message number wrong or forgetting it.
+1110    READ 8769
+1110    KILL
+1110    REPLY
+1110
+1110 All of the preceeding will use the message number 8769. Make sure that
+1110 you don't reverse KILL and REPLY or the message that will be killed will
+1110 be the reply you just sent.
+
+!967
+1110 ME and WHO commands ======================================================
+1110    ME
+1110    WHO [call]
+1110
+1110 These commands display information about the desired user. ME is the
+1110 same as typing WHO with your own call. It displays the user information
+1110 structure, WP and callbook information. Of course the protected fields
+1110 will not be displayed.
+
+!968
+1110 MINE keyword =============================================================
+1110    Read Mine
+1110    Kill Mine
+1110    List Mine
+1110
+1110 This keyword will cause the TO field in the message address to be compared
+1110 to your call. If it matches the function is performed. It will scan the
+1110 entire message database looking for matches. This is not the case with
+1110 the list command if additional options are supplied.
+
+!969
+1110 MOTD keyword =============================================================
+1110    Read MOtd
+1110
+1110 MOTD stands for "message of the day". This message is displayed upon
+1110 connection and is used to inform you of new features, and timely
+1110 information. In this bbs once you have seen the message it will no
+1110 longer be displayed on each connect. You may recall the message by
+1110 entering the READ MOTD command.
+1110
+1110 Whenever a sysop changes the contents of the MOTD he will issue a
+1110 command that will reset each user so they will see the message on
+1110 their next connect.
+
+!970
+1110 NTS commands =============================================================
+1110    Send NTs [zip@NTSst]
+1110    ST [zip@NTSst]
+1110    Edit nts_msg_num
+1110    CHeck [IN|OUt] nts_msg_num
+1110    Read nts_msg_num
+1110    List NTs
+1110    LT
+1110
+1110 NTS message are health and welfare messages that are sent via ham radio
+1110 to people who may or may not be hams. They could also be originated by
+1110 non hams. 
+1110
+1110 When an NTS message arrives here for delivery every user is invited to
+1110 participate in the delivery. Here is all you do: 
+1110    LIST NTS             list messages waiting to be delivered [LT]
+1110    READ msg_num         get a hard copy of the message
+1110    CHECK OUT msg_num    tell the system that you will deliver the msg
+1110
+1110 If delivery was successful: 
+1110    KILL msg_num
+1110
+1110 If delivery is not possible: 
+1110    CHECK IN msg_num     make it available for someone else to try
+1110 or
+1110    EDIT msg_num         change address to another nts bbs
+
+!971
+1110 PHONE and PASSWORD commands ==============================================
+1110    PHone [DELETE|-|your_number]
+1110    PASSWORD your_new_password
+1110
+1110 I discuss these together to hopefully reduce your worries about invasion
+1110 of privacy. I would like to have all my users phone numbers on file so
+1110 that I can give you a call if someone is looking for help and shares
+1110 your equipment setup, or if I need some information from you. This entry
+1110 as well as your equipment database entries can not be read out over
+1110 packet. It is only accessible on my computer console or over the modem.
+1110 And then only by a sysop. You can also apply a PASSWORD to your account
+1110 that will keep others from coming in on a secure line and looking at
+1110 your data. You may want to set these entries up over the phone modem
+1110 if you are worried about people listening in.
+1110 (See Also TNC, SOFTWARE, COMPUTER, RIG)
+1100    PHONE 408-555-1212          [PH 4085551212]  please include areacode
+1100    PHONE DELETE                [PH -]
+1100    PASSWORD burp
+
+!972
+1110 PORT command =============================================================
+1110    Ports [TNC]
+1110
+1110 This command will list the current users logged into the system and
+1110 by which method they are entering, 144, 220, 440, phone, console. It
+1110 actually executes the following unix command: 
+1110    ps -ax | grep bbs | grep -v grep
+1110 Adding the TNC keyword will also display the tnc driver processes.
+
+!973
+1110 REPLY command ============================================================
+1110    REPly [msg_num]
+1110    SR [msg_num]      (included now for compatibility)
+1110
+1110 This command will take the message supplied or optionally the last message
+1110 read or killed and generate a reply. It will do the addressing and change
+1110 the subject by putting "Re: " in front of the original subject. All you
+1110 need to do is type the body of the message. (See Also SEND)
+1110
+1110 A conflict may arise if the person orginating the message had sent it from
+1110 a bbs other than his home bbs. You will be prompted for additional instr-
+1110 uctions if you are at help levels 2 or 3.
+1100    REPLY 3245                 [REP 3245] or [SR 3245]
+
+!974
+1110 READ command =============================================================
+1110    Read [Mine] [Header] [msg_num_list] [NOPrompt] [Kill]
+1110    RM [Header] [NOPrompt]
+1110    RK [Header] [NOPrompt]
+1110    RH [Mine] [msg_num_list] [NOPrompt]
+1110    Read [FIle] [file_name] [NOPrompt]
+1110    Read Who [msg_num_list]
+1110    RW [msg_num_list]
+1110
+1110 This command is used to read both messages and files. It distinguishes
+1110 messages from files by the request list, numbers indicate messages and
+1110 words indicate files. You can optionally include the keyword FILE to
+1110 make it clearer but this is not required.
+1110 
+1110 On messages you can use the MINE keyword to read just the mail addressed
+1110 to you, see HELP MINE. The HEADER keyword will result in the entire
+1110 routing header being displayed with the message, see HELP HEADER. The
+1110 WHO keyword is used to list the callsigns of all the users that have
+1110 read the message.
+1110
+1110 The NOPROMPT keyword will override your LINES variable for this command.
+1110 Allowing you to capture to disk with out having the pauses occuring 
+1110 every X number of lines, see HELP NOPROMPT.
+1100    READ MINE HEADER               [RM H]
+1100    READ FILE NTS.INFO NOPROMPT    [R NTS.INFO NOP]
+1100    READ WHO 3456 3546             [RW 3456 3546]
+
+!975
+1110 SSID information =========================================================
+1110 The SSID is the -X that is added to a call to access a PBBS and at times
+1110 to contact another user keyboard to keyboard. Once you are in the BBS 
+1110 system this number is no longer used. To the rest of the world we are
+1110 known as %B not %B-1. In your mail and when answering bbs questions
+1110 please use our hierarchical address: 
+1110
+1110    YOURCALL @ %B.#NOCAL.CA.USA.NA
+1110
+1110 When you are talking to people about connecting with the bbs via packet
+1110 on RF use: 
+1110
+1110    %B-1 on 144.93 Mhz
+
+!976
+1110 SEND command =============================================================
+1110    Send [type] call[@homebbs] [<from] [$bid] [!password]
+1110    SB topic[@distribution] [<from] [$bid]
+1110    SD list [<from] [$bid]
+1110    SP call[@homebbs] [<from] [$bid]
+1110    ST zipcode[@NTSst] [<from] [$bid]
+1110    SS call [<from] [$bid] [!password]
+1110    SR call[@homebbs]
+1110
+1110 This command is used to initiate a message to another user. There are
+1110 4 type of messages that can be originated on this system,
+1110 
+1110 Personal [SP]
+1110    can be read only by you and the addressee.
+1110 Bulletin [SB]
+1110    can be read by anyone
+1110 Nts [SN | ST]
+1110    this is health and welfare traffic
+1110 Secure [SS]
+1110    this is a Personal message that can only be read when connected to
+1110    the bbs over the phone line or on the system console. This message
+1110    can also have a password assigned to it. These messages will not
+1110    be forwarded and are therefore only for local users.
+1110 Reply [SR]
+1110    see the REPLY command for discription.
+1110 
+1110 If the addressee is in the local WP database you don't have to provide
+1110 the @homebbs, the system already knows it. For further information on
+1110 the send command please refer to the manual. (See Also REPLY, COPY)
+1100    SEND PERSONAL KC6ZZZ        [SP KC6ZZZ]
+1100    SEND SECURE KC6ZZZ !DOGGY   [SS KC6ZZZ !DOGGY]
+1100    SEND NTS 94086 @ NTSCA      [ST 94086@NTSCA]
+1110
+1110 If a distribution list has been created you can send a message to
+1110 multiple users at once by refering to the distribution list name.
+1110 Type INFO DISTRIB for more information.
+1110
+1110 There are a number of options that can be used while entering a message
+1110 body. All of these commands are distinquished from message text becuase
+1110 they immediately follow a carriage return.
+1110
+1110 /EX
+1110    This is used to terminate input to a message, indicates to the bbs that
+1110    you are done. You may also use ^Z or a period. The period is for
+1110    UNIX compatibility.
+1110
+1110 /AB
+1110    Use this when you wish to abort a message without sending it.
+1110
+1110 /INclude [msg_num|file_name]
+1110    This command will include the supplied message into the body of your
+1110    message. Each line of the included text will begin with a '>' so that
+1110    the reader can identify the included section.
+1110
+1110 /CC
+1110    Using this command will instruct the bbs that you are done typing the
+1110    message body and would like the message to be sent to other users as
+1110    well. This is very similar to using the COPY command with the exception
+1110    that with this command a CC: CALL line will be added to the bottom
+1110    of the message for each call you supply. You will be prompted for 
+1110    additional calls, simply return to indicate you are done.
+1110
+1110 /SIgnature
+1110    Place the users signature in the message at the current position.
+1110    The signature is created with the SIGNATURE command. It is commonly
+1110    used to store your standard closing and return address. Type HELP
+1110    SIGNATURE at the bbs prompt for more info.
+1110
+1110 /NUmber
+1110    Print the current message being entered with line numbers to facilitate
+1110    editing.
+1110
+1110 /EDit line_num
+1110    This command will print the line number in question and allow you to
+1110    retype it. If you have chosen this line by mistake just type a 
+1110    carriage return and the line will be unchanged.
+1110
+1110 /ADd line_num
+1110    Insert the next line typed just before the line specified.
+1110
+1110 /KIll line_num
+1110    Delete the line specified from the message body.
+1110
+1110 /?
+1110 /HElp
+1110    Will display a menu of send commands while in input mode.
+
+
+!977
+1110 SHELL command ============================================================
+1110    SHell (SYSOP)
+1110
+1110 This is a sysop command that will grant the user a unix C shell and
+1110 access to the unix system. This is only allowed over a secure channel
+1110 and requires a good working knowledge of UNIX.
+
+!978
+1110 SKIP command =============================================================
+1110    SKip [ADD|DELete|+|-] [club_category_list]
+1110
+1110 This does just the opposite of the CLUBS command. Items placed in this
+1110 list will not be displayed when you request a list of messages. It is a
+1110 way of striping away the junk mail you never read. Of course you can
+1110 never get rid of all of it. You add categories to your skip list by
+1110 typing ADD or + and the list. To see your current list of skips type
+1110 SKIP alone. (See Also CLUBS)
+1100    SKIP ADD SPECS SALE       [SK + SPECS SALE]
+1100    SKIP DELETE AMSAT         [SK - AMSAT]
+1110
+1110 You can override this by using the ALL keyword during your LIST request.
+
+!979
+1110 SPAWN command ============================================================
+1110    SPAWN [TNC144|TNC220|TNC440] (SYSOP)
+1110
+1110 When a tnc process has died, either because it was killed by the unix
+1110 OS or a sysop with the KILL PROCESS command, this command will allow
+1110 the tnc process to be restarted. Verify that the tnc process is actually
+1110 gone by issuing a PORTS TNC command first. (See Also KILL PROCESS, PORTS)
+
+!980
+1110 USERS command ============================================================
+1110    USers call_list
+1110    USers [cnt] 
+1110 These commands display the last connect status which includes time,
+1110 date, login count and method of connect. The first form does it for
+1110 the supplied calls. The second form will list the last X number of
+1110 people to connect, if no number is given it defaults to 10.
+1100    USERS N0ARY N6ZFJ             [US N0ARY N6ZFJ]
+1100    USERS 20                      [US 20]
+
+!981
+1110 EMAIL command ============================================================
+1110    EMail [address]
+1110    EMail ON|OFF
+1110 If you have an email address that is in some way accessible from the
+1110 internet, you can have your mail forwarded from the packet system
+1110 to your email address. First you must tell the bbs your email address.
+1110    EMAIL bob@arasmith.com
+1110    EMAIL suny!connie@arasmith.com
+1110    EMAIL 1432587@mcimail.com
+1110
+1110 This in itself does nothing. You now have to instruct the system to
+1110 start forwarding your mail. You can enable and disable this forwarding
+1110 without changing your address.
+1110    EMAIL ON
+1110    EMAIL OFF
+
+!982
+1110 White Pages commands =====================================================
+1110    WHEreis call
+1110    WP call
+1110
+1110 The White Pages is a directory of almost all the hams that are currently
+1110 using the packet bbs system. As soon as you choose a homebbs the bbs
+1110 system is notified, the regional servers distribute updates to all bbs's.
+1110 This allows you to send a message to someone without having to know their
+1110 homebbs. These commands are used to see if a user is in our white pages
+1110 database. Your WP information is updated via the USER commands.
+1110 (See Also FNAME, QTH, ZIP, HOME)
+1100    WHEREIS n0ary                [WHE n0ary | WP n0ary]
+
+!983
+1110 WRITE command ============================================================
+1110    WRite filename [msg_num]
+1110
+1110 This command is used to upload a file to the system. Upon issuing the
+1110 command you are placed in input mode until one of the standard methods
+1110 of terminating a message input is encountered, ^Z, /ex, etc. If a
+1110 message number is supplied the message will be turned into a file and
+1110 you will not be prompted for a body to the file.
+1110
+1110 The file will be written into the current directory. The file will
+1110 not actually become visable until a sysop has reviewed it. Files 
+1110 are not subject to aging and are therefore expensive from a disk
+1110 space point of view. (See Also READ FILE, DIR, LS, CD)
+1100    WRITE FT470.MODS             [WR FT470.MODS]
+1100    WRITE NCPA.bbs.list 1450     [WR NCPA.BBS.LIST 1450]
+
+!984
+1110 SYSOP commands ===========================================================
+1110    HOLd [msg_num_list]
+1110    RELease [msg_num_list]
+1110    Kill Process process_number
+1110    Kill User call_list
+1110    SPAwn [TNC144|TNC220|TNC440]
+1110    FORward BBSCALL [msg_num_list]
+1110    INItiate [Event|Wp|Callbk|Wx]
+1110    SET [callsign] [user_parameter [value]]
+1110    SHell
+
+!985
+1110 KEYWORD list =============================================================
+1110 These are reserved words that are interpreted by the system as commands or
+1110 options to commands. You should not use them in file names, etc.
+1110
+1110    ADDRESS ADD ALL APPROVED ASCENDING BAROMETER BBS
+1110    BULLETINS BYE CALLBK CD CHECK CLUBS
+1110    COMPUTER COMMANDS CMDS COPY DAYS DELETE DESCENDING
+1110    DIR DOWN EMAIL EQUIPMENT EVENT
+1110    EDIT FILESYS FIRST FNAME FORWARD FULL HEADER HELD HOLD
+1110    HOMEBBS HELP HUMIDITY INITIATE INFO INDOOR IN KM KILL KEYWORDS
+1110    LAST LINES LNAME LOOKUP LOCALE LOCAL LA LB LC LF LS LL LP LR
+1110    LK LO LM LIST MACRO MESSAGE ME MINE MONTHS MOTD NEW NONHAM NOPROMPT
+1110    NTS OLD OUT PASSWORD PENDING PERSONAL PHONE PORTS PROCESS
+1110    QTH RAIN RELEASE RIG REPLY READ RM RH RW RESERVED SSID SB
+1110    SEARCH SECURE SET SHELL SKIP SOFTWARE SPAWN SP SR SS ST SEND
+1110    SUSPECT SYSTEM SYSOP TEMPERATURE TNC144 TNC220 TNC440 TNC TREND UP
+1110    USERS WEEKS WHEREIS WHO WIND WP WRITE WX ZIP
+1110
+1110 The parser is context sensitive. The same letter may be used to identify
+1110 different keywords but only one will be valid in the context of the
+1110 command. For instance: 
+1110    LH   (LIST HELD messages)
+1110    RH   (READ with HEADER)
+1110
+1110 This also means that in many cases you may use these keywords in some
+1110 commands where the keyword would not have a meaning normally: 
+1110    LIST HELP
+1110
+1110 Since HELP is not a keyword for the LIST command it will be parsed and
+1110 assumed to be a pattern to search for in the To, From, or Subject fields.
+1110 See the LIST command for information on pattern matching.
+
+!986 INFO
+1110 CHOOSING A HOME BBS ======================================================
+1110 When choosing a home bbs you should find a bbs that is near your packet
+1110 station and has a reliable path. DXing to bbs is discouraged, all bbs's
+1110 carry the same bulletins. Also sending messages from a bbs that is not
+1110 your home bbs can corrupt your white pages entry. For those that have
+1110 tnc's with a personal mailbox don't put your tnc's call in this field.
+1110 Your home bbs has to be able to support bulletin and message forwarding.
+1110 If your are in the Sunnyvale area or this bbs is easy for you to connect
+1110 to your welcome to join us here, enter "HOME %B".
+
+!987 
+1110 LIST =====================================================================
+1110 The LIST command will display all the messages that match your search
+1110 criteria. The fields that are present are:
+1110 
+1110  Msg#  Stat  Size      To       From  Cnt Date/Time Subject
+1110  5764  abcd  2004 WA6GFY@N0ARY  N6ZFJ   1 0210/2141 Re: Field Day
+1110
+1110 The "Stat" field shows you the current condition of the message. Each
+1110 column has a particular meaning and multiple letters that can appear.
+1110 a - Message Type
+1110     B = Bulletin, P = Personal, N = Nts, S = Secure
+1110 b - Forwarding Status
+1110     P = Pending, I = In process, F = Forwarded, blank = No Forwarding
+1110 c - Message Status
+1110     H = Held, O = Old, K = Killed, blank = Active
+1110 d - Read Flag
+1110     R = Read by you, r = Read by addressee
+1110
+1110 The "Size" field is the size in bytes of the message body.
+1110 The "Cnt" field indicates how many different users have read the message.
+1110 The "Date/Time" field is when the message arrived on our system, in local
+1110 time.
+
+!988
+1110 SET ======================================================================
+1110    SET [callsign] [user_parameter [value]]
+1110
+1110 This command is used by sysops to alter another users account.
+
+!989
+1110 SHOW =====================================================================
+1110    SHOw [Bbs|Nonham|SUspect|SYsop]
+1110    SHOw Home [bbs]
+1110
+1110 Sysop command to show groups of hams that match specific categories.
+
+!990
+1110 FREQUENCY command ========================================================
+1110    FRequency [your common vhf/uhf repeaters]
+1110 If you have a repeater or simplex channel that you typically monitor
+1110 it can be indicated here. Make sure you include offset and pl if
+1110 appropriate. You are limited to 80 characters.
+1110
+1110   FREQ 443.775+ 224.28- 145.62s all 100hz PL (linked system)
+
+!991
+1110 ----------------------------------------------------------------
+1110 /EX        Send the message as is
+1110 /AB        Abort the message, do not send
+1110 /IN #      Insert another message in this message at this point
+1110 /CC        Prompt for additional receipents of this message
+1110 /SI        Place users signature in message body
+1110 /NU        Display the current message with line numbers
+1110 /ED #      Allow me to retype line number #
+1110 /AD #      Insert next line just before the line specified
+1110 /KI #      Delete the line number specified
+1110 /HE		This display, same as /?  
+1110 ----------------------------------------------------------------
+
+!992
+1110 ----------------------------------------------------------------
+1110 /EX        Save the signature
+1110 /AB        Abort signature entry
+1110 /HE		This display, same as /?  
+1110 ----------------------------------------------------------------
+
+!993
+1110 SIGNATURE ================================================================
+1110    SIGNature
+1110    SIGNature [Write|Kill]
+1110    SIGNature [ON|OFF]
+1110
+1110 A signature is a block of text that you can store in the system and
+1110 copy into your messages with a single command /SIgnature. This sign-
+1110 ature can be as simple as your call and return address. Here is an
+1110 example:
+1110
+1110    73, bob
+1110        N0ARY @ N0ARY.#NOCAL.CA.USA.NA
+1110        bob@arasmith.com
+1110
+1110 When you are finished creating a message you type a /SI just before the
+1110 /EX and your signature will be copied into the message body.
+1110
+1110 To see you current signature you can type SIGNATURE at the bbs main
+1110 prompt. To create a signature you type SIGNATURE WRITE and to delete
+1110 your signature from your account type SIGNATURE KILL.
+1110
+1110 If you set SIGNATURE ON you don't have to type the /SI to have it
+1110 inserted in the message, it will happen automatically everytime when
+1110 you type /EX or /CC.
+
+!994
+1000 Enter signature body (/EXit, /ABort, /?): 
+0100 Signature (/EX /AB /?): 
+0010 Sgn: 
+
+!995
+1110 You have not created a signature yet, type HELP SIGN at the bbs prompt
+
+!996
+1110 ----------------------------------------------------------------
+1110 /EX        Save the file to disk
+1110 /AB        Abort the file, do not write
+1110 /NU        Display the current file with line numbers
+1110 /ED #      Allow me to retype line number #
+1110 /AD #      Insert next line just before the line specified
+1110 /KI #      Delete the line number specified
+1110 /HE		This display, same as /?  
+1110 ----------------------------------------------------------------
+
+!997
+1000 Enter file body (/EXit, /ABort, /NU, /ED, /AD, /KI, /?): 
+0100 Body (/EX /AB /NU /ED /AD /KI /?): 
+0010 Body:
+
+!998
+1110 To access the remote voice link to the bbs, such as to check
+1110 to see if you have unread messages, you tune to 441.000 Simplex
+1110 and enter one of the following codes:
+1110
+1110     111*%U	Tell how many unread messages you have
+1110     111*%U*	Tell how many, who they are from and the subjects
+1110     112*%U	Tell the last time you logged in
+1110
+1110     1100	General bbs info, user count, message count, etc
+1110     117 	Canned track on how to access the bbs
+1110
+
+!999
+1110 end
+
