@@ -28,6 +28,9 @@ build_msgdir(void)
 	int *fn, *p;
 	long now = Time(NULL);
 
+	if (dirp == NULL)
+		return ERROR;
+
 	for(dp=readdir(dirp); dp!=NULL; dp=readdir(dirp))
 		if(isdigit(dp->d_name[0]))
 			cnt++;

@@ -183,7 +183,11 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);
 
-	build_msgdir();
+	if (build_msgdir()) {
+		Logging = logON;
+		log_f("msgd", "Can't build_msgdir()", "");
+		exit(1);
+	}
 
 	listen_port = Msgd_Port;
 	if((listen_sock = socket_listen(&listen_port)) == ERROR)
