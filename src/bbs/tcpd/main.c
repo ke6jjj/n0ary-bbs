@@ -5,11 +5,13 @@
 #include <sys/time.h>
 #include <sys/wait.h>
 #include <fcntl.h>
-#include <sys/termios.h>
+#include <termios.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -108,6 +110,8 @@ pass_thru(struct active_processes *ap)
 		if(socket_write(ap->sock, buf) == sockERROR)
 			return close_downstream(ap);
 	} while(socket_read_pending(ap->sock) == TRUE);
+
+	return ERROR;
 }
 
 int
@@ -121,11 +125,11 @@ service_port(struct active_processes *ap)
 	if(socket_read_line(ap->fd, buf, 256, 1) == sockERROR)
 		return ERROR;
 
-	logf("tcpd", "R:", buf);
+	log_f("tcpd", "R:", buf);
 	if((c = parse(ap, buf)) == NULL)
 		return ERROR;
 
-	logf("tcpd", "S:", c);
+	log_f("tcpd", "S:", c);
 	if(socket_raw_write(ap->fd, c) == ERROR)
 		return ERROR;
 
@@ -190,13 +194,14 @@ show_status(struct active_processes *ap)
 	output[0] = 0;
 	while(tap) {
 		sprintf(output, "%s%c%d\t%d\t%d\t%s\n", 
-			output, ((long)tap == (long)ap) ? '*':' ',
+			output, (tap == ap) ? '*':' ',
 			tap->fd, tap->sock, tap->listen, tap->cmd);
 		NEXT(tap);
 	}
 	return output;
 }
 
+int
 main(int argc, char *argv[])
 {
 	int listen_sock;
@@ -209,10 +214,10 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgIGNOREHOST))
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
-		daemon();
+		daemon(1, 1);
 	if(dbug_level & dbgVERBOSE) {
 		Logging = logON;
-		logf("tcpd", "   ", "UP");
+		log_f("tcpd", "   ", "UP");
 	}
 
     if(bbsd_open(Bbs_Host, Bbsd_Port, "tcpd", "DAEMON") == ERROR)
@@ -335,4 +340,6 @@ main(int argc, char *argv[])
         }
 		wait3(NULL, WNOHANG, NULL);
 	}
+
+	return 0;
 }

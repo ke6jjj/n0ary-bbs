@@ -58,12 +58,15 @@ endef
 #		msgd gateway process dial helpmsg callbk bbstool
 #		wx dectalk dtmf system metcon sola time tools
 
+# TODO
+# include $(BBS_SRCDIR)/calcload/calcload.mk
+# include $(BBS_SRCDIR)/gateway/gateway.mk
+
 include $(BBS_SRCDIR)/bbslib/bbslib.mk
 include $(BBS_SRCDIR)/bbs/bbs.mk
 include $(BBS_SRCDIR)/bbsd/bbsd.mk
 include $(BBS_SRCDIR)/bbstool/bbstool.mk
 include $(BBS_SRCDIR)/bidd/bidd.mk
-# include $(BBS_SRCDIR)/calcload/calcload.mk
 include $(BBS_SRCDIR)/callbk/callbk.mk
 include $(BBS_SRCDIR)/callbk_uls/callbk_uls.mk
 include $(BBS_SRCDIR)/dectalk/dectalk.mk
@@ -71,11 +74,11 @@ include $(BBS_SRCDIR)/dial/dial.mk
 include $(BBS_SRCDIR)/etc/etc.mk
 include $(BBS_SRCDIR)/gated/gated.mk
 include $(BBS_SRCDIR)/helpmsg/helpmsg.mk
-# include $(BBS_SRCDIR)/gateway/gateway.mk
 include $(BBS_SRCDIR)/logd/logd.mk
 include $(BBS_SRCDIR)/msgd/msgd.mk
 include $(BBS_SRCDIR)/userd/userd.mk
 include $(BBS_SRCDIR)/tncd/tncd.mk
+include $(BBS_SRCDIR)/tcpd/tcpd.mk
 include $(BBS_SRCDIR)/wpd/wpd.mk
 
 BBS_CLEAN: $(BBS_CLEAN_TARGETS) BBSLIB_CLEAN

@@ -1,10 +1,10 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = b_tcpd
-OBJS =	main.o parse.o
-CFILES =	main.c parse.c
-HDRS = tcpd.h
-SUPPORT = Makefile
+all: TCPD_APP
 
-include ../common.mk
+include $(THIS_SRCDIR)/../../top.mk
+
+TCPD_APP: $(TCPD_APP)
+
+clean: TCPD_APP_CLEAN
+install: TCPD_APP_INSTALL
