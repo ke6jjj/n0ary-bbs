@@ -11,6 +11,7 @@ BBS_PRODUCTS :=
 # Likewise, each item to be cleaned should add its target here.
 #
 BBS_CLEAN_TARGETS :=
+BBS_INSTALL_TARGETS :=
 
 #
 # Create a macro which can be used to generate rules for compiling a
@@ -30,6 +31,10 @@ $$($1): $$($1_OBJS) $$(BBSLIB_LIB) $$(TOOLS_LIB)
 
 $1_CLEAN:
 	rm -rf $$($1_OBJDIR)
+
+$1_INSTALL:
+	install -d $(BBS_DIR)/bin
+	install $$($1) $(BBS_DIR)/bin/$$($1_PROD)
 
 endef
 
@@ -69,3 +74,4 @@ include $(BBS_SRCDIR)/tncd/tncd.mk
 include $(BBS_SRCDIR)/wpd/wpd.mk
 
 BBS_CLEAN: $(BBS_CLEAN_TARGETS)
+BBS_INSTALL: $(BBS_INSTALL_TARGETS)

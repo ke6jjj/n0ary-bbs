@@ -40,5 +40,6 @@ QA_CLEAN:
 	rm -rf $(QA_OBJDIR)
 
 QA_INSTALL: $(QA_PRODUCTS)
-	cp $(QA_APP) $(QA_SRCDIR)/../bin
-	cp $(CONDUIT_APP) $(QA_SRCDIR)/../bin
+	install -d $(BBS_DIR)/bin
+	install $(QA_APP) $(BBS_DIR)/bin
+	install $(CONDUIT_APP) $(BBS_DIR)/bin

@@ -1,7 +1,6 @@
 THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 all: CALCLOAD_APP
-clean: CALCLOAD_APP_CLEAN
 
 include $(THIS_SRCDIR)/../../top.mk
 
@@ -11,3 +10,6 @@ else
   CALCLOAD_APP:
 	$(error "calcload not enabled")
 endif
+
+clean: CALCLOAD_APP_CLEAN
+install: CALCLOAD_APP_INSTALL

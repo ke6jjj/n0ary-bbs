@@ -7,7 +7,10 @@ BBS_ETC_SRCS := \
 
 BBS_ETC_SRCS_ABS := $(patsubst %,$(BBS_ETC_SRCDIR)/%,$(BBS_ETC_SRCS))
 
-BBS_ETC_INSTALL: $(BBS_ETC_SRCS_ABS)
-	for cf in $^; do \
-		cp $${cf} $(BBS_ETC_DIR)/$${cf}.sample; \
+BBS_ETC_INSTALL:
+	install -d $(BBS_DIR)/etc
+	for cf in $(BBS_ETC_SRCS); do \
+		cp $(BBS_ETC_SRCDIR)/$${cf} $(BBS_DIR)/etc/$${cf}.sample; \
 	done
+
+BBS_INSTALL_TARGETS += BBS_ETC_INSTALL

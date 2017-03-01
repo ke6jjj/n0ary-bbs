@@ -3,7 +3,9 @@
 #
 THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-all: BBS_ALL
-clean: TOP_CLEAN
+all: TOP_ALL
 
 include $(THIS_SRCDIR)/top.mk
+
+clean: TOP_CLEAN
+install: TOP_INSTALL

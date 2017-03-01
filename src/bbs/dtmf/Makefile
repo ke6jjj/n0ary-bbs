@@ -1,13 +1,15 @@
 THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-all: DECTALK_APP
-clean: DECTALK_APP_CLEAN
+all: DTMF_APP
 
 include $(THIS_SRCDIR)/../../top.mk
 
 ifneq ($(ENABLE_DECTALK),0)
-  DECTALK_APP: $(DECTALK_APP)
+  DTMF_APP: $(DTMF_APP)
 else
-  DECTALK_APP:
+  DTMF_APP:
 	$(error "dectalk not enabled")
 endif
+
+clean: DTMF_APP_CLEAN
+install: DTMF_APP_INSTALL

@@ -2,7 +2,7 @@
 # Edit this file to configure the BBS and what to build.
 #
 
-BBS_DIR=/usr/home/n0ary-bbs
+BBS_DIR=/usr/home/bbs
 
 FREEBSD=1
 ENABLE_BBSTOOL=0
