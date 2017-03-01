@@ -69,6 +69,7 @@ include $(BBS_SRCDIR)/dectalk/dectalk.mk
 include $(BBS_SRCDIR)/dial/dial.mk
 include $(BBS_SRCDIR)/etc/etc.mk
 include $(BBS_SRCDIR)/gated/gated.mk
+include $(BBS_SRCDIR)/helpmsg/helpmsg.mk
 # include $(BBS_SRCDIR)/gateway/gateway.mk
 include $(BBS_SRCDIR)/logd/logd.mk
 include $(BBS_SRCDIR)/msgd/msgd.mk

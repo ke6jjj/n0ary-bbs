@@ -1,24 +1,10 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = helpmsg
-CFILES = helpmsg.c
-OBJS = helpmsg.o
-HDRS =
-SUPPORT = Makefile helpmsg.txt
+all: HELPMSG_APP
 
-LOCAL_INC = -I../bbs
-ALL: helpmsg $(INS)/../etc/helpmsg.dat $(INS)/../etc/helpmsg.idx
+include $(THIS_SRCDIR)/../../top.mk
 
-$(INS)/../etc/helpmsg.dat:	helpmsg.dat
-	chmod 777 helpmsg.dat
-	cp helpmsg.dat $(INS)/../etc
+HELPMSG_APP: $(HELPMSG_APP)
 
-$(INS)/../etc/helpmsg.idx:	helpmsg.idx
-	chmod 777 helpmsg.idx
-	cp helpmsg.idx $(INS)/../etc
-
-helpmsg.dat:	helpmsg.txt ../bbs/help.h
-	helpmsg
-
-include ../common.mk
+clean: HELPMSG_APP_CLEAN
+install: HELPMSG_INSTALL

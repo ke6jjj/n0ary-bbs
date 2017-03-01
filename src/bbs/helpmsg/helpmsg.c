@@ -1,11 +1,16 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+
 #define MAXINDX	1000
 
+#include "bbslib.h"
 #include "vars.h"
 
 FILE *txt, *dat, *idx;
 long indx[MAXINDX];
+
+static void usage(const char *prog);
 
 void
 move_string(char *str)
@@ -29,21 +34,35 @@ move_string(char *str)
 	fputs(buf, dat);
 }
 
-void
-main()
+int
+main(int argc, char *argv[])
 {
 	int i;
-	char buf[256];
+	char buf[256], *msgs, *msgdat, *msgidx;
 
-	if((txt = fopen("helpmsg.txt", "r")) == NULL) {
+	msgs = "helpmsg.txt";
+	msgdat = "helpmsg.dat";
+	msgidx = "helpmsg.idx";
+
+	if (argc > 1) {
+		if (argc != 4) {
+			usage(argv[0]);
+			exit(1);
+		}
+		msgs = argv[1];
+		msgdat = argv[2];
+		msgidx = argv[3];
+	}
+
+	if((txt = fopen(msgs, "r")) == NULL) {
 		printf("Failure opening messages.txt\n");
 		exit(1);
 	}
-	if((dat = fopen("helpmsg.dat", "w")) == NULL) {
+	if((dat = fopen(msgdat, "w")) == NULL) {
 		printf("Failure opening messages.dat\n");
 		exit(1);
 	}
-	if((idx = fopen("helpmsg.idx", "w")) == NULL) {
+	if((idx = fopen(msgidx, "w")) == NULL) {
 		printf("Failure opening messages.idx\n");
 		exit(1);
 	}
@@ -77,6 +96,16 @@ main()
 	fclose(idx);
 
 	exit(0);
+	return 0;
 }
 
+static void
+usage(const char *prog)
+{
+	fprintf(stderr, "usage: %s [ <msgtxt> <msgdat> <msgidx> ]\n", prog);
+	fprintf(stderr, "Help text compiler.\n");
+	fprintf(stderr, "<msgtxt> - Source for help messages. (Default \"messages.txt\")\n");
+	fprintf(stderr, "<msgdat> - Name of .dat file to write (Default \"messages.dat\")\n");
+	fprintf(stderr, "<msgidx> - Name of .idx file to write (Default \"messages.idx\")\n");
+}
 
