@@ -155,7 +155,7 @@ main(int argc, char *argv[])
 	build_version_strings(argv[optind]);
 	preload(argv[optind]);
 
-	if(!(dbug_level & dbgIGNOREHOST))
+	if(dbug_level & dbgTESTHOST)
 		test_host(Tncd_Host);
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);

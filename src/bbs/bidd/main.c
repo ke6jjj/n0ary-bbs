@@ -136,7 +136,7 @@ main(int argc, char *argv[])
 
 	parse_options(argc, argv, ConfigList, "BIDD - Bid Daemon");
 
-	if(!(dbug_level & dbgIGNOREHOST))
+	if(dbug_level & dbgTESTHOST)
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);

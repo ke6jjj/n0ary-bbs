@@ -265,7 +265,7 @@ main(int argc, char *argv[])
 		return 0;
 	}
 
-	if(!(dbug_level & dbgIGNOREHOST))
+	if(dbug_level & dbgTESTHOST)
 		test_host(Bbs_Host);
 
 	if(!(dbug_level & dbgFOREGROUND))

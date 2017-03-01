@@ -42,15 +42,9 @@ int
 wpd_open_specific(char *hostname, int port)
 {
 	char *host = hostname;
-	char thishost[80];
 
 	if(wpd_sock != ERROR)
 		return OK;
-
-	if(hostname == NULL) {
-		gethostname(thishost, 80);
-		host = thishost;
-	}
 
 	if((wpd_sock = socket_open(host, port)) == ERROR)
 		return ERROR;

@@ -178,7 +178,7 @@ main(int argc, char *argv[])
 	time_now = bbsd_get_time();
 
 	age_time = Time(NULL) + Msgd_Age_Interval;
-	if(!(dbug_level & dbgIGNOREHOST))
+	if(dbug_level & dbgTESTHOST)
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);

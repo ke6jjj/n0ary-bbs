@@ -26,9 +26,10 @@ usage(char *pgm)
 	printf("\t\t-d\tEnable debugging (# is hex value)\n");
 	printf("\t\t\t\t0x001\tverbose\n");
 	printf("\t\t\t\t0x100\trun program in foreground\n");
-	printf("\t\t\t\t0x200\tdon't test for hostname\n");
+	printf("\t\t\t\t0x200\tdon't test for hostname (obsolete, now default)\n");
 	printf("\t\t\t\t0x400\tdon't connect to other daemons\n");
 	printf("\t\t\t\t0x800\tdon't send mail\n");
+	printf("\t\t\t\t0x1000\ttest for hostname\n");
 	printf("\n");
 	exit(1);
 }
@@ -78,6 +79,13 @@ parse_options(int argc, char *argv[],  struct ConfigurationList *cl, char *me)
 			exit(0);
 		}
 	}
+
+	/* Test for nonsense options */
+	if ((dbug_level & dbgTESTHOST) && (dbug_level & dbgIGNOREHOST)) {
+		fprintf(stderr, "Conflicting host options; can't both test and ignore host.\n");
+		exit(1);
+	}
+
 	if(show_config) {
 		if(show_config > 1)
 			show_configuration_rules(config_fn);

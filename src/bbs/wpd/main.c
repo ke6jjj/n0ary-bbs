@@ -276,7 +276,7 @@ main(int argc, char *argv[])
 	time_t wp_update_time = calc_wp_time(0);
 	parse_options(argc, argv, ConfigList, "WPD - White Pages Daemon");
 
-	if(!(dbug_level & dbgIGNOREHOST))
+	if(dbug_level & dbgTESTHOST)
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);

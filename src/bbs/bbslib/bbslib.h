@@ -129,6 +129,7 @@ extern int Logging;
 #define dbgIGNOREHOST	0x200
 #define dbgNODAEMONS	0x400
 #define dbgINHIBITMAIL	0x800
+#define dbgTESTHOST	0x1000
 extern int dbug_level;
 
 #define CALLisOK		1

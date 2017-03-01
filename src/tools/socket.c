@@ -132,7 +132,6 @@ socket_open(char *host, int port)
 {
 	struct sockaddr_in server;
 	struct hostent *hp;
-	char hostname[80];
 	int sock;
 	int linger = 0;
 
@@ -142,17 +141,15 @@ socket_open(char *host, int port)
 	server.sin_family = AF_INET;
 
 	if(host == NULL) {
-		if(gethostname(hostname, 80) < 0)
-			return error_log("socket_open.gethostname: %s", sys_errlist[errno]);
-		host = hostname;
-	}
+		server.sin_addr.s_addr =  htonl(INADDR_LOOPBACK);
+	} else {
+		if((hp = gethostbyname(host)) == NULL) {
+			error_log("socket_open.gethostbyname:");
+			return error_log("could not find \"%s\" in the hosts database\n", host);
+		}
 
-	if((hp = gethostbyname(host)) == NULL) {
-		error_log("socket_open.gethostbyname:");
-		return error_log("could not find \"%s\" in the hosts database\n", host);
+		bcopy((char*)hp->h_addr, (char*)&server.sin_addr, hp->h_length);
 	}
-
-	bcopy((char*)hp->h_addr, (char*)&server.sin_addr, hp->h_length);
 
 	server.sin_port = htons(port);
 
