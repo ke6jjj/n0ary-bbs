@@ -893,7 +893,8 @@
 1100    All          (keyword: LIST)
 1100    ASCENDing    (keyword: LIST)
 1100    Approved     (keyword: SET)
-0010 A     Cmd: none
+1100    AXRelay      set outgoing SSID (keyword: GATEWAY)
+0010 A     Cmd: AXRelay
 0010   Keyword: ACTivate Add All ASCENDing Approved
 
 !902
@@ -910,6 +911,7 @@
 1100    CD           change directory on file system
 1100    CHeck        check in/out a NTS message for delivery, see NTS
 1100    CLubs        set/show current clubs (keyword: LIST)
+1100    CONnect      connect to remote AX.25 station
 1100    COMPuter     set/show computer, see EQUIPMENT
 1100    COpy         send a copy of a message to another user
 0010 C     Cmd: CD CHeck CLubs COMPuter COpy
@@ -941,9 +943,10 @@
 1100    FILESYS      (server)
 1100    First        (keyword: LIST)
 1100    FName        set/show your first name, see WP
+1100    FREQ         set/show the frequencies you monitor
 1100    FORward      alter forwarding on a message (sysop)
 1100    Full         (keyword: )
-0010 F     Cmd: FName FORward
+0010 F     Cmd: FName FORward FREQ
 0010   Keyword: First Full
 
 !907
@@ -1091,11 +1094,12 @@
 1100 T commands ----------------------------------------------
 1100    Talk         request to speak to the sysop, if around
 1100    Temperature  (keyword: WX)
+1100    TELnet       connect to a remote host on the Internet
 1100    TNC          (keyword: PORTS)
 1100    TNC144       (keyword: SPAWN)
 1100    TNC220       (keyword: SPAWN)
 1100    TNC440       (keyword: SPAWN)
-0010 T     Cmd: Talk
+0010 T     Cmd: Talk TELnet
 0010   Keyword: Temperature TNC TNC144 TNC220 TNC440 
 
 !921
@@ -1148,6 +1152,7 @@
 1110    @            at bbs field, used in LIST, SEND
 1110    !            assign a password to a message, see SEND
 1110    $            assign a bit to a message, see SEND
+1110    ~            break remote connection, see Session
 
 !937
 1110 HISTORY command =========================================================
@@ -2026,7 +2031,7 @@
 1110 you will not be prompted for a body to the file.
 1110
 1110 The file will be written into the current directory. The file will
-1110 not actually become visable until a sysop has reviewed it. Files 
+1110 not actually become visible until a sysop has reviewed it. Files 
 1110 are not subject to aging and are therefore expensive from a disk
 1110 space point of view. (See Also READ FILE, DIR, LS, CD)
 1100    WRITE FT470.MODS             [WR FT470.MODS]
@@ -2219,5 +2224,105 @@
 1110
 
 !999
-1110 end
+1110 Gateway commands ========================================================
+1110    CONnect call port [Via digi_calls]  (Connect to remote AX.25 station)
+1110    TELnet host [port_num]              (Connect to remote Internet host)
+1110    AXrelay ssid_num                    (Change your outgoing SSID)
+1110
+1110 Gateway commands allow you to connect to another station or computer from
+1110 the BBS. The "CONnect" command makes connections over the air using the
+1110 AX.25 packet network, while the "TELnet" command makes a connection
+1110 through the Internet. To avoid network station name collisions, the BBS
+1110 will attempt to pick an unused substation id (SSID) to attach to your
+1110 callsign for the outbound connection. A full description of this process
+1110 and a way to change it are documented in the AXRelay command.
+1110
+1110 Once connected you will be placed in remote session mode (Keyword:
+1110 Session).
 
+!1001
+1110 Session mode ============================================================
+1110 When you establish a connection with a remote station or Internet host
+1110 using the BBS, everything you type from then on will be sent to the
+1110 remote station. This behavior is called the Session mode.
+1110 
+1110 The BBS will remain in Session mode until the connection is dropped
+1110 by the remote side or until you abort it using the Session Attention
+1110 Sequence. The Session Attention Sequence is a tilde character ("~") sent
+1110 on a line of its own.
+1110
+1110 If for some reason you really need to send the session attention sequence
+1110 to the remote side then you can escape the attention sequence by sending
+1110 two tildes in a row (~~). The BBS will remove the first tilde and send
+1110 the remaing one (or more, if given) onward to the remote side.
+1100   ~  (Abort connection, when sent on a line of its own)
+
+!1002
+1110 CONNECT command =========================================================
+1110   CONnect call [Via digi_calls] [ON] port
+1110
+1110 Connect to another packet station via one of the BBS's AX.25 packet TNC
+1110 ports. (See PORTS for a list of available ports that can be used). Each
+1110 port is connected to a different frequency, so you should choose the
+1110 port based on the station you wish to reach.
+1110
+1110 If you wish the connection to be made via a digipeater (or several
+1110 digipeaters) you must use the "Via" keyword and supply the list of
+1110 digipeater callsigns, separated by commas. Do not use spaces between
+1110 digipeaters.
+1110
+1110 The BBS must make the connection using your callsign, but it must also
+1110 avoid a colliding with the very callsign you may be using to access the
+1110 BBS if you are connected via a TNC. To solve this problem the BBS will
+1110 try to append a substation identifier (SSID) to your callsign. For more
+1110 information on the process and to change this behavior, see the AXrelay
+1110 command.
+1110
+1110 Established connections place you in Session Mode, which is described in
+1110 further detail under the "Session" keyword.
+1110
+1110 (See also: AXRelay, Keyword: Gateway, Session)
+1100  CONNECT %B ON TNC0
+1100  CONNECT %B-1 VIA %C-4,OSI TNC1
+
+!1003
+1110 TELNET command =========================================================
+1110   TELnet host [port_num]
+1110
+1110 Connect to a host on the Internet using TCP/IP. Host can be a domain
+1110 name or an IP address (xxx.xxx.xxx.xxx). If you do not specify a port
+1110 number then the connection will be made to the default telnet port number,
+1110 23.
+1110
+1110 While the connection is being set up and after it is made, you will
+1110 be in connection SESSION mode (See also: Session).
+1100  TELNET ke6jjj-8.ampr.org
+1100  TELNET 44.4.39.8 8888
+
+!1004
+1110 AXRelay command =========================================================
+1110    AXRelay ssid_num                    (Change your outgoing SSID)
+1110    AXRelay AUTO                        (Revert to automatic method)
+1110
+1110 When the BBS makes a connection to another AX.25 packet station on your
+1110 behalf, it must use your callsign as the source address in each packet
+1110 of the transmission, but it also must avoid a collision with the very
+1110 callsign you may be using to access the BBS if you are connected to it
+1110 using a TNC. To solve this problem the BBS will find an address to use
+1110 via one of two methods: it will use the address previously configured in
+1110 your user profile with the AXRelay command, or it will try to create a
+1110 new, unique address automatically.
+1110
+1110 Under the automatic procedure, the BBS will choose an outgoing address
+1110 by append a substation identifier (SSID) to your callsign in the outgoing
+1110 connection. First, the BBS will examine the SSID on your incoming
+1110 connection and add a one to it. If your incoming connection was made
+1110 without an SSID then the outgoing connection will be made with SSID 1.
+1110 If the incoming SSID is 15 then the outgoing SSID will be 0 (none).
+1110
+1110 If you wish to override this behavior and use a specific outgoing SSID,
+1110 issue the AXRelay command, specify an SSID between 0 and 15 (inclusive),
+1110 and that SSID will be saved in your user profile and used thereafter
+1110 (until changed).
+1100   AXRELAY 9
+1100   AXRELAY AUTO
