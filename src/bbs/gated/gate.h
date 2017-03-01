@@ -56,7 +56,7 @@ extern int
 	write_if_needed(void);
 
 extern char
-    *time2date(long t),
+    *time2date(time_t t),
 	*disp_stat(void),
 	*disp_guess(char *s),
 	*parse(struct active_processes *ap, char *s);

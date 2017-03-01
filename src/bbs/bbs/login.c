@@ -23,8 +23,8 @@ static void
 	welcome_new_user(void),
 	welcome_old_user(void);
 
-long login_time;
-long logout_time;
+time_t login_time;
+time_t logout_time;
 char *login_method;
 long login_method_num;
 
@@ -41,7 +41,7 @@ logout_user(void)
 	min = sec/60;
 	sec %= 60;
 
-	sprintf(buf, "%ld %ld %s %ld\t; %s for %d:%02d on %s",
+	sprintf(buf, "%"PRTMd" %"PRTMd" %s %ld\t; %s for %d:%02d on %s",
 		login_time, logout_time,
 		Via,
 		user_get_value(uNUMBER),

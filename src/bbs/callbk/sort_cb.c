@@ -42,7 +42,7 @@ main(int argc, char *argv[])
 	}
 
 	nel = statbuf.st_size/sizeof(struct callbook_index);
-	printf("index file size = %d [%ld/%zd]\n", nel,
+	printf("index file size = %d [%"PROFFTd"/%zd]\n", nel,
 		statbuf.st_size, sizeof(struct callbook_index));
 
 	cb = (struct callbook_index *)malloc(statbuf.st_size);

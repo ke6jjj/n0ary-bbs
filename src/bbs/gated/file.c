@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <stdlib.h>
+#include <time.h>
 
 #include "date.h"
 
@@ -196,7 +197,7 @@ read_file(void)
 	}
 
 	if(dbug_level)
-		printf("Loaded %d translations in %ld seconds\n", cnt, time(NULL) - t0);
+		printf("Loaded %d translations in %"PRTMd" seconds\n", cnt, time(NULL) - t0);
 	fclose(fp);
 	return OK;
 }

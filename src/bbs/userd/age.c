@@ -65,11 +65,11 @@ age_users(struct active_processes *ap)
 				strcpy(call, dir->call);
 
 				if(ap)
-					sprintf(reason, "%s, suspect [%ld days]",
+					sprintf(reason, "%s, suspect [%"PRTMd" days]",
 						call, (now - dir->lastseen)/tDay);
 
 				if(dbug_level) {
-					fprintf(dfp, "age user %s, suspect call [%ld days]\n",
+					fprintf(dfp, "age user %s, suspect call [%"PRTMd" days]\n",
 						call, (now - dir->lastseen)/tDay);
 					suspect_cnt++;
 				}
@@ -80,11 +80,11 @@ age_users(struct active_processes *ap)
 					strcpy(call, dir->call);
 
 					if(ap)
-						sprintf(reason, "%s, non-ham [%ld days]",
+						sprintf(reason, "%s, non-ham [%"PRTMd" days]",
 							call, (now - dir->lastseen)/tDay);
 
 					if(dbug_level) {
-						fprintf(dfp, "age user %s, non-ham [%ld days]\n",
+						fprintf(dfp, "age user %s, non-ham [%"PRTMd" days]\n",
 							call, (now - dir->lastseen)/tDay);
 						nonham_cnt++;
 					}
@@ -97,12 +97,12 @@ age_users(struct active_processes *ap)
 						strcpy(call, dir->call);
 
 						if(ap)
-							sprintf(reason, "%s%s, age [%ld days]",
+							sprintf(reason, "%s%s, age [%"PRTMd" days]",
 								call, home_here?"@HERE":"",
 								(now - dir->lastseen)/tDay);
 
 						if(dbug_level) {
-							fprintf(dfp, "age user %s [%ld days]\n",
+							fprintf(dfp, "age user %s [%"PRTMd" days]\n",
 								call, (now - dir->lastseen)/tDay);
 							user_cnt++;
 						}

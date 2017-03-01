@@ -148,13 +148,13 @@ rfc822_gen_bid(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 static void
 rfc822_gen_create(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 {
-	sprintf(buf, "%s %"PRId64, rf->text, m->cdate);
+	sprintf(buf, "%s %"PRTMd, rf->text, m->cdate);
 }
 
 static void
 rfc822_gen_born(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 {
-	sprintf(buf, "%s %"PRId64, rf->text, m->edate);
+	sprintf(buf, "%s %"PRTMd, rf->text, m->edate);
 }
 
 static void
@@ -190,13 +190,13 @@ rfc822_gen_immune(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 static void
 rfc822_gen_kill(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 {
-	sprintf(buf, "%s %"PRId64, rf->text, m->kdate);
+	sprintf(buf, "%s %"PRTMd, rf->text, m->kdate);
 }
 
 static void
 rfc822_gen_time2live(struct RfcFields *rf, struct msg_dir_entry *m, char *buf)
 {
-	sprintf(buf, "%s %"PRId64, rf->text, m->time2live);
+	sprintf(buf, "%s %"PRTMd, rf->text, m->time2live);
 }
 
 static void

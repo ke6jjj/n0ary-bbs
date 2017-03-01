@@ -1,6 +1,6 @@
 
 struct event_entry {
-	long time;
+	time_t time;
 	int number;
 	char title[40];
 	char location[40];

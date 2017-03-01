@@ -173,9 +173,9 @@ write_config_file(void)
 	printf("USERFILE %s\n", Wpd_User_File);
 	printf("BBSFILE %s\n", Wpd_Bbs_File);
 	printf("WPFILE %s\n", Wpd_Dump_File);
-	printf("REFRESH %ld (days)\n", Wpd_Refresh / tDay);
-	printf("AGE %ld (months)\n", Wpd_Age / tMonth);
-	printf("FLUSH %ld (minutes)\n", Wpd_Flush / tMin);
+	printf("REFRESH %"PRTMd" (days)\n", Wpd_Refresh / tDay);
+	printf("AGE %"PRTMd" (months)\n", Wpd_Age / tMonth);
+	printf("FLUSH %"PRTMd" (minutes)\n", Wpd_Flush / tMin);
 }
 
 void
@@ -228,17 +228,17 @@ read_config_file(char *fn)
 		}
 		if(!strcmp(field, "FLUSH")) {
 			Wpd_Flush = (time_t)get_number(&s) * tMin;
-			printf("FLUSH = %ld\n", Wpd_Flush/tMin);
+			printf("FLUSH = %"PRTMd"\n", Wpd_Flush/tMin);
 			continue;
 		}
 		if(!strcmp(field, "AGE")) {
 			Wpd_Age = (time_t)get_number(&s) * tMonth;
-			printf("AGE = %ld\n", Wpd_Age/tMonth);
+			printf("AGE = %"PRTMd"\n", Wpd_Age/tMonth);
 			continue;
 		}
 		if(!strcmp(field, "REFRESH")) {
 			Wpd_Refresh = (time_t)get_number(&s) * tDay;
-			printf("REFRESH = %ld\n", Wpd_Refresh/tDay);
+			printf("REFRESH = %"PRTMd"\n", Wpd_Refresh/tDay);
 			continue;
 		}
 	}
@@ -364,7 +364,7 @@ main(int argc, char *argv[])
 
 					if(dbug_level & dbgVERBOSE) {
 						char out[80];
-						sprintf(out, "Aging took %ld seconds\n", time(NULL) - t0);
+						sprintf(out, "Aging took %"PRTMd" seconds\n", time(NULL) - t0);
 						puts(out);
 						log_f("wpd", "S:", out);
 					}

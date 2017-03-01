@@ -61,7 +61,7 @@ read_file(char *filename)
 	}
 
 	if(dbug_level)
-		printf("Loaded %d bids in %ld seconds\n", cnt, time(NULL) - t0);
+		printf("Loaded %d bids in %"PRTMd" seconds\n", cnt, time(NULL) - t0);
 	fclose(fp);
 	return OK;
 }

@@ -22,7 +22,7 @@ FILE *log_fp;
 
 #define MAXSOCKETS 20
 
-long time_base = 0;
+time_t time_base = 0;
 
 struct text_line *PendCmd = NULL;
 
@@ -279,7 +279,7 @@ get_line(char *buf, int fd, int len, int timeout)
 int
 stamp(char *s)
 {
-	long t = time(NULL);
+	time_t t = time(NULL);
 	char now[80];
 	char buf[80];
 
@@ -287,15 +287,15 @@ stamp(char *s)
 	now[strlen(now)-1] = 0;
 
 	if(*s) {
-		long delta = t - time_base;
-		long hours, minutes, seconds;
+		time_t delta = t - time_base;
+		time_t hours, minutes, seconds;
 
 		hours = delta / 3600;
 		delta = delta % 3600;
 		minutes = delta / 60;
 		seconds = delta % 60;
 
-		sprintf(buf, "%s  delta= %ld:%02ld:%02ld",
+		sprintf(buf, "%s  delta= %"PRTMd":%02"PRTMd":%02"PRTMd,
 			now, hours, minutes, seconds);
 	} else {
 		time_base = t;

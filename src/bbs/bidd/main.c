@@ -57,8 +57,8 @@ display_config(void)
 	printf(" Bbsd_Port = %d\n", Bbsd_Port);
 	printf(" Bidd_Port = %d\n", Bidd_Port);
 	printf(" Bidd_File = %s\n", Bidd_File);
-	printf("Bidd_Flush = %ld\n", Bidd_Flush);
-	printf("  Bidd_Age = %ld\n", Bidd_Age);
+	printf("Bidd_Flush = %"PRTMd"\n", Bidd_Flush);
+	printf("  Bidd_Age = %"PRTMd"\n", Bidd_Age);
 	fflush(stdout);
 	exit(0);
 }

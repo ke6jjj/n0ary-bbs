@@ -689,19 +689,17 @@ get_route_addr(char **str)
  */
 
 void
-read_routing(char *buf, char *homebbs, long *orig_date, int *num)
+read_routing(char *buf, char *homebbs, time_t *orig_date, int *num)
 {
 	char *p, hloc[LenHLOC];
-	struct tm *tm;
+	struct tm ltm, *tm;
 
-	tm = gmtime(orig_date);
+	tm = gmtime_r(orig_date, &ltm);
 
 	/* ignore the supplied date for now. */
 	NextChar(buf);
-	sscanf(buf, "%2d%2d%2d/%2d%2d", 
-		&tm->tm_year, &tm->tm_mon, &tm->tm_mday,
-		&tm->tm_hour, &tm->tm_min);
-	tm->tm_mon--;
+	strptime(buf, "%y%m%d/%H%M", tm);
+	tm->tm_sec = 0;
 #ifdef HAVE_TIMEGM
 	*orig_date = timegm(tm);
 #else

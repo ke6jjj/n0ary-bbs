@@ -19,7 +19,7 @@ convert_time(void)
 	char *result;
 	if((result = config_fetch("DEBUG_TIME")) == NULL)
 		return "0\n";
-	snprintf(output, sizeof(output), "%ld\n", str2time_t(result));
+	snprintf(output, sizeof(output), "%"PRTMd"\n", str2time_t(result));
 	return output;
 }
 

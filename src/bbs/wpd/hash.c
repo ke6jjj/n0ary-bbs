@@ -318,8 +318,8 @@ hash_gen_update(FILE *gfp, int *gcnt, FILE *lfp, int *lcnt)
 	time_t threshold = t - Wpd_Age;
 
 	if(dbug_level & dbgVERBOSE) {
-		printf("current time = %ld\n", t);
-		printf("refresh threshold = %ld\n\n", refresh);
+		printf("current time = %"PRTMd"\n", t);
+		printf("refresh threshold = %"PRTMd"\n\n", refresh);
 	}
 
 	*gcnt = *lcnt = 0;
@@ -332,14 +332,14 @@ hash_gen_update(FILE *gfp, int *gcnt, FILE *lfp, int *lcnt)
 			if(wp->level < WP_Init) {
 				if(wp->changed > wp->last_update_sent) {
 					if(dbug_level & dbgVERBOSE)
-						printf("%s changed since update %ld > %ld\n",
+						printf("%s changed since update %"PRTMd" > %"PRTMd"\n",
 							wp->call, wp->changed, wp->last_update_sent);
 					update = TRUE;
 				} else
 				if((wp->seen > wp->last_update_sent) &&
 					(wp->last_update_sent < refresh)) {
 					if(dbug_level & dbgVERBOSE)
-						printf("%s seen in last two weeks %ld > %ld\n",
+						printf("%s seen in last two weeks %"PRTMd" > %"PRTMd"\n",
 							wp->call, wp->seen, wp->last_update_sent);
 					update = TRUE;
 				}

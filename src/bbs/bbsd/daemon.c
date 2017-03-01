@@ -39,7 +39,7 @@ daemon_display(struct Daemons *dl)
 	case dmnONLINE: p = "Online"; break;
 	}
 
-	printf("\t%s\t%s%4d  RESPAWN:%sTO:%4ld  %s\n",
+	printf("\t%s\t%s%4d  RESPAWN:%sTO:%4"PRTMd"  %s\n",
 		dl->name, p,
 		dl->proc_num, dl->respawn ? "YES ":"NO  ",
 		dl->timeout, dl->cmd);

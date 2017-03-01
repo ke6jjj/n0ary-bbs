@@ -38,7 +38,7 @@ report_update(struct active_processes *ap)
 	if(ap->wpb == NULL)
 		return Error("invalid homebbs");
 
-	sprintf(output, "%ld %ld %ld On %s %s/%c @ %s.%s zip %s %s %s\n",
+	sprintf(output, "%"PRTMd" %"PRTMd" %"PRTMd" On %s %s/%c @ %s.%s zip %s %s %s\n",
 		ap->wpu->changed, ap->wpu->seen, ap->wpu->last_update_sent,
 		time2udate((ap->wpu->seen > ap->wpu->changed)?ap->wpu->seen:ap->wpu->changed),
 		ap->wpu->call,

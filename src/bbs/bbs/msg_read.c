@@ -315,7 +315,7 @@ read_message_number(int num)
 		char datebuf[40];
 		struct text_line *rfc = m->header;
 		struct tm *dt = localtime(&(m->cdate));
-		strftime(datebuf, 40, "%e %h %y %H:%M", dt);
+		strftime(datebuf, 40, "%e %h %Y %H:%M", dt);
 
 		PRINTF("=============================================================\n");
 		if(more()) return OK;
@@ -361,7 +361,7 @@ display_routing(struct msg_dir_entry *m, struct text_line **tl, int mode)
 {
 	int cnt = 0;
 	char datebuf[40];
-	long t = Time(NULL);
+	time_t t = Time(NULL);
 	struct tm *dt = gmtime(&t);
 	strftime(datebuf, 40, "%y%m%d/%H""%M", dt);
 

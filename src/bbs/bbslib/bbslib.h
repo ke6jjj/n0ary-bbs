@@ -289,12 +289,12 @@ struct msg_dir_entry {
 		char address[LenHLOC];
 	} to, from;
 
-	int64_t	odate;
-	int64_t	kdate;
-	int64_t	cdate;
-	int64_t	edate;
-	int64_t	time2live;
-	int64_t	update_t;
+	time_t	odate;
+	time_t	kdate;
+	time_t	cdate;
+	time_t	edate;
+	time_t	time2live;
+	time_t	update_t;
 
 	long	read_cnt;
 	long	fwd_cnt;

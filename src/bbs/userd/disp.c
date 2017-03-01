@@ -23,7 +23,7 @@ disp_last(int num)
 
 	output[0] = 0;
 	while(dir) {
-		sprintf(output, "%s%.6s\t%5d\t%s\t%ld\n", output, dir->call,
+		sprintf(output, "%s%.6s\t%5d\t%s\t%"PRTMd"\n", output, dir->call,
 			dir->connect_cnt, port_name(dir->port), dir->lastseen);
 
 		if(--num == 0 || strlen(output) > 4000)
@@ -54,7 +54,7 @@ disp_user(char *s)
 
 	while(dir) {
 		if(!strcmp(dir->call, call)) {
-			sprintf(output, "%.6s\t%5d\t%s\t%ld\n",
+			sprintf(output, "%.6s\t%5d\t%s\t%"PRTMd"\n",
 				call, dir->connect_cnt, port_name(dir->port), dir->lastseen);
 			return output;
 		}

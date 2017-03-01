@@ -88,11 +88,11 @@ write_file(struct processes *ap)
 	fprintf(fp, "=== %s\t", ap->whoami);
 
 	tm = localtime(&(ap->t0));
-	strftime(dbuf, 80, "%y%m%d:%H""%M", tm);
+	strftime(dbuf, 80, "%Y-%m-%d:%H%M%z", tm);
 	fprintf(fp, "%s ", dbuf);
 
 	tm = localtime(&(ap->t1));
-	strftime(dbuf, 80, "%y%m%d:%H""%M", tm);
+	strftime(dbuf, 80, "%Y-%m-%d:%H%M%z", tm);
 	fprintf(fp, "%s\n", dbuf);
 
 	while(tl) {

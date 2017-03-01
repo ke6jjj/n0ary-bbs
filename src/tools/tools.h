@@ -1,3 +1,20 @@
+#ifndef TIME_T_FORMAT_SET
+#  ifdef __LP64__
+#    define PRTMd "ld"
+#  else
+#    define PRTMd "d"
+#  endif
+#  define TIME_T_FIXED
+#endif
+
+#ifndef OFF_T_FORMAT_SET
+#  ifdef __LP64__
+#    define PROFFTd "ld"
+#  else
+#    define PROFFTd "lld"
+#  endif
+#  define OFF_T_FORMAT_SET
+#endif
 
 #define sockOK          0
 #define sockTIMEOUT     1

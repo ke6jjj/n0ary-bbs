@@ -159,7 +159,7 @@ write_config_file(void)
 	printf("HOST %s\n", Bbs_Host);
 	printf("PORT %d\n", Gated_Port);
 	printf("GATEFILE %s\n", Gated_File);
-	printf("FLUSH %ld (minutes)\n", Gated_Flush / tMin);
+	printf("FLUSH %"PRTMd" (minutes)\n", Gated_Flush / tMin);
 }
 
 void
@@ -198,7 +198,7 @@ read_config_file(char *fn)
 		}
 		if(!strcmp(field, "FLUSH")) {
 			Gated_Flush = (time_t)get_number(&s) * tMin;
-			printf("FLUSH = %ld\n", Gated_Flush/tMin);
+			printf("FLUSH = %"PRTMd"\n", Gated_Flush/tMin);
 			continue;
 		}
 	}

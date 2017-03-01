@@ -129,7 +129,7 @@ write_config_file(void)
 	printf("HOST %s\n", Bbs_Host);
 	printf("PORT %d\n", Userd_Port);
 	printf("USERFILEPATH %s\n", Userd_Acc_Path);
-	printf("AGE %ld (minutes)\n", Userd_Age_Interval / tMin);
+	printf("AGE %"PRTMd" (minutes)\n", Userd_Age_Interval / tMin);
 }
 
 void
@@ -168,7 +168,7 @@ read_config_file(char *fn)
 		}
 		if(!strcmp(field, "AGE")) {
 			Userd_Age_Interval = (time_t)get_number(&s) * tMin;
-			printf("AGE = %ld\n", Userd_Age_Interval/tMin);
+			printf("AGE = %"PRTMd"\n", Userd_Age_Interval/tMin);
 			continue;
 		}
 	}

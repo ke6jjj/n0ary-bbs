@@ -183,6 +183,9 @@ disp_wx_graph(int type, int samples)
 	int i, floor, step, ceiling;
 	long rainbase;
 
+#if 1
+	PRINT("WX graphing needs porting; too reliant on binary formats. -KE6JJJ\n");
+#else
 	if(samples <= 0)
 		return;
 
@@ -306,6 +309,7 @@ disp_wx_graph(int type, int samples)
 
 	PRINT("\n");
 	free(graph.data);
+#endif
 	return;
 }
 
@@ -421,6 +425,9 @@ disp_wx_raw(int samples)
 	if(samples <= 0)
 		return;
 
+#if 1
+	PRINT("WX needs porting; Too binary specific. -KE6JJJ\n");
+#else
 	if((fp = fopen(Bbs_WxData_File, "r")) == NULL) {
 		PRINT("Couldn't open raw weather file\n");
 		return;
@@ -454,4 +461,5 @@ disp_wx_raw(int samples)
 				wd.rain);
 	}
 	fclose(fp);
+#endif
 }

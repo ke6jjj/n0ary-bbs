@@ -133,7 +133,7 @@ system_parse_ax25(int check, struct System *sys, char *p)
 static void
 system_parse_when(int check, struct System *sys, char *p)
 {
-	long t = Time(NULL);
+	time_t t = Time(NULL);
 	struct tm *dt = localtime(&t);
 	int now = (dt->tm_hour * 100) + dt->tm_min;
 	int time_ok = TRUE;

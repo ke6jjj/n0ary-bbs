@@ -205,7 +205,7 @@ read_user_file(char *filename)
 	}
 
 	if(dbug_level & dbgVERBOSE)
-		printf("Loaded %d users in %ld seconds\n", cnt, time(NULL) - t0);
+		printf("Loaded %d users in %"PRTMd" seconds\n", cnt, time(NULL) - t0);
 	fclose(fp);
 	return OK;
 }
@@ -274,7 +274,7 @@ read_bbs_file(char *filename)
 	}
 
 	if(dbug_level & dbgVERBOSE)
-		printf("Loaded %d bbss in %ld seconds\n", cnt, time(NULL) - t0);
+		printf("Loaded %d bbss in %"PRTMd" seconds\n", cnt, time(NULL) - t0);
 	fclose(fp);
 	return OK;
 }

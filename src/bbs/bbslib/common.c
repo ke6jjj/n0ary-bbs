@@ -350,16 +350,14 @@ phone_init(char *name)
 	return t->init_str;
 }
 
-long
+time_t
 str2time_t(char *s)
 {
 	time_t t = time(NULL);
-	struct tm *tm = localtime(&t);
-	long dt = 0;
+	struct tm ltm, *tm = localtime_r(&t, &ltm);
+	time_t dt = 0;
 
-	sscanf(s, "%2d%2d%2d/%2d%2d", &tm->tm_year, &tm->tm_mon,
-		&tm->tm_mday, &tm->tm_hour, &tm->tm_min);
-	tm->tm_mon--;
+	strptime(s, "%y%m%d/%H%M", tm);
 	tm->tm_sec = 0;
 #ifdef SUNOS
 	dt = timelocal(tm);

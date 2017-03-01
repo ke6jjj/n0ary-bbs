@@ -51,7 +51,7 @@ long
 	ImPotentialBBS = FALSE,
 	ImNonHam = FALSE;
 
-long
+time_t
 	last_login_time = 0;
 
 struct IncludeList

@@ -4,7 +4,7 @@
 
 #include "date.h"
 
-long
+time_t
 date2time(char *s)
 {
 	long t;
@@ -22,10 +22,10 @@ date2time(char *s)
 }
 
 char *
-time2date(long t)
+time2date(time_t t)
 {
 	static char buf[256];
-	struct tm *tm = gmtime(&t);
+	struct tm ltm, *tm = gmtime_r(&t, &ltm);
 	strftime(buf, 256, "%D", tm);
 	return buf;
 }

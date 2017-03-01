@@ -20,10 +20,12 @@ extern char
 	exclude[LenINCLUDE],
 	usercall[LenCALL];
 
+extern time_t
+	last_login_time;
+
 extern long
 	Lines,
 	Base,
-	last_login_time,
 	ImLogging,
 	ImSysop,
 	ImBBS,

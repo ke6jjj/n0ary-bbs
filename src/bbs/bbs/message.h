@@ -160,6 +160,6 @@ extern int
     
 extern void
     check_for_recpt_options(struct msg_dir_entry *m),
-    read_routing(char *buf, char *homebbs, long *orig_date, int *num);
+    read_routing(char *buf, char *homebbs, time_t *orig_date, int *num);
 
 int msg_xlate_tokens(struct TOKEN *t, struct msg_dir_entry *msg);

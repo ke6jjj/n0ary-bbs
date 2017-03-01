@@ -114,10 +114,10 @@ static char *dom[] = {
 };
 
 static void
-	encode_day_of_week(char *s, long int t),
-	encode_month(char *s, long int t),
-	encode_day(char *s, long int t),
-	encode_time(char *s, long int t),
+	encode_day_of_week(char *s, time_t t),
+	encode_month(char *s, time_t t),
+	encode_day(char *s, time_t t),
+	encode_time(char *s, time_t t),
 	encode_number(char *s, int n);
 
 static char play_str[10000];
@@ -354,28 +354,28 @@ encode_connect_method(char *s, int method)
 }
 
 static void
-encode_day_of_week(char *s, long int t)
+encode_day_of_week(char *s, time_t t)
 {
 	struct tm *tm = localtime(&t);	
 	strcat(s, dow[tm->tm_wday]);
 }
 
 static void
-encode_month(char *s, long int t)
+encode_month(char *s, time_t t)
 {
 	struct tm *tm = localtime(&t);	
 	strcat(s, moy[tm->tm_mon]);
 }
 
 static void
-encode_day(char *s, long int t)
+encode_day(char *s, time_t t)
 {
 	struct tm *tm = localtime(&t);	
 	strcat(s, dom[tm->tm_mday]);
 }
 
 static void
-encode_time(char *s, long int t)
+encode_time(char *s, time_t t)
 {
 	struct tm *tm = localtime(&t);	
 	sprintf(s, "%s %d", s, tm->tm_hour);

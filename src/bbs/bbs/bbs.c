@@ -79,7 +79,7 @@ char
 	*Via,
 	prompt_string[4096];
 
-long
+time_t
 inactivity_timer = 0,
 time_now = 0;
 
@@ -883,7 +883,7 @@ log_user(char *str)
 {
 	if(logfile == NULL) {
 		char fn[80];
-		long t = Time(NULL);
+		time_t t = Time(NULL);
 		struct tm *dt = localtime(&t);
 
 		sprintf(fn, "%s/%s", Bbs_Log_Path, usercall);
@@ -906,7 +906,7 @@ log_user(char *str)
 int
 ports(void)
 {
-	long t1 = time(NULL);
+	time_t t1 = time(NULL);
 	struct text_line *tl, *TL = NULL;
 	bbsd_get_status(&TL);
 
@@ -964,10 +964,10 @@ chat(void)
 	return OK;
 }
 
-long
-Time(long *t)
+time_t
+Time(time_t *t)
 {
-	long now = time_now;
+	time_t now = time_now;
 
 	if(now == 0)
 		now = time(NULL);

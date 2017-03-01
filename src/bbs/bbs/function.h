@@ -1,5 +1,7 @@
+#include <time.h>
+
 extern void
-    read_routing(char *buf, char *homebbs, long *orig_date, int *num),
+    read_routing(char *buf, char *homebbs, time_t *orig_date, int *num),
 	init_forwarding(char *port, char *call);
 
 /* bbs.c */
@@ -18,8 +20,8 @@ extern void
 	print_socket();
 #endif
 
-extern long
-	Time(long *t);
+extern time_t
+	Time(time_t *t);
 
 /*addr.c*/
 

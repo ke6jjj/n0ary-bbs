@@ -368,7 +368,7 @@ bbsd_get_status(struct text_line **tl)
 	return bbsd_fetch_textline(cmd, tl);
 }
 
-long
+time_t
 bbsd_get_time(void)
 {
 	char *result = bbsd_fetch(bbsd_xlate(bTIME));
