@@ -29,11 +29,13 @@ struct Tnc tnc[MAX_TNC];
 extern char versionc[80];
 extern char *Bbs_Call;
 
+static int asy_init_serial(int dev, char *ttydev);
+static int asy_init_tcp(int dev, char *host_port_spec);
+
 int
 asy_init(int dev, char *ttydev)
 {
 	extern int ReceiveSocket, SendSocket;
-	struct termios tt;
 
 	if(ReceiveSocket) {
 		int sock;
@@ -86,6 +88,20 @@ asy_init(int dev, char *ttydev)
 	}
 
 	strcpy(tnc[dev].tty, ttydev);
+
+	if (strchr(ttydev, ':') != NULL) {
+		/* TNC is on a terminal server */
+		return asy_init_tcp(dev, ttydev);
+	} else {
+		/* TNC is a local device */
+		return asy_init_serial(dev, ttydev);
+	}
+}
+
+static int
+asy_init_serial(int dev, char *ttydev)
+{
+	struct termios tt;
 
 	if((tnc[dev].fd = open(ttydev, (O_RDWR), 0)) < 0) {
 		if(dbug_level & dbgVERBOSE)
@@ -166,6 +182,45 @@ asy_init(int dev, char *ttydev)
 #endif
 
 	tnc[dev].inuse = TRUE;
+	return OK;
+}
+
+static int
+asy_init_tcp(int dev, char *host_spec)
+{
+	char *colon, *host, *mutable;
+	int port, fd;
+	
+	mutable = strdup(host_spec);
+	colon = strchr(host_spec, ':');
+
+	if (colon == NULL) {
+		free(mutable);
+		logd_stamp("tncd", "asy_init: bad host spec");
+		exit(1);
+	}
+
+	*colon = '\0';
+	host = mutable;
+	port = atoi(colon + 1);
+
+	if ((fd = socket_open(host, port)) < 0) {
+		free(mutable);
+		logd_stamp("tncd", "asy_init: can't connect to host");
+		exit(1);
+	}
+
+	free(mutable);
+
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
+		logd_stamp("tncd", "asy_init: can't O_NONBLOCK");
+		close(fd);
+		exit(1);
+	}
+
+	tnc[dev].fd = fd;
+	tnc[dev].inuse = TRUE;
+
 	return OK;
 }
 

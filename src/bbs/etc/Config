@@ -13,11 +13,13 @@
 ; Values have an associated type. The posible types are:
 ;   STRING, NUMBER, DIRECTORY, FILE and TIME
 ;
+; -----TOTALLY INACCURATE!!!!!!
 ; When specifying a DIRECTORY or FILE if the first character
 ; is a slash '/' then the path is considered to be absolute.
 ; If it begins with a character other than a slash the field
 ; represented by BBS_DIR is prepended. DIRECTORY values should
 ; not end with a slash.
+; -----TOTALLY INACCURATE!!!!!!
 ;
 ; The TIME values are a number followed by the quantity
 ; definition, ie. SECONDS, MINUTES, HOURS, DAYS, WEEKS,
@@ -196,7 +198,9 @@ PORT	STATUS	SYSTEM	FALSE	FALSE	Status
 ;	Refer to the manual on tncd for further explanation of what
 ;	these are used for.
 ;
-; Device:
+; Device: UNIX path for the device OR
+;         hostname:port for TCP connection to a terminal server.
+;
 ; Host: Where is the physical hardware located?
 ;
 ; The rest are AX25 definitions

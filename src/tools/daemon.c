@@ -25,6 +25,9 @@ test_host(char *host)
 		exit(1);
 	}
 
+	if ((dotptr = strchr(name,'.')) != NULL)
+		*dotptr = 0;
+
 	if((hp = gethostbyname(host)) == NULL) {
 		printf("could not find \"%s\" in the hosts database\n", host);
 		exit(1);
@@ -33,7 +36,8 @@ test_host(char *host)
 	if ((dotptr = strchr(hp->h_name,'.')) != NULL)
 		*dotptr = 0;
 
-	if(strcmp(hp->h_name, name)) {
-		printf("Must be run from \"%s\" which is \"%s\"\n", host, hp->h_name);
+	if (strcmp(hp->h_name, name) != 0) {
+		printf("\"%s\" resolves to \"%s\"\n", host, hp->h_name);
+		printf("Must be run from \"%s\" which is \"%s\"\n", name, hp->h_name);
 	}
 }
