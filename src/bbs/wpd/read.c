@@ -44,7 +44,7 @@ iscall(char *s)
 }
 
 int
-read_user_file(char *filename)
+read_user_file(char *filename, int depth)
 {
 	char s[256];
 	int cnt = 0;
@@ -56,8 +56,25 @@ read_user_file(char *filename)
 		t0 = time(NULL);
 
 	if(fp == NULL) {
-		write_user_file();
-		return read_user_file(filename);
+		if (depth == 0) {
+			/*
+			 * Couldn't open file. Perhaps it needs to
+			 * be created. Attempt to do so.
+			 */
+			write_user_file();
+
+			/*
+			 * Now try again (but keep track of the fact that this
+			 * is the second time.
+			 */
+			return read_user_file(filename, depth + 1);
+		} else {
+			/*
+			 * Can't read the file and we've already tried to
+			 * create it. Error.
+			 */
+			return ERROR;
+		}
 	}
 
     if(fgets(s, 256, fp) == 0) {
@@ -214,7 +231,7 @@ int
 read_new_user_file(char *filename)
 {
 	hash_user_init();
-	return read_user_file(filename);
+	return read_user_file(filename, 0);
 }
 
 int

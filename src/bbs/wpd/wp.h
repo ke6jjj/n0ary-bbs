@@ -113,7 +113,7 @@ int
 	msg_generate(struct smtp_message *msg),
 	disp_update(struct active_processes *ap, struct smtp_message *msg),
 	read_new_user_file(char *filename),
-	read_user_file(char *filename),
+	read_user_file(char *filename, int depth),
 	read_new_bbs_file(char *filename),
 	read_bbs_file(char *filename),
 	hash_gen_update(FILE *gfp, int *gcnt, FILE *lfp, int *lcnt),
