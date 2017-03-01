@@ -33,6 +33,8 @@ void
 static void
 	log_user(char *str);
 
+static const char *mem2chr(const char *src, const char *pat, size_t len);
+
 #define DEFINITION		/* define config structures in this module */
 
 #include "c_cmmn.h"
@@ -67,7 +69,7 @@ static int
 	wait_to_die = FALSE,
 	display_motd(int force);
 
-static int socket_tnc_safe_raw_write(const char *buf);
+static int socket_tnc_safe_raw_write_n(const char *buf, size_t len);
 
 short bbscallsum;
 
@@ -858,6 +860,7 @@ print_socket(va_alist) va_dcl
 	va_list ap;
 	char buf[4096];
 	int err;
+	size_t len;
 
 #ifndef SABER
 	va_start(ap, fmt);
@@ -877,19 +880,29 @@ print_socket(va_alist) va_dcl
 	if(ImLogging)
 		log_user(buf);
 
+	len = strlen(buf);
+
 	if(monitor_fd != ERROR && monitor_connected == FALSE)
-		socket_raw_write(monitor_fd, buf);
+		socket_raw_write_n(monitor_fd, buf, len);
+
+	write_socket(buf, len);
+}
+
+void
+write_socket(const char *buf, size_t len)
+{
+	int err;
 
 	if(sock != ERROR) {
 		if (escape_tnc_commands)
-			err = socket_tnc_safe_raw_write(buf);
+			err = socket_tnc_safe_raw_write_n(buf, len);
 		else
-			err = socket_raw_write(sock, buf);
+			err = socket_raw_write_n(sock, buf, len);
 
 		if (err == ERROR)
-			error_log("print_socket.write(): %s", sys_errlist[errno]);
+			error_log("write_socket.write(): %s", sys_errlist[errno]);
 	} else {
-		printf("%s", buf);
+		fwrite(buf, len, 1, stdout);
 		fflush(stdout);
 	}
 }
@@ -994,16 +1007,19 @@ Time(time_t *t)
 }
 
 /*
- * Write a string to the user output socket in such a way that no in-band
+ * Write a buffer to the user output socket in such a way that no in-band
  * TNC commands will appear in the stream (this is a requirement when talking
  * to an AX.25 connection that is mediated by tncd).
  */
 static int
-socket_tnc_safe_raw_write(const char *buf)
+socket_tnc_safe_raw_write_n(const char *buf, size_t len)
 {
 	static int tnc_command_state = 0;
 	const char *unsafe;
 	ssize_t err;
+
+	if (len < 1)
+		return 0;
 
 	if (tnc_command_state == 1 && buf[0] == '~') {
 		err = socket_raw_write_n(sock, "~", 1);
@@ -1012,23 +1028,45 @@ socket_tnc_safe_raw_write(const char *buf)
 		tnc_command_state = 0;
 	}
 
-	while ((unsafe = strstr(buf, "\n~")) != NULL) {
-		err = socket_raw_write_n(sock, buf, unsafe-buf+2);
+	while ((unsafe = mem2chr(buf, "\n~", len)) != NULL) {
+		size_t subsz = unsafe - buf + 2;
+		err = socket_raw_write_n(sock, buf, subsz);
 		if (err == ERROR)
 			return ERROR;
 		err = socket_raw_write_n(sock, "~", 1);
 		if (err == ERROR)
 			return ERROR;
-		buf = unsafe+2;
+		buf += subsz;
+		len -= subsz;
 	}
 
-	if (buf[0] != '\0') {
-		err = socket_raw_write(sock, buf);
+	if (len) {
+		err = socket_raw_write_n(sock, buf, len);
 		if (err == ERROR)
 			return ERROR;
-		size_t len = strlen(buf);
 		tnc_command_state = buf[len-1] == '\n';
 	}
 
 	return 0;
+}
+
+static const char *
+mem2chr(const char *src, const char *pat, size_t len)
+{
+	const char *f;
+
+	do {
+		f = memchr(src, pat[0], len);
+		if (f == NULL)
+			return NULL;
+		len -= f - src + 1;
+		if (len == 0)
+			return NULL;
+		if (f[1] == pat[1])
+			return f;
+		src = f + 1;
+		len--;
+	} while (len > 0);
+
+	return NULL;
 }

@@ -20,6 +20,8 @@ extern void
 	print_socket();
 #endif
 
+void write_socket(const char *, size_t);
+
 extern time_t
 	Time(time_t *t);
 
@@ -138,3 +140,6 @@ extern int
 /*wx.c*/
 extern int
 	wx(void);
+
+/*unixlogin.c*/
+int unixlogin(void);

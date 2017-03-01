@@ -732,7 +732,7 @@ struct possible_tokens Opcodes[] = {
 	{ pUS,	"SB",			2, 2, SEND, BULLETIN,	msg,		SendOperands },
 	{ pUS,	"SD",			2, 2, SEND, DISTRIB,	msg,		SendOperands },
 	{ pUS,	"SEARCH",		3, 6, SEARCH, 0,		callbk,		DummyOperands },
-	{ pS,	"SHELL",		5, 5, SHELL, 0,		process,	DummyOperands },
+	{ pUS,	"SHELL",		5, 5, SHELL, 0,		unixlogin,	DummyOperands },
 	{ pUS,	"SIGNATURE",	3, 9, SIGNATURE, 0,	signature,	SignOperands },
 	{ pUS,	"SI",			2, 2, SEND, MAIL,		msg,		SendOperands },
 	{ pUSB,	"SKIP",			2, 4, EXCLUDE, 0,	usr,		InclOperands },

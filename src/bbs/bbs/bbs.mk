@@ -19,7 +19,7 @@ BBS_APP_SRCS := \
 	parse.c process.c\
 	remote.c rfc822.c\
 	search.c server.c system.c\
-	tokens.c\
+	tokens.c unixlogin.c\
 	user.c usr_disp.c usr_parse.c\
 	voice.c\
 	wp.c wx.c

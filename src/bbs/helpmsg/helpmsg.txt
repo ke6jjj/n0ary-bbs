@@ -1945,14 +1945,17 @@
 1110 /HElp
 1110    Will display a menu of send commands while in input mode.
 
-
 !977
-1110 SHELL command ============================================================
-1110    SHell (SYSOP)
+1110 SHELL command ==========================================================
+1110    SHELL user                   (Attempt UNIX log in on BBS machine)
 1110
-1110 This is a sysop command that will grant the user a unix C shell and
-1110 access to the unix system. This is only allowed over a secure channel
-1110 and requires a good working knowledge of UNIX.
+1110 Attempt to log in to the BBS machine as the named user. You will be
+1110 prompted for the user's password, and, if sucessful, will be given
+1110 UNIX shell access. To return to the BBS simply type "exit".
+1110
+1110 It is not wise to use this command over an unsecure channel unless the
+1110 user in question has been set up to use a one-time password setup,
+1110 such as S/KEY or OPIE.
 
 !978
 1110 SKIP command =============================================================
