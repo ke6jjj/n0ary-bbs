@@ -554,6 +554,19 @@ struct PortDefinition {
 	char alias[9];
 	int show;
 };
+
+/*
+ * Kenwood has line of mobile radios with built-in TNCs that can be
+ * used in KISS mode. The TNCs in some of these radios, however, have 
+ * a bug which will cause them to exit KISS mode if they see a string
+ * matching the radio command "TC 0".
+ *
+ * A workaround for such radios is to ensure that no ASCII "C" character
+ * makes it unescaped into the KISS stream. Setting this flag on a TNC's
+ * Tnc_ax25.flags member will cause TNCD to make such an adjustment.
+ */
+#define TNC_AX25_ESCAPE_ASCII_C 1
+
 struct Tnc_ax25 {
 		/* AX25 parameters
 		 * t1 = This is how long to wait after a frame is sent before
@@ -568,11 +581,14 @@ struct Tnc_ax25 {
 		 * paclen = maximum packet size in bytes. Typical setting would
 		 *			be 110, should never go beyond 256.
 		 * n2 = number of retries to allow.
+		 * flags = Special KISS encoding flags, in ASCII hexadecimal:
+		 *   1 = Escape ASCII 'C' on this port
 		 */
 
 	int t1, t2, t3;
 	int maxframe, paclen;
 	int n2;
+	int flags;
 };
 
 struct TncDefinition {

@@ -124,6 +124,7 @@ build_ports(char *s)
 static void
 build_tncs(char *s)
 {
+	int optional_flags;
 	struct TncDefinition
 		**tmp = &TD,
 		*td = malloc_struct(TncDefinition);
@@ -140,6 +141,12 @@ build_tncs(char *s)
 	td->ax25.maxframe = get_number(&s);
 	td->ax25.paclen = get_number(&s);
 	td->ax25.n2 = get_number(&s);
+	td->ax25.flags = 0;
+
+	/* Get SLIP encoding flags, if present. */
+	optional_flags = get_number(&s);
+	if (optional_flags != ERROR)
+		td->ax25.flags = optional_flags;
 
 	while(*tmp != NULL)
 		tmp = &((*tmp)->next);

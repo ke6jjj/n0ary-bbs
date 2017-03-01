@@ -10,7 +10,7 @@
 #include "tnc.h"
 
 static struct mbuf
-	*slip_encode(struct mbuf *bp),
+	*slip_encode(struct mbuf *bp, int flags),
 	*slip_decode(int dev, u_char c);
 
 static void
@@ -22,6 +22,26 @@ static int
 /* Slip level control structure */
 struct slip slip[MAX_TNC];
 
+int Tncd_SLIP_Flags;
+
+int
+slip_init(int dev)
+{
+	struct slip *sp;
+
+	if (dev < 0 || dev >= MAX_TNC)
+		return -1;
+
+	sp = &slip[dev];
+
+	sp->tbp = NULLBUF;
+	sp->sndq = NULLBUF;
+	sp->sndcnt = 0;
+	sp->rcnt = 0;
+	sp->errors = 0;
+
+	return 0;
+}
 
 /* Start output, if possible, on asynch device dev */
 static void
@@ -143,10 +163,11 @@ slipq(int dev, struct mbuf *data)
 	struct slip *sp;
 	struct mbuf *bp;
 
-	if((bp = slip_encode(data)) == NULLBUF)
+	if((bp = slip_encode(data, Tncd_SLIP_Flags)) == NULLBUF)
 		return -1;	
 
 	sp = &slip[dev];
+
 	enqueue(&sp->sndq,bp);
 	sp->sndcnt++;
 	if(sp->tbp == NULLBUF)
@@ -156,7 +177,7 @@ slipq(int dev, struct mbuf *data)
 
 /* Encode a packet in SLIP format */
 static struct mbuf *
-slip_encode(struct mbuf *bp)
+slip_encode(struct mbuf *bp, int flags)
 {
 	struct mbuf *lbp;	/* Mbuf containing line-ready packet */
 	register char *cp;
@@ -187,6 +208,14 @@ slip_encode(struct mbuf *bp)
 			*cp++ = FR_ESC;
 			*cp++ = T_FR_END;
 			break;
+		case 'C':
+			/* Handle ASCII C for weird KISS problem */
+			if (flags & SLIP_FLAGS_ESCAPE_ASCII_C) {
+				*cp++ = FR_ESC;
+				*cp++ = 'C';
+				break;
+			}
+			/*FALLTHROUGH*/
 		default:
 			*cp++ = c;
 		}

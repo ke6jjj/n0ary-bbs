@@ -8,6 +8,7 @@
 #include "socket.h"
 #include "timer.h"
 #include "ax25.h"
+#include "slip.h"
 #include "ax_mbx.h"
 #include "tools.h"
 #undef YES
@@ -32,6 +33,7 @@ char *helpmsg[] = {
 	"   MAXFRAME 7\n",
 	"   PACLEN 220\n",
 	"   N2 10\n",
+	"   FLAGS 1\n",
 	NULL };
 
 int
@@ -201,6 +203,10 @@ fprintf(stderr, "monitor_chk: broken pipe\n"); fflush(stderr);
 						Tncd_N2 = value;
 						break;
 					}
+					if (!strcmp(q, "FLAGS")) {
+						Tncd_SLIP_Flags = value;
+						break;
+					}
 				} else {
 					struct mboxsess *mpb = base;
 					char obuf[256];
@@ -220,8 +226,8 @@ fprintf(stderr, "monitor_chk: broken pipe\n"); fflush(stderr);
 						mp = monitor_disc(mp);
 						continue;
 					}
-					sprintf(obuf, "maxframe = %d\npaclen = %d\n2 = %d\n",
-						Tncd_Maxframe, Tncd_Paclen, Tncd_N2);
+					sprintf(obuf, "maxframe = %d\npaclen = %d\n2 = %d\nflags = %d",
+						Tncd_Maxframe, Tncd_Paclen, Tncd_N2, Tncd_SLIP_Flags);
 					if(write(mp->fd, obuf, strlen(obuf)) < 0) {
 						mp = monitor_disc(mp);
 						continue;

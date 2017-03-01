@@ -73,6 +73,7 @@ struct ConfigurationList ConfigList[] = {
 	{ "TNCxD_N2",				tINT,		(int*)&Tncd_N2 },
 	{ "TNCxD_PACLEN",			tINT,		(int*)&Tncd_Paclen },
 	{ "TNCxD_PTHRESH",			tINT,		(int*)&Tncd_Pthresh },
+	{ "TNCxD_FLAGS",			tINT,		(int*)&Tncd_SLIP_Flags },
 #endif
 	{ NULL, 0, NULL}};
 
@@ -94,7 +95,7 @@ preload(char *name)
 	Tncd_Maxframe = tax->maxframe;
 	Tncd_N2 = tax->n2;
 	Tncd_Paclen = Tncd_Pthresh = tax->paclen;
-
+	Tncd_SLIP_Flags = tax->flags;
 
 	for(i=0; ConfigList[i].token != NULL; i++) {
 		if(!strncmp(ConfigList[i].token, "TNCx", 4))

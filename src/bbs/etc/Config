@@ -13,13 +13,11 @@
 ; Values have an associated type. The posible types are:
 ;   STRING, NUMBER, DIRECTORY, FILE and TIME
 ;
-; -----TOTALLY INACCURATE!!!!!!
 ; When specifying a DIRECTORY or FILE if the first character
 ; is a slash '/' then the path is considered to be absolute.
 ; If it begins with a character other than a slash the field
 ; represented by BBS_DIR is prepended. DIRECTORY values should
 ; not end with a slash.
-; -----TOTALLY INACCURATE!!!!!!
 ;
 ; The TIME values are a number followed by the quantity
 ; definition, ie. SECONDS, MINUTES, HOURS, DAYS, WEEKS,
@@ -42,6 +40,10 @@
 ; make sure it establishes a connection and continues to run. If
 ; one of these programs dies bbsd will start another copy.
 ; 
+; NOTE: While most components in the BBS will allow file specifications
+;       to be relative to the BBS_DIR, the DAEMON directives below do
+;       not have this flexibility. When specifying a path to a daemon
+;       program below, you must use a full, absolute path.
 
 ;DAEMON IGNORE	/bbs/bin/your.program.here
 
@@ -214,11 +216,11 @@ PORT	STATUS	SYSTEM	FALSE	FALSE	Status
 ; T3: How often to ping the remote station to see if it is still there
 ;	when idle.
 ;
-; MaxFrame: The maximum number of frames that will be sent without
+; MxF: The maximum number of frames that will be sent without
 ;	waiting for an acknoledgement. The maximum is 7, poor links
 ;	should be lower.
 ;
-; Paclen: The maximum size packet that can be sent. I believe the maximum
+; Plen: The maximum size packet that can be sent. I believe the maximum
 ;	is 256 but you have some overhead that AX25 adds. 220 is a good
 ;	max value for me. Bad links should lower this, possibly as low
 ;	as 64.
@@ -226,15 +228,25 @@ PORT	STATUS	SYSTEM	FALSE	FALSE	Status
 ; N2: Retry count. If you issue something this many times and don't get
 ;	thru, dump the connection.
 ;
+; Flgs: (OPTIONAL) Enable some device-specific fixes. This is a bit field
+;       representing TNCD flags to apply to this device (interpreted as
+;       a decimal number). Current flags are:
+;
+;       1 = Escape all ASCII 'C' characters on this device, in order to
+;           prevent the device from leaving KISS mode (necessary for
+;           the built-in TNCs on some Kenwood mobile radios. Search
+;           the Internet for the subject "Linux AX25 KISS driver for
+;           Kenwood D700" for more details).
+;      
 ; My strategy on the user ports is to dump as big of frames and as many
 ; as possible. I figure the user must be hearing me pretty well, don't
 ; waste a bunch of time with acknoledgments.
 
-;	Name	dPort	cPort	Device	   Host    T1 T2  T3 MaxFrame Paclen N2
-TNC	TNC0	44450	44460	/dev/ttyr5 bbshost 10  4 300    7       220  5
-TNC	TNC1	44451	44461	/dev/ttyr6 bbshost 10  4 300    3       128  5
-TNC	TNC2	44452	44462	/dev/ttyr7 bbshost 10  4 300    7       220  5
-TNC	TNC3	44453	44463	/dev/ttyb  bbshost 10  4 300    7       220  5
+;	Name	dPort	cPort	Device	   Host    T1 T2  T3 MxF Plen N2 (Flgs)
+TNC	TNC0	44450	44460	/dev/ttyr5 bbshost 10  4 300 7   220  5  0
+TNC	TNC1	44451	44461	/dev/ttyr6 bbshost 10  4 300 3   128  5  0
+TNC	TNC2	44452	44462	/dev/ttyr7 bbshost 10  4 300 7   220  5  0
+TNC	TNC3	44453	44463	/dev/ttyb  bbshost 10  4 300 7   220  5  0
 
 ;###
 ;#	PHONE DEFINITIONS
@@ -279,7 +291,7 @@ MAIL_HOST	mailhost
 SMTP_PORT	25
 
 BIN_DIR			bin
-BBS_SID			[ARY-4.0-H$]
+BBS_SID			[ARY-4.1-H$]
 
 ; This is the port number that bbsd listens on. You are free to change
 ; all the port numbers but it would be nice if we all used the same
