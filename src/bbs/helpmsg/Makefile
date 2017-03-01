@@ -1,10 +1,10 @@
 THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-all: HELPMSG_APP
+all: HELPMSG
 
 include $(THIS_SRCDIR)/../../top.mk
 
-HELPMSG_APP: $(HELPMSG_APP)
+HELPMSG: HELPMSG_MESSAGES
 
 clean: HELPMSG_APP_CLEAN
 install: HELPMSG_INSTALL
