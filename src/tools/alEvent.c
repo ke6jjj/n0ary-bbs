@@ -369,14 +369,18 @@ alEvent_setFdEvents(alEventHandle evp, int newflags)
 
   if ((evh->enabledFlags ^ newflags) & ALFD_READ) {
     kflags = EV_ADD;
-    if (!(newflags & ALFD_READ))
+    if (newflags & ALFD_READ)
+      kflags |= EV_ENABLE;
+    else
       kflags |= EV_DISABLE;
     EV_SET(&filters[i], fd, EVFILT_READ, kflags, 0, 0, evh);
     i++;
   }
   if ((evh->enabledFlags ^ newflags) & ALFD_WRITE) {
     kflags = EV_ADD;
-    if (!(newflags & ALFD_WRITE))
+    if (newflags & ALFD_WRITE)
+      kflags |= EV_ENABLE;
+    else
       kflags |= EV_DISABLE;
     EV_SET(&filters[i], fd, EVFILT_WRITE, kflags, 0, 0, evh);
     i++;
@@ -432,7 +436,9 @@ alEvent_setProcEvents(alEventHandle evp, int newflags)
   if ((evh->enabledFlags ^ newflags) & ALPROC_EXIT) {
     kflags = EV_ADD;
     fflags = NOTE_EXIT;
-    if (!(newflags & ALPROC_EXIT))
+    if (newflags & ALPROC_EXIT)
+      kflags |= EV_ENABLE;
+    else
       kflags |= EV_DISABLE;
     
     EV_SET(&filter, pid, EVFILT_PROC, kflags, fflags, 0, evh);
