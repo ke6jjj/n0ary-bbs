@@ -1,10 +1,10 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = b_gateway
-OBJS = gateway.o
-CFILES = gateway.c
-HDRS = gateway.h
-SUPPORT = Makefile
+all: GATEWAY_APP
 
-include ../common.mk
+include $(THIS_SRCDIR)/../../top.mk
+
+GATEWAY_APP: $(GATEWAY_APP)
+
+clean: GATEWAY_APP_CLEAN
+install: GATEWAY_APP_INSTALL

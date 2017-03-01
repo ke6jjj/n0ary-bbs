@@ -1,10 +1,10 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = b_logd
-CFILES = main.c
-OBJS = main.o
-HDRS = log.h
-SUPPORT = Makefile
+all: LOGD_APP
 
-include ../common.mk
+include $(THIS_SRCDIR)/../../top.mk
+
+LOGD_APP: $(LOGD_APP)
+
+clean: LOGD_APP_CLEAN
+install: LOGD_APP_INSTALL

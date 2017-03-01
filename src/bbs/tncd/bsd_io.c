@@ -192,7 +192,7 @@ asy_init_tcp(int dev, char *host_spec)
 	int port, fd;
 	
 	mutable = strdup(host_spec);
-	colon = strchr(host_spec, ':');
+	colon = strchr(mutable, ':');
 
 	if (colon == NULL) {
 		free(mutable);

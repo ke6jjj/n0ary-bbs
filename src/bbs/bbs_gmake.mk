@@ -32,7 +32,7 @@ $$($1): $$($1_OBJS) $$(BBSLIB_LIB) $$(TOOLS_LIB)
 $1_CLEAN:
 	rm -rf $$($1_OBJDIR)
 
-$1_INSTALL:
+$1_INSTALL: $$($1)
 	install -d $(BBS_DIR)/bin
 	install $$($1) $(BBS_DIR)/bin/$$($1_PROD)
 
@@ -42,7 +42,7 @@ endef
 # For reference only:
 #	common			; required for all builds
 #	bbsd bidd gated logd	; all the daemons
-#	   tncd userd wpd
+#	   tncd userd wpd msgd
 #	bbstool			; only for X installations
 #	bbs
 #	dial gateway		; used if uucp available
@@ -69,9 +69,11 @@ include $(BBS_SRCDIR)/dectalk/dectalk.mk
 include $(BBS_SRCDIR)/dial/dial.mk
 include $(BBS_SRCDIR)/etc/etc.mk
 include $(BBS_SRCDIR)/gated/gated.mk
+# include $(BBS_SRCDIR)/gateway/gateway.mk
+include $(BBS_SRCDIR)/logd/logd.mk
 include $(BBS_SRCDIR)/userd/userd.mk
 include $(BBS_SRCDIR)/tncd/tncd.mk
 include $(BBS_SRCDIR)/wpd/wpd.mk
 
-BBS_CLEAN: $(BBS_CLEAN_TARGETS)
+BBS_CLEAN: $(BBS_CLEAN_TARGETS) BBSLIB_CLEAN
 BBS_INSTALL: $(BBS_INSTALL_TARGETS)

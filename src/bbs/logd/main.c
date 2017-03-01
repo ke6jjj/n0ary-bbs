@@ -9,6 +9,7 @@
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -176,6 +177,7 @@ read_config_file(char *fn)
 	fclose(fp);
 }
 
+int
 main(int argc, char *argv[])
 {
 	int listen_port;
@@ -188,7 +190,7 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgIGNOREHOST))
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
-		daemon();
+		daemon(1, 1);
 
 	if(bbsd_open(Bbs_Host, Bbsd_Port, "logd", "DAEMON") == ERROR)
 		error_print_exit(0);
@@ -256,4 +258,6 @@ main(int argc, char *argv[])
             NEXT(ap);
         }
 	}
+
+	return 0;
 }

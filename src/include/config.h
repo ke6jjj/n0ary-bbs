@@ -7,7 +7,7 @@
 #include "common.h"
 
 #define BBS_SID     "[ARY-%-H$]"
-#define BBS_HOST	"bbshost"
+#define BBS_HOST	"photon"
 #define BBSD_PORT	44510
 
 #if 1
