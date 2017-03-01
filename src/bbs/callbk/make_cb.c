@@ -22,7 +22,7 @@ static int
 	parse_expire(struct callbook_entry *cb, char *s, int len),
 	parse_class(struct callbook_entry *cb, char *s, int len);
 static void create_output_files(char *s);
-static void append_index(struct callbook_entry *cb, int loc);
+static int append_index(struct callbook_entry *cb, off_t loc);
 static void create_callbook(FILE *fp, char *dir);
 
 struct input_record {
@@ -138,12 +138,21 @@ main(int argc, char *argv[])
 	return 0;
 }
 
-static void
-append_index(struct callbook_entry *cb, int loc)
+static int
+append_index(struct callbook_entry *cb, off_t loc)
 {
 	struct callbook_index indx;
 
-	indx.loc = loc;
+	if (loc > 0xFFFFFFFFUL)
+		/* Can't represent this position in the index file */
+		return -1;
+
+	/* Store position in big-endian fashion */
+	indx.loc_xdr[0] = (uint8_t)((loc >> 24) & 0xff);
+	indx.loc_xdr[1] = (uint8_t)((loc >> 16) & 0xff);
+	indx.loc_xdr[2] = (uint8_t)((loc >>  8) & 0xff);
+	indx.loc_xdr[3] = (uint8_t)( loc        & 0xff);
+
 	indx.area = cb->callarea[0];
 	indx.suffix = cb->suffix[0];
 
@@ -162,6 +171,8 @@ append_index(struct callbook_entry *cb, int loc)
 	strncpy(indx.key, cb->zip, 7);
 	indx.key[7] = 0;
 	fwrite(&indx, sizeof(indx), 1, fp_zip);
+
+	return 0;
 }
 
 static void
@@ -203,8 +214,12 @@ create_callbook(FILE *fp, char *dir)
 			fflush(stdout);
 		}
 
-		if(cb.fname[0] != '>')
-			append_index(&cb, ftell(fpw));
+		if(cb.fname[0] != '>') {
+			if (append_index(&cb, ftell(fpw)) != 0) {
+				printf("Database too big for index format (wow).\n");
+				exit(4);
+			}
+		}
 
 		if(fwrite(&cb, sizeof(cb), 1, fpw) == 0) {
 			printf("Error writing to %s\n", buf);

@@ -3,6 +3,7 @@
 #include <sys/stat.h>
 #include <stdlib.h>
 #include <string.h>
+#include <inttypes.h>
 
 #include "config.h"
 #include "bbslib.h"
@@ -68,8 +69,15 @@ display_indx(FILE *fp)
 	int cnt = 0;
 	FILE *fpw;
 
-	while(fread(&cb, sizeof(cb), 1, fp))
-		printf("%6d: %s\t%c%c:%d\n", cnt++, cb.key, cb.area, cb.suffix, cb.loc);
+	while(fread(&cb, sizeof(cb), 1, fp)) {
+		uint32_t off =
+			(cb.loc_xdr[0] << 24) +
+			(cb.loc_xdr[0] << 16) +
+			(cb.loc_xdr[0] <<  8) +
+			(cb.loc_xdr[0]      );
+
+		printf("%6d: %s\t%c%c:%"PRIu32"\n", cnt++, cb.key, cb.area, cb.suffix, off);
+	}
 }
 
 static void

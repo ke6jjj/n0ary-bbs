@@ -556,8 +556,15 @@ search_callbook(int server)
 		if(result > 0)
 			break;
 
+		/* Unmarshal the record location from its disk format */
+		uint32_t loc = 
+			(cbi.loc_xdr[0] << 24) +
+			(cbi.loc_xdr[1] << 16) +
+			(cbi.loc_xdr[2] << 8) +
+			(cbi.loc_xdr[3]);
+
 		if(!result)
-			if(check_call_for_match(fptmp, cbi.area, cbi.suffix, cbi.loc)) {
+			if(check_call_for_match(fptmp, cbi.area, cbi.suffix, loc)) {
 				cnt++;
 				if(!server) 
 					if(!(cnt % 20))

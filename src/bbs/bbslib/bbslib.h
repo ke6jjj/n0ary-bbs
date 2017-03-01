@@ -544,7 +544,7 @@ struct callbook_index {
 	char area;
 	char suffix;
 	short pad;
-	int loc;
+	uint8_t loc_xdr[4];
 };
 
 struct PortDefinition {
