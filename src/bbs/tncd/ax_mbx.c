@@ -767,7 +767,7 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 
 			if(dbug_level & dbgVERBOSE) {
 				printf("Starting bbs process [1]:\n");
-				printf("\t%s/b_bbs -v %s -s %s %s\n",
+				printf("\t%s/b_bbs -v %s -e -s %s %s\n",
 					Bin_Dir, Tncd_Name, port, call);
 			}
 
@@ -776,7 +776,8 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 				char cmd[256];
 
 				sprintf(cmd, "%s/b_bbs", Bin_Dir);
-				execl(cmd, "b_bbs", "-v", Tncd_Name, "-s", port, call, 0);
+				execl(cmd, "b_bbs", "-v", Tncd_Name, "-s",
+					port, "-e", call, 0);
 				exit(1);
 			}
 
@@ -853,7 +854,7 @@ mbx_incom(struct ax25_cb *axp, int cnt)
 	if((pid=fork()) == 0){			/*if we are the child*/
 		char cmd[256];
 		sprintf(cmd, "%s/b_bbs", Bin_Dir);
-		execl(cmd, "b_bbs", "-v", Tncd_Name, "-s", port, call, 0);
+		execl(cmd, "b_bbs", "-v", Tncd_Name, "-e", "-s", port, call, 0);
 		exit(1);
 	}
 	mbp->pid=pid;				/* save pid of new baby*/

@@ -59,13 +59,15 @@ static void
 	init_program_vars(void);
 
 static int
-		/* change this to FALSE to see if the handshake is necessary.
-		 * when set to TRUE the bbs will send a disconnect to tncd
-		 * then pause waiting for tncd to kill me. With it set to 
-		 * FALSE we simply close and exit.
-		 */
+	/* change this to FALSE to see if the handshake is necessary.
+	 * when set to TRUE the bbs will send a disconnect to tncd
+	 * then pause waiting for tncd to kill me. With it set to 
+	 * FALSE we simply close and exit.
+	 */
 	wait_to_die = FALSE,
 	display_motd(int force);
+
+static int socket_tnc_safe_raw_write(const char *buf);
 
 short bbscallsum;
 
@@ -80,20 +82,21 @@ char
 	prompt_string[4096];
 
 time_t
-inactivity_timer = 0,
-time_now = 0;
+	inactivity_timer = 0,
+	time_now = 0;
 
 int 
 	batch_mode = FALSE,
 	Program = ERROR,
-bbsd_sock = ERROR,
+	bbsd_sock = ERROR,
 	sock = ERROR;
 
 static int
 	monitor_connected = FALSE,
 	monitor_port = 0,
 	monitor_sock = ERROR,
-	monitor_fd = ERROR;
+	monitor_fd = ERROR,
+	escape_tnc_commands = FALSE;
 
 #define	MONITOR_ON	"ON"
 #define	MONITOR_OFF	"OFF"
@@ -157,10 +160,10 @@ static void
 usage(char *pgm)
 {
 	printf("Usage:\n");
-	printf("\t%s -h host -p port -t0 -c# -v via -s# [call]\n", pgm);
+	printf("\t%s -h host -p port -t0 -c# -v via -s# -e -w [call]\n", pgm);
 	printf("\t\t-h\tspecify new bbsd host\n");
 	printf("\t\t-p\tspecify new bbsd port\n");
-	printf("\t\t-d\tdaemonize, only used for testing\n");
+	printf("\t\t-d\tdon't daemonize, only used for testing\n");
 	printf("\n");
 	printf("\t\t-t\tprogram mode\n");
 	printf("\t\t\t\t1 = bbs (default)\n");
@@ -184,6 +187,10 @@ usage(char *pgm)
 	printf("\n");
 	printf("\t\t-v\tconnect via (TNC0, TNC1, CONSOLE, PHONE, etc)\n");
 	printf("\t\t-s\tsocket number (default to stdin/stdout)\n");
+	printf("\t\t-U\timmediately enter SYSOP mode\n");
+	printf("\t\t-u\tstart out in non-SYSOP mode (default)\n");
+	printf("\t\t-e\tProtect against TNC escape sequences (~X commands)\n");
+	printf("\t\t-w\tShow configuration (can be used multiple times)\n");
 	printf("\n");
 }
 
@@ -205,9 +212,12 @@ read_options(int argc, char **argv)
 
 	Program = Prog_BBS;
 
-	while((c = getopt(argc, argv, "d:h:p:t:c:v:S:s:UuwWf:?")) != -1) {
+	while((c = getopt(argc, argv, "d:eh:p:t:c:v:S:s:UuwWf:?")) != -1) {
 
 		switch(c) {
+		case 'e':
+			escape_tnc_commands = TRUE;
+			break;
 		case 'h':
 			Bbs_Host = optarg;
 			break;
@@ -257,9 +267,6 @@ read_options(int argc, char **argv)
 		case 'u':
 			ImSysop = TRUE;
 			break;
-
-		case 'S':
-			wait_to_die = FALSE;
 		case 's':
 			socket_number = atoi(optarg);
 			break;
@@ -467,6 +474,7 @@ main(int argc, char **argv)
 #endif
 	prompt_string[0] = 0;
 	Group[0] = 0;
+	escape_tnc_commands = FALSE;
 
 	read_options(argc, argv);
 
@@ -849,6 +857,7 @@ print_socket(va_alist) va_dcl
 {
 	va_list ap;
 	char buf[4096];
+	int err;
 
 #ifndef SABER
 	va_start(ap, fmt);
@@ -857,8 +866,10 @@ print_socket(va_alist) va_dcl
 	va_start(ap);
 	fmt = va_arg(ap, char*);
 #endif
-	vsprintf(buf, fmt, ap);
+	vsnprintf(buf, sizeof(buf)-1, fmt, ap);
 	va_end(ap);
+
+	buf[sizeof(buf)-1] = '\0';
 
 	if(Cnvrt2Uppercase)
 		uppercase(buf);
@@ -870,7 +881,12 @@ print_socket(va_alist) va_dcl
 		socket_raw_write(monitor_fd, buf);
 
 	if(sock != ERROR) {
-		if(socket_raw_write(sock, buf) == ERROR)
+		if (escape_tnc_commands)
+			err = socket_tnc_safe_raw_write(buf);
+		else
+			err = socket_raw_write(sock, buf);
+
+		if (err == ERROR)
 			error_log("print_socket.write(): %s", sys_errlist[errno]);
 	} else {
 		printf("%s", buf);
@@ -975,4 +991,44 @@ Time(time_t *t)
 	if(t != NULL)
 		*t = now;
 	return now;
+}
+
+/*
+ * Write a string to the user output socket in such a way that no in-band
+ * TNC commands will appear in the stream (this is a requirement when talking
+ * to an AX.25 connection that is mediated by tncd).
+ */
+static int
+socket_tnc_safe_raw_write(const char *buf)
+{
+	static int tnc_command_state = 0;
+	const char *unsafe;
+	ssize_t err;
+
+	if (tnc_command_state == 1 && buf[0] == '~') {
+		err = socket_raw_write_n(sock, "~", 1);
+		if (err == ERROR)
+			return ERROR;
+		tnc_command_state = 0;
+	}
+
+	while ((unsafe = strstr(buf, "\n~")) != NULL) {
+		err = socket_raw_write_n(sock, buf, unsafe-buf+2);
+		if (err == ERROR)
+			return ERROR;
+		err = socket_raw_write_n(sock, "~", 1);
+		if (err == ERROR)
+			return ERROR;
+		buf = unsafe+2;
+	}
+
+	if (buf[0] != '\0') {
+		err = socket_raw_write(sock, buf);
+		if (err == ERROR)
+			return ERROR;
+		size_t len = strlen(buf);
+		tnc_command_state = buf[len-1] == '\n';
+	}
+
+	return 0;
 }

@@ -25,7 +25,7 @@ socket_watcher(int sock_fd)
 }
 
 static void
-socket_print(char c, char *s)
+socket_print(char c, const char *s)
 {
 	printf("%c(%zu):", c, strlen(s));
 	while(*s) {
@@ -362,18 +362,25 @@ socket_write(int fd, char *buf)
 }
 
 int
-socket_raw_write(int fd, char *buf)
+socket_raw_write(int fd, const char *buf)
 {
-	int nleft, nwritten;
-	char *p = buf;
+	size_t len = strlen(buf);
+	return socket_raw_write_n(fd, buf, len);
+}
+
+int
+socket_raw_write_n(int fd, const char *buf, size_t len)
+{
+	ssize_t nleft, nwritten;
+	const char *p = buf;
 
 #ifdef _DEBUG
 	if(fd == ERROR)
-		return error_log("socket_raw_write: closed fd supplied");
+		return error_log("socket_raw_write_n: closed fd supplied");
 #endif
 	if(socket_watch == fd)
 		socket_print('W', buf);
-	nleft = strlen(buf);
+	nleft = len;
 	while(nleft) {
 		if((nwritten = write(fd, p, nleft)) == ERROR) {
 			switch(errno) {
@@ -386,7 +393,7 @@ socket_raw_write(int fd, char *buf)
 			case EPIPE:
 				return ERROR;
 			default:
-				return error_log("socket_raw_write: %s", sys_errlist[errno]);
+				return error_log("socket_raw_write_n: %s", sys_errlist[errno]);
 			}
 		}
 		nleft -= nwritten;
