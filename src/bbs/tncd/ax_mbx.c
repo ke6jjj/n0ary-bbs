@@ -35,7 +35,7 @@ static void mbx_handle_network(void *obj, void *arg0, int arg1);
 static void mbx_handle_child_exit(void *obj, void *arg0, int arg1);
 static void mbx_notify_sendable(struct mboxsess *mbp, size_t amount, int q);
 static void mbx_sendable_changed(void *obj, void *arg0, int arg1);
-static void mbx_check_sendable(struct mboxsess *mbp);
+static void mbx_process_tx_queue(struct mboxsess *mbp);
 static void mbx_nagle_timer(void *obj, void *arg0, int arg1);
 
 static void
@@ -497,16 +497,19 @@ mbx_handle_network(void *obj, void *arg0, int arg1)
 		}
 	}
 
-	mbx_check_sendable(mbp);
+	mbx_process_tx_queue(mbp);
 }
 
 
 static void
-mbx_check_sendable(struct mboxsess *mbp)
+mbx_process_tx_queue(struct mboxsess *mbp)
 {
 	struct mbuf *bp;
 	char *cp;
 	int testsize,size;
+
+	if (mbp->byte_cnt == 0)
+		return;
 
 	if (mbp->nagle_timer_id != -1) {
 		/*
@@ -527,6 +530,9 @@ mbx_check_sendable(struct mboxsess *mbp)
 		 * We've got enough data to send now, cancel the
 		 * timer.
 		 */
+		if(dbug_level & dbgVERBOSE)
+			printf("axsend: %s lifting Nagle gate due to size\n",
+				mbp->call);
 		alEvent_cancelTimer(mbp->nagle_timer_id);
 		mbp->nagle_timer_id = -1;
 		mbp->nagle_gate_down = 0;
@@ -537,6 +543,9 @@ mbx_check_sendable(struct mboxsess *mbp)
 		 * We should wait a little bit until sending any
 		 * data.
 		 */
+		if(dbug_level & dbgVERBOSE)
+			printf("axsend: %s starting Nagle timer\n",
+				mbp->call);
 		alCallback cb;
 		AL_CALLBACK(&cb, mbp, mbx_nagle_timer);
 		mbp->nagle_timer_id = alEvent_addTimer(MBOX_NAGLE_TIMER,
@@ -546,7 +555,7 @@ mbx_check_sendable(struct mboxsess *mbp)
 
 	while (mbp->byte_cnt && mbp->sendable_count) {
 		if(dbug_level & dbgVERBOSE)
-			printf("axchk: %s byte_cnt = %d\n", mbp->call,
+			printf("axsend: %s byte_cnt = %d\n", mbp->call,
 				mbp->byte_cnt);
 		testsize = min(mbp->sendable_count, mbp->axbbscb->paclen+1);
 		size = min(testsize, mbp->byte_cnt) + 1;
@@ -571,8 +580,12 @@ mbx_check_sendable(struct mboxsess *mbp)
 		send_ax25(mbp->axbbscb, bp);
 	}
 
-	if (mbp->byte_cnt == 0)
+	if (mbp->byte_cnt == 0) {
+		if(dbug_level & dbgVERBOSE)
+			printf("axsend: %s re-enabling Nagle gate\n",
+				mbp->call);
 		mbp->nagle_gate_down = 1;
+	}
 }
 
 static void
@@ -607,6 +620,9 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 		if(mbp->axbbscb != NULL)
 			disc_ax25(mbp->axbbscb);
 	}
+	if(mbp->nagle_timer_id != -1)
+		alEvent_cancelTimer(mbp->nagle_timer_id);
+
 
 	/* it should have died by now. Let's get it's completion
 	 * status.
@@ -960,7 +976,7 @@ static void
 mbx_sendable_changed(void *mbpp, void *arg0, int arg1)
 {
 	struct mboxsess *mbp = mbpp;
-	mbx_check_sendable(mbp);
+	mbx_process_tx_queue(mbp);
 }
 
 static void
@@ -974,5 +990,9 @@ mbx_nagle_timer(void *obj, void *arg0, int arg1)
 	mbp->nagle_timer_id = -1;
 	mbp->nagle_gate_down = 0;
 
-	mbx_check_sendable(mbp);
+	if(dbug_level & dbgVERBOSE)
+		printf("axsend: %s lifting Nagle gate due to timeout\n",
+			mbp->call);
+
+	mbx_process_tx_queue(mbp);
 }

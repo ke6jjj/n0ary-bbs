@@ -3,23 +3,44 @@
  */
 #include <stdio.h>
 #include <sys/types.h>
+#include <assert.h>
+
+#include "alib.h"
 #include "mbuf.h"
 #include "kiss.h"
 #include "bsd.h"
 #include "slip.h"
 #include "tnc.h"
 
-static struct mbuf
-	*slip_encode(struct mbuf *bp, int flags),
-	*slip_decode(int dev, u_char c);
+/* SLIP definitions */
+#define	SLIP_ALLOC	1024	/* Receiver allocation increment */
 
-static void
-	asy_start(int dev);
+#define	FR_END		0300	/* Frame End */
+#define	FR_ESC		0333	/* Frame Escape */
+#define	T_FR_END	0334	/* Transposed frame end */
+#define	T_FR_ESC	0335	/* Transposed frame escape */
 
+/* Slip protocol control structure */
+struct slip {
+	struct mbuf *sndq;	/* Encapsulated packets awaiting transmission */
+	int sndcnt;		/* Number of datagrams on queue */
+	char escaped, flags;	/* Receiver State control flag */
+	struct mbuf *rbp;	/* Head of mbuf chain being filled */
+	struct mbuf *rbp1;	/* Pointer to mbuf currently being written */
+	char *rcp;		/* Write pointer */
+	int rcnt;		/* Length of mbuf chain */
+	struct mbuf *tbp;	/* Transmit mbuf being sent */
+	int errors;		/* Receiver input errors */
+	void (*recv)();		/* Function to call with an incoming buffer */
+	alCallback selfChkQCb;  /* Callback handle to self for dequeue task */
+};
+
+static struct mbuf *slip_encode(struct mbuf *bp, int flags);
+static struct mbuf *slip_decode(int dev, u_char c);
+static void slip_check_queue(void *obj, void *arg0, int arg1);
+static void asy_start(int dev);
 static void doslip(int dev, void *unused);
-
-static int
-	slipq(int dev, struct mbuf *data);
+static int slipq(int dev, struct mbuf *data);
 
 /* Slip level control structure */
 struct slip slip[MAX_TNC];
@@ -41,6 +62,7 @@ slip_init(int dev)
 	sp->sndcnt = 0;
 	sp->rcnt = 0;
 	sp->errors = 0;
+	AL_CALLBACK(&sp->selfChkQCb, sp, slip_check_queue);
 
 	return 0;
 }
@@ -76,8 +98,21 @@ asy_start(int dev)
 	sp->tbp = dequeue(&sp->sndq);
 	sp->sndcnt--;
 	asy_output(dev, sp->tbp->data, sp->tbp->cnt);
+
+	/* Keep calling back until queue is empty */
+	alEvent_queueCallback(sp->selfChkQCb, ALCB_UNIQUE, NULL, dev);
 }
 
+static void
+slip_check_queue(void *obj, void *arg0, int arg1)
+{
+	struct slip *sp = obj;
+	int dev = arg1;
+
+	assert(&slip[dev] == sp);
+
+	asy_start(dev);
+}
 
 /* Process incoming bytes in SLIP format
  * When a buffer is complete, return it; otherwise NULLBUF
@@ -161,9 +196,6 @@ doslip(int dev, void *unused)
 				kiss_recv(dev, bp);
 		}
 	}
-
-	/* Kick the transmitter if it's idle */
-	asy_start(dev);
 }
 
 
@@ -193,6 +225,7 @@ slipq(int dev, struct mbuf *data)
 	sp->sndcnt++;
 	if(sp->tbp == NULLBUF)
 		asy_start(dev);
+
 	return 0;
 }
 

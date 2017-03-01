@@ -180,6 +180,7 @@ main(int argc, char *argv[])
 	tnc[0].inuse = FALSE;
 
 	asy_init(0, Tncd_Device);
+	slip_init(0);
 	slip_start(0);
 
 	bbsd_msg("");
