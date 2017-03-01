@@ -28,11 +28,19 @@ AMDatabase_lookup_by_callsign(struct AMDatabase *db, const char *call,
 	struct ULS_AM_Record **res)
 {
 	uint32_t call_id;
-	size_t bucket;
-	struct ULS_AM_Record *rec;
 
 	if (call2id(call, &call_id) != 0)
 		return -1; /* Bad callsign */
+
+	return AMDatabase_lookup_by_call_id(db, call_id, res);
+}
+
+int
+AMDatabase_lookup_by_call_id(struct AMDatabase *db, uint32_t call_id,
+	struct ULS_AM_Record **res)
+{
+	size_t bucket;
+	struct ULS_AM_Record *rec;
 
 	bucket = call_id % AMDatabase_Hash_Key;
 	for (rec = db->bucket[bucket]; rec != NULL; rec = rec->hash_next) {

@@ -134,3 +134,12 @@ id2call(uint32_t id, char call[7])
 
 	return o;
 }
+
+int
+id2region(uint32_t id)
+{
+	/* Remove suffix */
+	id /= 27 * 27 * 27;
+
+	return id % 10;
+}

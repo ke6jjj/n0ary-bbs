@@ -10,8 +10,10 @@
 struct ULS_AM_Record {
 	struct ULS_AM_Record *hash_next;
 	uint32_t op_call_id;
-	uint8_t  op_region;
 	uint8_t  op_class;
+	uint8_t  op_expire_month;
+	uint8_t  op_expire_day;
+	uint16_t op_expire_year;
 };
 
 #endif

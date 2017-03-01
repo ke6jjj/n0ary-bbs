@@ -29,5 +29,6 @@
 
 int call2id(const char *call, uint32_t *r_id);
 char *id2call(uint32_t id, char call[7]);
+int   id2region(uint32_t id);
 
 #endif

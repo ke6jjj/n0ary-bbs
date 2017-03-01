@@ -11,5 +11,7 @@ void AMDatabase_init(struct AMDatabase *db);
 void AMDatabase_add(struct AMDatabase *db, struct ULS_AM_Record *amr);
 int AMDatabase_lookup_by_callsign(struct AMDatabase *db, const char *call,
 	struct ULS_AM_Record **res);
+int AMDatabase_lookup_by_call_id(struct AMDatabase *db, uint32_t call,
+	struct ULS_AM_Record **res);
 
 #endif
