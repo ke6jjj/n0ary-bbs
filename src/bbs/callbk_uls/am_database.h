@@ -1,7 +1,7 @@
 #ifndef MAKECB_ULS_AM_DATABASE_H
 #define MAKECB_ULS_AM_DATABASE_H
 
-#define AMDatabase_Hash_Key 1023
+#define AMDatabase_Hash_Key 10243
 
 struct AMDatabase {
 	struct ULS_AM_Record *bucket[AMDatabase_Hash_Key];
