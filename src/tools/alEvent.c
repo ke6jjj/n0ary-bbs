@@ -35,6 +35,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <assert.h>
+#include <errno.h>
 
 #include "alib.h"
 
@@ -251,8 +252,12 @@ alEvent_addFdCallback(int fd, int flags, alCallback cb, alEventHandle *r)
     kflags |= EV_DISABLE;
   EV_SET(&filters[1], fd, EVFILT_WRITE, kflags, 0, 0, entry);
 
-  if (kevent(alKQFd, filters, 2, NULL, 0, NULL) != 0)
-    goto failed_kqueue_add;
+  do {
+    if (kevent(alKQFd, filters, 2, NULL, 0, NULL) == 0)
+      break;
+    if (errno != EINTR)
+      goto failed_kqueue_add;
+  } while (1);
   
   /*
    * Grow the kevent list to accomodate the kernel returning a descriptor READ
@@ -317,8 +322,12 @@ alEvent_addProcCallback(pid_t pid, int flags, alCallback cb, alEventHandle *r)
     
   EV_SET(&filter, pid, EVFILT_PROC, kflags, fflags, 0, entry);
 
-  if (kevent(alKQFd, &filter, 1, NULL, 0, NULL) != 0)
-    goto failed_kqueue_add;
+  do {
+    if (kevent(alKQFd, &filter, 1, NULL, 0, NULL) == 0)
+      break;
+    if (errno != EINTR)
+      goto failed_kqueue_add_proc;
+  } while (1);
   
   /*
    * Grow the kevent list to accomodate the kernel returning a process
@@ -330,7 +339,7 @@ alEvent_addProcCallback(pid_t pid, int flags, alCallback cb, alEventHandle *r)
 
   return 0;
   
-failed_kqueue_add:
+failed_kqueue_add_proc:
   LIST_REMOVE(entry, listEntry);
   free(entry);
   return -1;
@@ -418,8 +427,11 @@ alEvent_poll(void)
    * Wait for events.
    */
   nevents = kevent(alKQFd, NULL, 0, alKeventList, alKeventListSize, pWaitTime);
-  if (nevents == -1)
-    err(1, "kevent failed");
+  if (nevents == -1) {
+    if (errno != EINTR)
+      err(1, "kevent failed");
+    nevents = 0;
+  }
   
   /*
    * Note the time at which kevent returned.
