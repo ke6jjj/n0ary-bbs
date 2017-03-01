@@ -543,7 +543,7 @@ struct callbook_index {
 	char key[8];
 	char area;
 	char suffix;
-	short pad;
+	uint8_t pad[2];
 	uint8_t loc_xdr[4];
 };
 

@@ -155,6 +155,8 @@ append_index(struct callbook_entry *cb, off_t loc)
 
 	indx.area = cb->callarea[0];
 	indx.suffix = cb->suffix[0];
+	indx.pad[0] = 0;
+	indx.pad[1] = 0;
 
 	strncpy(indx.key, cb->lname, 7);
 	indx.key[7] = 0;
