@@ -36,6 +36,8 @@ int
 	test_mode = FALSE,
 	child = 0;
 
+static void usage(const char *prog);
+
 int
 	exec_listen(char *s),
 	compare_files(char *s),
@@ -192,13 +194,29 @@ main(int argc, char *argv[])
 	int c;
 	extern int optind;
 	struct text_line *tl;
+	char *log_path = "/dev/null", *prog = argv[0];
 
-	while((c = getopt(argc, argv, "t")) != -1) {
+	while((c = getopt(argc, argv, "tl:h?")) != -1) {
 		switch(c) {
 		case 't':
 			test_mode = TRUE;
 			break;
+		case 'l':
+			log_path = optarg;
+			break;
+		case 'h':
+		case '?':
+			usage(argv[0]);
+			exit(1);
 		}
+	}
+
+	argv += optind;
+	argc -= optind;
+
+	if (argc < 1) {
+		usage(prog);
+		exit(1);
 	}
 
 	for(c=0; c<MAXSOCKETS; c++) {
@@ -206,9 +224,9 @@ main(int argc, char *argv[])
 		Socket[c].sock = ERROR;
 	}
 
-	log_fp = fopen("logfile", "w");
+	log_fp = fopen(log_path, "w");
 
-	read_script_file(argv[optind]);
+	read_script_file(argv[0]);
 
 	tl = PendCmd;
 	while(tl) {
@@ -736,4 +754,12 @@ verbose(char *s)
 	else
 		test_mode = FALSE;
 	return OK;
+}
+
+static void
+usage(const char *prog)
+{
+	fprintf(stderr, "usage: %s [-t] [-l <logfile>] <scriptfile>\n", prog);
+	fprintf(stderr, "-t Test mode\n");
+	fprintf(stderr, "-l Write debug log to <logfile>\n");
 }
