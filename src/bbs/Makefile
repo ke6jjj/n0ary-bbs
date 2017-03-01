@@ -7,3 +7,4 @@ include $(THIS_SRCDIR)/../top.mk
 BBS_PRODUCTS: $(BBS_PRODUCTS)
 
 clean: BBS_CLEAN
+install: BBS_INSTALL
