@@ -39,5 +39,8 @@ kiss_recv(int dev, struct mbuf *bp)
 	case KISS_DATA:
 		ax_recv(dev, bp);
 		break;
+	default:
+		free_p(bp);
+		break;
 	}
 }
