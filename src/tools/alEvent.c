@@ -221,7 +221,7 @@ alEvent_queueCallback(alCallback cb, int flags, void *arg0, int arg1)
 
   if (flags & ALCB_UNIQUE) {
     SLIST_FOREACH(cbEntry, &alQueuedCallbacks, listEntry) {
-      if (cbEntry->cb.obj == cb.obj && cbEntry->cb.fn == cb.fn &&
+      if (AL_CALLBACK_EQUAL(&cbEntry->cb, &cb) &&
           cbEntry->arg0 == arg0 && cbEntry->arg1 == arg1)
       {
         return 0;

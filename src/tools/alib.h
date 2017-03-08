@@ -34,6 +34,9 @@
 
 #define alEvent_doCallback(cb, arg0, arg1) ((cb).fn((cb).obj, arg0, arg1))
 #define AL_CALLBACK(cb, o, f) { (cb)->obj = o; (cb)->fn = f; }
+#define AL_CALLBACK_EQUAL(cbA, cbB) ( \
+	(cbA)->obj == (cbB)->obj && (cbA)->fn == (cbB)->fn \
+)
 #define alMalloc(type, size) ((type *)malloc(sizeof(type)*size))
 #define alMallocFatal(type, size) ((type *)malloc(sizeof(type)*size))
 
