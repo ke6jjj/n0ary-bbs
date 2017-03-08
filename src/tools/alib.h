@@ -30,6 +30,8 @@
 #ifndef JSC_ALIB_H
 #define JSC_ALIB_H
 
+#include <sys/types.h>
+
 #define alEvent_doCallback(cb, arg0, arg1) ((cb).fn((cb).obj, arg0, arg1))
 #define AL_CALLBACK(cb, o, f) { (cb)->obj = o; (cb)->fn = f; }
 #define alMalloc(type, size) ((type *)malloc(sizeof(type)*size))
