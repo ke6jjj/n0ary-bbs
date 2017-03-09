@@ -28,10 +28,6 @@ struct timer {
 #define	TIMER_EXPIRE	2
 };
 
-#ifndef MSPTICK  /* { */
-#define	MSPTICK		1000		/* Milliseconds per tick */
-#endif   /* } */
-
 /* Useful user macros that hide the timer structure internals */
 #define	run_timer(t)	((t)->state == TIMER_RUN)
 

@@ -40,7 +40,7 @@ start_timer(struct timer *t)
 	}
 
 	AL_CALLBACK(&cb, t, timer_fired);
-	t->al_timerid = alEvent_addTimer(t->start * MSPTICK, 0, cb);
+	t->al_timerid = alEvent_addTimer(t->start, 0, cb);
 	assert(t->al_timerid != -1);
 	t->state = TIMER_RUN;
 
