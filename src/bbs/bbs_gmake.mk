@@ -76,6 +76,7 @@ include $(BBS_SRCDIR)/gated/gated.mk
 include $(BBS_SRCDIR)/helpmsg/helpmsg.mk
 include $(BBS_SRCDIR)/logd/logd.mk
 include $(BBS_SRCDIR)/msgd/msgd.mk
+include $(BBS_SRCDIR)/newtncd/tncd.mk
 include $(BBS_SRCDIR)/userd/userd.mk
 include $(BBS_SRCDIR)/tncd/tncd.mk
 include $(BBS_SRCDIR)/tcpd/tcpd.mk
