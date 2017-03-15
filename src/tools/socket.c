@@ -134,7 +134,6 @@ socket_listen(const char *bind_addr, int *port)
 	if(getsockname(sock, (struct sockaddr *)&server, &length) < 0)
 		return error_log("socket_listen.getsockname: %s", sys_errlist[errno]);
 
-	setsockopt(sock, SOL_SOCKET, SO_LINGER, (char *)&linger, sizeof(linger));
 	listen(sock, 5);
 
 	*port = ntohs(server.sin_port);
@@ -185,7 +184,6 @@ socket_open(char *host, int port)
 	if(connect(sock, (struct sockaddr*)&server, sizeof server) < 0)
 		return error_log("socket_open.connect: %s", sys_errlist[errno]);
 
-	setsockopt(sock, SOL_SOCKET, SO_LINGER, (char *)&linger, sizeof(linger));
 	fcntl(sock, F_SETFL, O_NDELAY);
 	link_fd(sock);
 	return sock;
