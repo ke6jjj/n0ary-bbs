@@ -3,14 +3,22 @@
 #
 SCRIPTS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-SCRIPTS_SRCS := n0ary-bbs.sh
+STARTUP_SCRIPTS_SRCS := n0ary-bbs.sh
+CRON_SCRIPTS_SRCS := callbook-update-uls.sh
 
 BSD_STARTUP_DIR ?= /usr/local/etc/rc.d
+BSD_AUTOMATED_DIR ?= /usr/local/libexec
 
 SCRIPTS_INSTALL:
 	install -d $(BSD_STARTUP_DIR)
-	for sc in $(SCRIPTS_SRCS); do \
+	for sc in $(STARTUP_SCRIPTS_SRCS); do \
 		sed -e s,XXBBS_DIRXX,$(BBS_DIR), < $(SCRIPTS_SRCDIR)/$$sc \
 		> $(BSD_STARTUP_DIR)/$$sc; \
 		chmod 755 $(BSD_STARTUP_DIR)/$$sc; \
+	done
+	install -d $(BSD_AUTOMATED_DIR)
+	for sc in $(CRON_SCRIPTS_SRCS); do \
+		sed -e s,XXBBS_DIRXX,$(BBS_DIR), < $(SCRIPTS_SRCDIR)/$$sc \
+		> $(BSD_AUTOMATED_DIR)/$$sc; \
+		chmod 755 $(BSD_AUTOMATED_DIR)/$$sc; \
 	done
