@@ -124,9 +124,11 @@ fi
 
 # Move old directory aside
 mv ${bbs_cbdir} ${bbs_cbdir}.old
+
 # Move new directory into place
 mv ${new_cbdir} ${bbs_cbdir}
 
+rm -rf ${bbs_cbdir}.old
 rm -rf ${tmpdir}
 
 echo "Done."
