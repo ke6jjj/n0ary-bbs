@@ -811,3 +811,4 @@ struct PhoneDefinition *phone_table(void);
 
 int parse_remote_addr(const char *addrspec, struct RemoteAddr *addr);
 int print_remote_addr(const struct RemoteAddr *addr, char *str, size_t len);
+int get_remote_addr(int sock, struct RemoteAddr *addr);

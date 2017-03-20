@@ -12,6 +12,8 @@ static int parse_local_addr(const char *addrspec, struct RemoteAddr *);
 static int parse_ax25_addr(const char *addrspec, struct RemoteAddr *);
 static int parse_tcpipv4_addr(const char *addrspec, struct RemoteAddr *);
 static int parse_tcpipv6_addr(const char *addrspec, struct RemoteAddr *);
+static int ntoa_tcpipv4(struct in_addr pin, int port, struct RemoteAddr *);
+static int ntoa_tcpipv6(struct in6_addr pin, int port, struct RemoteAddr *);
 
 int
 parse_remote_addr(const char *addrspec, struct RemoteAddr *addr)
@@ -66,9 +68,40 @@ print_remote_addr(const struct RemoteAddr *addr, char *str, size_t len)
 			addr->u.tcpipv6.port);
 		return 0;
 	default:
-		snprintf(str, len, "unknown");
-		return 0;
+		break;
 	}
+
+	snprintf(str, len, "unknown");
+	return 0;
+}
+
+int
+get_remote_addr(int sock, struct RemoteAddr *addr)
+{
+	int res;
+	socklen_t len;
+	struct sockaddr sa;
+	struct sockaddr_in *sin;
+	struct sockaddr_in6 *sin6;
+
+	len = sizeof(sa);
+	res = getpeername(sock, &sa, &len);
+	if (res != 0)
+		return -1;
+
+	switch (sa.sa_family) {
+	case AF_INET:
+		sin = (struct sockaddr_in *) &sa;
+		return ntoa_tcpipv4(sin->sin_addr, ntohs(sin->sin_port), addr);
+	case AF_INET6:
+		sin6 = (struct sockaddr_in6 *) &sa;
+		return ntoa_tcpipv6(sin6->sin6_addr, ntohs(sin6->sin6_port),
+			addr);
+	default:
+		break;
+	}
+
+	return -2;
 }
 
 static int
@@ -146,11 +179,7 @@ parse_tcpipv4_addr(const char *addrspec, struct RemoteAddr *addr)
 	if (port < 0 || port > 65535)
 		return -7;
 
-	addr->addr_type = pTCPIPv4;
-	addr->u.tcpipv4.port = port;
-	inet_ntoa_r(pin, addr->u.tcpipv4.ip, sizeof(addr->u.tcpipv4.ip));
-
-	return 0;
+	return ntoa_tcpipv4(pin, port, addr);
 }
 
 static int
@@ -183,6 +212,22 @@ parse_tcpipv6_addr(const char *addrspec, struct RemoteAddr *addr)
 	if (port < 0 || port > 65535)
 		return -7;
 
+	return ntoa_tcpipv6(pin, port, addr);
+}
+
+static int
+ntoa_tcpipv4(struct in_addr pin, int port, struct RemoteAddr *addr)
+{
+	addr->addr_type = pTCPIPv4;
+	addr->u.tcpipv4.port = port;
+	inet_ntoa_r(pin, addr->u.tcpipv4.ip, sizeof(addr->u.tcpipv4.ip));
+
+	return 0;
+}
+
+static int
+ntoa_tcpipv6(struct in6_addr pin, int port, struct RemoteAddr *addr)
+{
 	addr->addr_type = pTCPIPv6;
 	addr->u.tcpipv6.port = port;
 	inet_ntop(AF_INET6, &pin, addr->u.tcpipv6.ip,

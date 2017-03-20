@@ -89,10 +89,16 @@ chain_bbs(struct active_processes *ap, char *call)
 
 	if(fork() == 0) {
 		char cmd[256];
+		char addr[LenREMOTEADDR];
+		struct RemoteAddr raddr;
 		char p[10];
+		snprintf(addr, sizeof(addr), "unknown:");
+		get_remote_addr(ap->fd, &raddr);
+		print_remote_addr(&raddr, addr, sizeof(addr));
 		sprintf(p, "%d", port);
 		sprintf(cmd, "%s/b_bbs", Bin_Dir);
-		execl(cmd, "b_bbs", "-u", "-s", p, "-v", "TCP", call, 0);
+		execl(cmd, "b_bbs", "-u", "-s", p, "-v", "TCP", "-a",
+			addr, call, 0);
 		exit(1);
 	}
 	return Ok("Waiting for connection");
@@ -143,6 +149,11 @@ spawn_bbs(int fd, char *call, int sysop)
 
 	if(fork() == 0) {
 		char cmd[256];
+		char addr[LenREMOTEADDR];
+		struct RemoteAddr raddr;
+		snprintf(addr, sizeof(addr), "unknown:");
+		get_remote_addr(fd, &raddr);
+		print_remote_addr(&raddr, addr, sizeof(addr));
 
 		close(0);
 		close(1);
@@ -152,9 +163,10 @@ spawn_bbs(int fd, char *call, int sysop)
 		dup(fd);
 		sprintf(cmd, "%s/b_bbs", Bin_Dir);
 		if(sysop)
-			execl(cmd, "b_bbs", "-u", "-v", "TCP", call, 0);
+			execl(cmd, "b_bbs", "-u", "-v", "TCP", "-a", addr,
+				call, 0);
 		else
-			execl(cmd, "b_bbs", "-v", "TCP", call, 0);
+			execl(cmd, "b_bbs", "-v", "TCP", "-a", addr, call, 0);
 		exit(1);
 	}
 }
