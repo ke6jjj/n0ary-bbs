@@ -163,40 +163,45 @@ monitor_service()
 static void
 usage(char *pgm)
 {
-	printf("Usage:\n");
-	printf("\t%s -h host -p port -t0 -c# -v via -a addr -s# -e -w [call]\n", pgm);
-	printf("\t\t-h\tspecify new bbsd host\n");
-	printf("\t\t-p\tspecify new bbsd port\n");
-	printf("\t\t-d\tdon't daemonize, only used for testing\n");
-	printf("\n");
-	printf("\t\t-t\tprogram mode\n");
-	printf("\t\t\t\t1 = bbs (default)\n");
-	printf("\t\t\t\t2 = import\n");
-	printf("\t\t\t\t3 = callbk server\n");
-	printf("\t\t\t\t4 = wp server\n");
-	printf("\t\t\t\t5 = voice remote\n");
-	printf("\t\t\t\t6 = forwarding\n");
-	printf("\n");
-	printf("\t\t-t\tdebugging\n");
-	printf("\t\t\t\t0x001 = tokens\n");
-	printf("\t\t\t\t0x002 = translation\n");
-	printf("\t\t\t\t0x004 = forwarding\n");
-	printf("\t\t\t\t0x008 = user\n");
-	printf("\t\t\t\t0x010 = message list\n");
-	printf("\t\t\t\t0x800 = new (test)\n");
-	printf("\n");
-	printf("\t\t-c\tcommand level\n");
-	printf("\t\t\t\t0 = all commands (default)\n");
-	printf("\t\t\t\t1 = batch mode, no interactive commands\n");
-	printf("\n");
-	printf("\t\t-v\tconnect via (TNC0, TNC1, CONSOLE, PHONE, etc)\n");
-	printf("\t\t-s\tsocket number (default to stdin/stdout)\n");
-	printf("\t\t-U\timmediately enter SYSOP mode\n");
-	printf("\t\t-u\tstart out in non-SYSOP mode (default)\n");
-	printf("\t\t-e\tProtect against TNC escape sequences (~X commands)\n");
-	printf("\t\t-w\tShow configuration (can be used multiple times)\n");
-	printf("\t\t-a\tRemote protocol and address of connection. (ax25:<call-ssid> or tcp:<ip>:<port>\n");
-	printf("\n");
+	printf(
+	"Usage:\n"
+	"  %s -h host -p port -t0 -c# -v via -a addr -s# -e -w [call]\n"
+	"    -h  specify new bbsd host\n"
+	"    -p  specify new bbsd port\n"
+	"\n"
+	"    -t program mode\n"
+	"        1 = bbs (default)\n"
+	"        2 = import\n"
+	"        3 = callbk server\n"
+	"        4 = wp server\n"
+	"        5 = voice remote\n"
+	"        6 = forwarding\n"
+	"\n"
+	"    -d  debugging\n"
+	"        0x001 = tokens\n"
+	"        0x002 = translation\n"
+	"        0x004 = forwarding\n"
+	"        0x008 = user\n"
+	"        0x010 = message list\n"
+	"        0x800 = new (test)\n"
+	"\n"
+	"    -c  command level\n"
+	"        0 = all commands (default)\n"
+	"        1 = batch mode, no interactive commands\n"
+	"\n"
+	"    -v  connect via (TNC0, TNC1, CONSOLE, PHONE, etc)\n"
+	"    -s  socket number (default to stdin/stdout)\n"
+	"    -U  immediately enter SYSOP mode\n"
+	"    -u  start out in non-SYSOP mode (default)\n"
+	"    -e  Protect against TNC escape sequences (~X commands)\n"
+	"    -w  Show configuration (can be used multiple times)\n"
+	"    -W  Alias for -w -w (two increments)\n"
+	"    -f  Output configuration to file (when showing configuration)\n"
+	"    -a  Remote protocol and address of connection.\n"
+	"        (ax25:<call-ssid> or tcpip:<ip>:<port>, etc.)\n"
+	"    -?  Display this help message.\n"
+	"\n",
+	pgm);
 }
 
 static void
@@ -218,7 +223,7 @@ read_options(int argc, char **argv)
 	Program = Prog_BBS;
 	RemoteAddr.addr_type = pUNKNOWN;
 
-	while((c = getopt(argc, argv, "a:d:eh:p:t:c:v:S:s:UuwWf:?")) != -1) {
+	while((c = getopt(argc, argv, "a:d:eh:p:t:c:v:s:UuwWf:?")) != -1) {
 
 		switch(c) {
 		case 'a':
