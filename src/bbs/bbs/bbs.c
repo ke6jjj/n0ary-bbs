@@ -83,6 +83,8 @@ char
 	*Via,
 	prompt_string[4096];
 
+struct RemoteAddr RemoteAddr;
+
 time_t
 	inactivity_timer = 0,
 	time_now = 0;
@@ -162,7 +164,7 @@ static void
 usage(char *pgm)
 {
 	printf("Usage:\n");
-	printf("\t%s -h host -p port -t0 -c# -v via -s# -e -w [call]\n", pgm);
+	printf("\t%s -h host -p port -t0 -c# -v via -a addr -s# -e -w [call]\n", pgm);
 	printf("\t\t-h\tspecify new bbsd host\n");
 	printf("\t\t-p\tspecify new bbsd port\n");
 	printf("\t\t-d\tdon't daemonize, only used for testing\n");
@@ -193,6 +195,7 @@ usage(char *pgm)
 	printf("\t\t-u\tstart out in non-SYSOP mode (default)\n");
 	printf("\t\t-e\tProtect against TNC escape sequences (~X commands)\n");
 	printf("\t\t-w\tShow configuration (can be used multiple times)\n");
+	printf("\t\t-a\tRemote protocol and address of connection. (ax25:<call-ssid> or tcp:<ip>:<port>\n");
 	printf("\n");
 }
 
@@ -213,10 +216,17 @@ read_options(int argc, char **argv)
 	}
 
 	Program = Prog_BBS;
+	RemoteAddr.addr_type = pUNKNOWN;
 
-	while((c = getopt(argc, argv, "d:eh:p:t:c:v:S:s:UuwWf:?")) != -1) {
+	while((c = getopt(argc, argv, "a:d:eh:p:t:c:v:S:s:UuwWf:?")) != -1) {
 
 		switch(c) {
+		case 'a':
+			if (parse_remote_addr(optarg, &RemoteAddr) != 0) {
+				printf("-a Invalid address\n");
+				exit(1);
+			}
+			break;
 		case 'e':
 			escape_tnc_commands = TRUE;
 			break;

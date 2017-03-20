@@ -1,6 +1,29 @@
 #!/bin/sh
 BBS_DIR=XXBBS_DIRXX
 BBS_BIN=${BBS_DIR}/bin/b_bbs
+GETPEERNAME=${BBS_DIR}/bin/getpeername
+
+#
+# Get remote address.
+#
+if ! remote_addr=$( ${GETPEERNAME} ); then
+  echo "Invalid peername."
+fi
+set -- ${remote_addr}
+af=$1
+host=$2
+port=$3
+
+case ${af} in
+inet)
+  remote=tcpip:${host}:${port}
+  ;;
+inet6)
+  remote=tcpipv6:${host}:${port}
+  ;;
+*)
+  remote=unknown:
+esac
 
 #
 # Issue a login prompt and read the username.
@@ -57,7 +80,7 @@ if [ "$username" == bbs ]; then
     #
     # Run the BBS!
     #
-    exec ${BBS_BIN} -t 1 -v TCP "${filt_callsign}" 1<&0 2<&0
+    exec ${BBS_BIN} -t 1 -v TCP -a ${remote} "${filt_callsign}" 1<&0 2<&0
   done
 fi
 exit 1

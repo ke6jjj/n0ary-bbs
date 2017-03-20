@@ -1,0 +1,10 @@
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
+
+all: GETPEERNAME_APP
+
+include $(THIS_SRCDIR)/../../top.mk
+
+GETPEERNAME_APP: $(GETPEERNAME_APP)
+
+clean: GETPEERNAME_APP_CLEAN
+install: GETPEERNAME_APP_INSTALL

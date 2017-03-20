@@ -1,3 +1,4 @@
+#include <netinet/in.h>
 #include <stdint.h>
 #include <time.h>
 
@@ -53,6 +54,12 @@
 #define tSMTP		4
 #define tTCP		5
 
+#define pUNKNOWN	0
+#define pLOCAL		1
+#define pAX25		2
+#define pTCPIPv4	3
+#define pTCPIPv6	4
+
 extern int
 	batch_mode,
 	PendingCmd,
@@ -87,6 +94,7 @@ extern int
 #define LenHLOC		40
 #define LenBID		20
 #define LenINCLUDE	150
+#define LenREMOTEADDR	150
 
 #define LenMAX		LenINCLUDE
 
@@ -113,7 +121,33 @@ struct call_and_checksum {
 	short	sum;
 };
 
+struct RemoteAddr_Local {};
 
+struct RemoteAddr_AX25 {
+	char callsign[LenCALL];
+	char ssid;
+};
+
+struct RemoteAddr_TCPIPv4 {
+	char ip[INET_ADDRSTRLEN];
+	int port;
+};
+
+struct RemoteAddr_TCPIPv6 {
+	char ip[INET6_ADDRSTRLEN]; /* Room for RFC5952 format */
+	int port;
+};
+	
+struct RemoteAddr {
+	int addr_type; /* pUNKNOWN, pLOCAL, pAX25, etc */
+	union {
+		struct RemoteAddr_Local local;
+		struct RemoteAddr_AX25  ax25;
+		struct RemoteAddr_TCPIPv4 tcpipv4;
+		struct RemoteAddr_TCPIPv6 tcpipv6;
+	} u;
+};
+		
 extern int Bbsd_Port;
 extern char *Bbs_Host;
 
@@ -774,3 +808,6 @@ struct PortDefinition
 
 struct TncDefinition *tnc_table(void);
 struct PhoneDefinition *phone_table(void);
+
+int parse_remote_addr(const char *addrspec, struct RemoteAddr *addr);
+int print_remote_addr(const struct RemoteAddr *addr, char *str, size_t len);

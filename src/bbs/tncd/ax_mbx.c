@@ -765,10 +765,14 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 				exit(1);
 			}
 
+			char addr[256];
+			snprintf(addr, sizeof(addr), "ax25:%s-%d", call,
+				mbp->axbbscb->addr.dest.ssid);
+
 			if(dbug_level & dbgVERBOSE) {
 				printf("Starting bbs process [1]:\n");
-				printf("\t%s/b_bbs -v %s -e -s %s %s\n",
-					Bin_Dir, Tncd_Name, port, call);
+				printf("\t%s/b_bbs -v %s -e -s %s -a %s %s\n",
+					Bin_Dir, Tncd_Name, port, addr, call);
 			}
 
 			/*now, fork and exec the bbs*/
@@ -777,7 +781,7 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 
 				sprintf(cmd, "%s/b_bbs", Bin_Dir);
 				execl(cmd, "b_bbs", "-v", Tncd_Name, "-s",
-					port, "-e", call, 0);
+					port, "-e", "-a", addr, call, 0);
 				exit(1);
 			}
 
@@ -844,13 +848,19 @@ mbx_incom(struct ax25_cb *axp, int cnt)
 	mbp->port = 0;
 	mbp->socket = socket_listen(NULL, &(mbp->port));
 	sprintf(port, "%d", mbp->port);
+
+	char addr[256];
+	snprintf(addr, sizeof(addr), "ax25:%s-%d", call,
+		mbp->axbbscb->addr.dest.ssid);
+
+	/*now, fork and exec the bbs*/
  
 	if(dbug_level & dbgVERBOSE) {
 		printf("Starting bbs process [2]:\n");
-		printf("\t%s/b_bbs -v %s -s %s %s\n",
-			Bin_Dir, Tncd_Name, port, call);
+		printf("\t%s/b_bbs -v %s -s %s -a %s %s\n",
+			Bin_Dir, Tncd_Name, port, addr, call);
 	}
-									/*now, fork and exec the bbs*/
+
 	if((pid=fork()) == 0){			/*if we are the child*/
 		char cmd[256];
 		sprintf(cmd, "%s/b_bbs", Bin_Dir);
