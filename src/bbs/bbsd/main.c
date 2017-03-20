@@ -229,7 +229,7 @@ fetch_configuration(void)
 		Bbs_Host = s;
 
 	if((s = config_fetch("BBS_CALL")) != NULL)
-		Bbs_Host = s;
+		Bbs_Call = s;
 
 	if((s = config_fetch("BBSD_PORT")) != NULL) {
 		if(!isdigit(*s)) {
