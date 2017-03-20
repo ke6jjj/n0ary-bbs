@@ -54,7 +54,7 @@ read_systems_file()
 {
 	FILE *fp = fopen(Msgd_System_File, "r");
 	struct Systems **sys = &System;
-	char buf[256];
+	char buf[257];
 
 	if(fp == NULL)
 		return;
@@ -260,7 +260,7 @@ fwddir_touch(int type, int number, char *alias)
 static void
 read_route_aliases(FILE *fp)
 {
-	char *p, buf[80];
+	char *p, buf[81];
 	while(fgets(buf, 80, fp)) {
 		if(buf[0] == '_') {
 			struct route_aliases *ra = malloc_struct(route_aliases);
@@ -340,7 +340,7 @@ struct text_line *
 read_message_path(struct msg_dir_entry *m)
 {
 	struct text_line *list = NULL;
-	char buf[1024];
+	char buf[1025];
 	FILE *fp;
 
 	sprintf(buf, "%s/%05ld", Msgd_Body_Path, m->number);
@@ -410,7 +410,7 @@ int
 set_forwarding(struct active_processes *ap, struct msg_dir_entry *m, int check)
 {
 	FILE *fp = fopen(Msgd_Route_File, "r");
-	char buf[80];
+	char buf[257];
 	int found = FALSE;
 	time_t now = Time(NULL);
 

@@ -92,7 +92,7 @@ set_groups(struct msg_dir_entry *m)
 {
 	FILE *fp;
 	int found = FALSE;
-	char buf[256];
+	char buf[257];
 	time_t now = Time(NULL);
 
 	if((fp = fopen(Msgd_Group_File, "r")) == NULL)

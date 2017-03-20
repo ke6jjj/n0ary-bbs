@@ -70,7 +70,7 @@ int
 rfc822_display_held(struct active_processes *ap, int num)
 {
 	FILE *fp = open_message(num);
-	char buf[1024];
+	char buf[1025];
 	int heldby = strlen(rfc822_xlate(rHELDBY));
 	int heldwhy = strlen(rfc822_xlate(rHELDWHY));
 
@@ -98,7 +98,7 @@ char *
 rfc822_get_field(int num, int token)
 {
 	FILE *fp = open_message(num);
-	char buf[1024];
+	char buf[1025];
 	static char output[1024];
 	int len = strlen(rfc822_xlate(token));
 
@@ -119,7 +119,7 @@ rfc822_get_field(int num, int token)
 int
 rfc822_skip_to(FILE *fp)
 {
-	char buf[1024];
+	char buf[1025];
 
 	while(fgets(buf, 1024, fp))
 		if(!strcmp(buf, "/EX\n"))
@@ -131,7 +131,7 @@ int
 rfc822_decode_fields(struct msg_dir_entry *m)
 {
 	FILE *fp = open_message(m->number);
-	char buf[1024];
+	char buf[1025];
 	int nothing = TRUE;
 
 	if(fp == NULL)
