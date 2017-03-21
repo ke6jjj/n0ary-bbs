@@ -6,7 +6,10 @@
 #
 . /etc/rc.subr
 
-load_rc_config n0ary_bbs
+name=n0ary_bbs
+rcvar=`set_rcvar`
+
+load_rc_config ${name}
 
 : ${n0ary_bbs_enable:="NO"}
 
