@@ -685,6 +685,12 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 	case CONNECTED:
 		switch(old) {
 		case SETUP:
+			/*
+			 * This code can only be reached by outbound
+			 * connections. Any inbound connections wouldn't
+			 * be in SETUP state. Can I place an assert to
+			 * double check?
+			 */
 			mbp = base;
 			while(mbp != NULLMBS && axp != mbp->axbbscb)
 				mbp = mbp->next;
@@ -695,36 +701,24 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 			}
 			write(mbp->fd, "~C\n", 3);
 
-			mbp->axbbscb=axp;
 			mbx_notify_sendable(mbp, 500, 1); /*jump start the upcall*/
 			return;
-
-		case CONNECTED:
-			/* we are already CONNECTED but received another SABM
-			 * this means they probably didn't get our UA
-			 */
-			if(dbug_level & dbgVERBOSE)
-				printf("Another SABM received, they must be deaf.\n");
-			if(base == NULLMBS)
-				break;
-
-			mbp = base;
-			while(mbp != NULLMBS){
-				if(axp == mbp->axbbscb){
-					if(dbug_level & dbgVERBOSE)
-						printf("mbx_state:Killing BBS, disconnect recv\n");
-					shutdown_process(mbp, FALSE);
-					break; /* from while loop */
-				}
-				mbp = mbp->next;
-			}
-			break;
-
 		default:
 			return;
 
 		case DISCONNECTED:
 			break;
+		}
+
+		/*
+		 * Is this code even ever called???
+		 */
+		FILE *ke6jjj = fopen("/tmp/n0ary_ax25_mystery.log", "a");
+		if (ke6jjj != NULL) {
+			time_t now;
+			time(&now);
+			fprintf(ke6jjj, "mystery code A called. %s\n", ctime(&now));
+			fclose(ke6jjj);
 		}
 
 		if(!calleq(axp,&bbscall)) { /*not for the mailbox*/
@@ -817,6 +811,17 @@ mbx_incom(struct ax25_cb *axp, int cnt)
 	int pid, j;
 	struct mboxsess *mbp;
 	struct mbuf *bp;
+
+	/*
+	 * Is this code even ever called???
+	 */
+	FILE *ke6jjj = fopen("/tmp/n0ary_ax25_mystery.log", "a");
+	if (ke6jjj != NULL) {
+		time_t now;
+		time(&now);
+		fprintf(ke6jjj, "mystery code B called. %s\n", ctime(&now));
+		fclose(ke6jjj);
+	}
 	
 	if(dbug_level & dbgVERBOSE)
 		printf("mbx_incom()\n");

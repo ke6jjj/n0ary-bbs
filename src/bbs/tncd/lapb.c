@@ -567,14 +567,6 @@ lapbstate(struct ax25_cb *axp, int s)
 	/* Don't bother the client unless the state is really changing */
 	if(oldstate != s && axp->s_upcall != NULL)
 		(*axp->s_upcall)(axp, oldstate, s);
-
-	/* Or if we have are already CONNECTED and get another SABM (CONNECTED)
-	 * then let the bbs know so it can resend the frames.
-	 * REA 5/22/93
-	 */
-
-	if(oldstate == CONNECTED && s == CONNECTED && axp->s_upcall != NULL)
-		(*axp->s_upcall)(axp, oldstate, s);
 }
 /* Process a valid incoming I frame */
 static void
