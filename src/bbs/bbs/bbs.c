@@ -69,6 +69,7 @@ static int
 	wait_to_die = FALSE,
 	display_motd(int force);
 
+static int DoCRLFEndings = 0;
 static int socket_tnc_safe_raw_write_n(const char *buf, size_t len);
 
 short bbscallsum;
@@ -165,7 +166,7 @@ usage(char *pgm)
 {
 	printf(
 	"Usage:\n"
-	"  %s -h host -p port -t0 -c# -v via -a addr -s# -e -w [call]\n"
+	"  %s -h host -p port -t0 -c# -v via -a addr -s# -e -l -w [call]\n"
 	"    -h  specify new bbsd host\n"
 	"    -p  specify new bbsd port\n"
 	"\n"
@@ -199,6 +200,7 @@ usage(char *pgm)
 	"    -f  Output configuration to file (when showing configuration)\n"
 	"    -a  Remote protocol and address of connection.\n"
 	"        (ax25:<call-ssid> or tcpip:<ip>:<port>, etc.)\n"
+	"    -l  Output CR-LF terminated lines (as opposed to LF only)\n"
 	"    -?  Display this help message.\n"
 	"\n",
 	pgm);
@@ -223,7 +225,7 @@ read_options(int argc, char **argv)
 	Program = Prog_BBS;
 	RemoteAddr.addr_type = pUNKNOWN;
 
-	while((c = getopt(argc, argv, "a:d:eh:p:t:c:v:s:UuwWf:?")) != -1) {
+	while((c = getopt(argc, argv, "a:d:eh:p:t:c:v:s:UuwWf:l?")) != -1) {
 
 		switch(c) {
 		case 'a':
@@ -287,7 +289,9 @@ read_options(int argc, char **argv)
 		case 's':
 			socket_number = atoi(optarg);
 			break;
-
+		case 'l':
+			DoCRLFEndings = 1;
+			break;
 		case '?':
 			usage(argv[0]);
 			exit(0);
@@ -854,8 +858,11 @@ putchar_socket(char *str)
 		if(socket_raw_write(sock, str) == ERROR)
 			error_log("putchar_socket.write(): %s", sys_errlist[errno]);
 	} else {
-		while(*str)
+		while(*str) {
+			if (DoCRLFEndings && *str == '\n')
+				fputc('\r', fp);
 			fputc(*str++, fp);
+		}
 		fflush(fp);
 	}
 }
@@ -902,6 +909,7 @@ void
 write_socket(const char *buf, size_t len)
 {
 	int err;
+	const char *nl;
 
 	if(sock != ERROR) {
 		if (escape_tnc_commands)
@@ -912,7 +920,17 @@ write_socket(const char *buf, size_t len)
 		if (err == ERROR)
 			error_log("write_socket.write(): %s", sys_errlist[errno]);
 	} else {
-		fwrite(buf, len, 1, stdout);
+		while (len > 0 && (nl = memchr(buf, '\n', len)) != NULL) {
+			if (nl != buf)
+				fwrite(buf, nl - buf, 1, stdout);
+			if (DoCRLFEndings)
+				fputc('\r', stdout);
+			fputc('\n', stdout);
+			len -= nl - buf + 1;
+			buf = nl + 1;
+		}
+		if (len > 0)
+			fwrite(buf, len, 1, stdout);
 		fflush(stdout);
 	}
 }

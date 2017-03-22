@@ -28,7 +28,7 @@ esac
 #
 # Issue a login prompt and read the username.
 #
-echo ""
+printf "\r\n"
 echo -n "login: "
 if ! read username; then
   exit 0
@@ -68,9 +68,9 @@ if [ "$username" == bbs ]; then
     # Warn the user if the callsign had bad characters in it.
     #
     if [ "$filt_callsign" != "$nospc_callsign" ]; then
-      echo ""
-      echo "Error in callsign. Only letters and numbers are allowed"
-      echo "please try again."
+      printf "\r\n"
+      printf "Error in callsign. Only letters and numbers are allowed\r\n"
+      printf "please try again.\r\n"
       continue
     fi
     if [ "${filt_callsign}" == "" ]; then
@@ -80,18 +80,18 @@ if [ "$username" == bbs ]; then
     #
     # Issue a newline so that the BBS SID starts out on a fresh line.
     #
-    echo ""
+    printf "\r\n"
 
     #
     # Run the BBS!
     #
-    exec ${BBS_BIN} -t 1 -v TCP -a ${remote} "${filt_callsign}" 1<&0 2<&0
+    exec ${BBS_BIN} -l -t 1 -v TCP -a ${remote} "${filt_callsign}" 1<&0 2<&0
   done
 else
   # Honeypot trap
   echo -n "Password: "
   while read line; do
-    echo -n "> "
+    printf "\r\n> "
   done
 fi
 exit 1
