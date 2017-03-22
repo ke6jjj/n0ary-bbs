@@ -78,9 +78,20 @@ if [ "$username" == bbs ]; then
     fi
 
     #
+    # Issue a newline so that the BBS SID starts out on a fresh line.
+    #
+    echo ""
+
+    #
     # Run the BBS!
     #
     exec ${BBS_BIN} -t 1 -v TCP -a ${remote} "${filt_callsign}" 1<&0 2<&0
+  done
+else
+  # Honeypot trap
+  echo -n "Password: "
+  while read line; do
+    echo -n "> "
   done
 fi
 exit 1
