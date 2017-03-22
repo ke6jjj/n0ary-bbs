@@ -10,16 +10,16 @@ extern int
 	chat(void);
 
 extern void
-	putchar_socket(char *str),
 	get_socket(char *str, int cnt);
 
 extern void
 #ifndef SABER
-	print_socket(char *fmt, ...);
+	printf_socket(char *fmt, ...);
 #else
-	print_socket();
+	printf_socket();
 #endif
 
+void puts_socket(char *str);
 void write_socket(const char *, size_t);
 
 extern time_t

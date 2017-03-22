@@ -98,8 +98,8 @@ extern int
 
 #define LenMAX		LenINCLUDE
 
-#define PRINTF		print_socket
-#define PRINT 		putchar_socket
+#define PRINTF		printf_socket
+#define PRINT 		puts_socket
 #define GETS		get_socket
 
 extern short bbscallsum;

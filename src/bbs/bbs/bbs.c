@@ -19,20 +19,8 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-void
-	get_socket(char *str, int cnt),
-	putchar_socket(char *str);
-
-void
-#ifndef SABER
-	print_socket(char *fmt, ...);
-#else
-	print_socket();
-#endif
-
-static void
-	log_user(char *str);
-
+static void write_socket_translate_nl(const char *buf, size_t len);
+static void log_user(char *str);
 static const char *mem2chr(const char *src, const char *pat, size_t len);
 
 #define DEFINITION		/* define config structures in this module */
@@ -841,43 +829,15 @@ get_socket(char *p, int cnt)
 }
 
 void
-putchar_socket(char *str)
-{
-	FILE *fp = stdout;
-
-	if(Cnvrt2Uppercase)
-		uppercase(str);
-
-	if(ImLogging && ImBBS)
-		log_user(str);
-
-	if(monitor_fd != ERROR && monitor_connected == FALSE)
-		socket_raw_write(monitor_fd, str);
-
-	if(sock != ERROR) {
-		if(socket_raw_write(sock, str) == ERROR)
-			error_log("putchar_socket.write(): %s", sys_errlist[errno]);
-	} else {
-		while(*str) {
-			if (DoCRLFEndings && *str == '\n')
-				fputc('\r', fp);
-			fputc(*str++, fp);
-		}
-		fflush(fp);
-	}
-}
-
-void
 #ifndef SABER
-print_socket(char *fmt, ...)
+printf_socket(char *fmt, ...)
 #else
-print_socket(va_alist) va_dcl
+printf_socket(va_alist) va_dcl
 #endif
 {
 	va_list ap;
 	char buf[4096];
 	int err;
-	size_t len;
 
 #ifndef SABER
 	va_start(ap, fmt);
@@ -891,6 +851,14 @@ print_socket(va_alist) va_dcl
 
 	buf[sizeof(buf)-1] = '\0';
 
+	puts_socket(buf);
+}
+
+void
+puts_socket(char *buf)
+{
+	size_t len;
+
 	if(Cnvrt2Uppercase)
 		uppercase(buf);
 
@@ -902,14 +870,32 @@ print_socket(va_alist) va_dcl
 	if(monitor_fd != ERROR && monitor_connected == FALSE)
 		socket_raw_write_n(monitor_fd, buf, len);
 
-	write_socket(buf, len);
+	if (DoCRLFEndings)
+		write_socket_translate_nl(buf, len);
+	else
+		write_socket(buf, len);
+}
+
+static void
+write_socket_translate_nl(const char *buf, size_t len)
+{
+	const char *nl;
+
+	while (len > 0 && (nl = memchr(buf, '\n', len)) != NULL) {
+		if (nl != buf)
+			write_socket(buf, nl - buf);
+		write_socket("\r\n", 2);
+		len -= nl - buf + 1;
+		buf = nl + 1;
+	}
+	if (len > 0)
+		write_socket(buf, len);
 }
 
 void
 write_socket(const char *buf, size_t len)
 {
 	int err;
-	const char *nl;
 
 	if(sock != ERROR) {
 		if (escape_tnc_commands)
@@ -920,17 +906,7 @@ write_socket(const char *buf, size_t len)
 		if (err == ERROR)
 			error_log("write_socket.write(): %s", sys_errlist[errno]);
 	} else {
-		while (len > 0 && (nl = memchr(buf, '\n', len)) != NULL) {
-			if (nl != buf)
-				fwrite(buf, nl - buf, 1, stdout);
-			if (DoCRLFEndings)
-				fputc('\r', stdout);
-			fputc('\n', stdout);
-			len -= nl - buf + 1;
-			buf = nl + 1;
-		}
-		if (len > 0)
-			fwrite(buf, len, 1, stdout);
+		fwrite(buf, len, 1, stdout);
 		fflush(stdout);
 	}
 }

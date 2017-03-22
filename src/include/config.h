@@ -4,7 +4,6 @@
  */
 
 #include "c_cmmn.h"
-#include "common.h"
 
 #define BBS_SID     "[ARY-%-H$]"
 #define BBS_HOST	"localhost"
