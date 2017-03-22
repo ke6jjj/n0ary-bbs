@@ -641,11 +641,6 @@ run_reverse_fwd(int fd)
 void
 exit_bbs(void)
 {
-	if(reverse_fwd_mode) {
-		reverse_fwd_mode = ERROR;
-		return;
-	}
-
 	if(ImBBS)
 		logd_close();
 
