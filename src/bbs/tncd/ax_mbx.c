@@ -761,7 +761,7 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 
 			char addr[256];
 			snprintf(addr, sizeof(addr), "ax25:%s-%d", call,
-				mbp->axbbscb->addr.dest.ssid);
+				(mbp->axbbscb->addr.dest.ssid >> 1) & 0xf);
 
 			if(dbug_level & dbgVERBOSE) {
 				printf("Starting bbs process [1]:\n");
@@ -856,7 +856,7 @@ mbx_incom(struct ax25_cb *axp, int cnt)
 
 	char addr[256];
 	snprintf(addr, sizeof(addr), "ax25:%s-%d", call,
-		mbp->axbbscb->addr.dest.ssid);
+		(mbp->axbbscb->addr.dest.ssid >> 1) & 0xf);
 
 	/*now, fork and exec the bbs*/
  
