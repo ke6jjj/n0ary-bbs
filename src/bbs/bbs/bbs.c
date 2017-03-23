@@ -389,13 +389,13 @@ read_options(int argc, char **argv)
 	switch(Program) {
 	case Prog_CALLBK:
 #if 0
-		daemon(1, 1);
+		daemon(0, 0);
 #endif
 		callbk_server(atoi(argv[optind]), argv[optind+1]);
 		exit(0);
 
 	case Prog_WP:
-		daemon(1, 1);
+		daemon(0, 0);
 		wp_server(atoi(argv[optind]), argv[optind+1]);
 		exit(0);
 
