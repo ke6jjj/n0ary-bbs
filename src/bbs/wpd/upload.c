@@ -50,8 +50,6 @@ upload(char *s)
 
 	s += 3;
 /* 910726 N6ZFJ/U @ N0ARY.#NOCAL.CA.USA.NA zip 94086 Connie Sunnyvale, CA */
-	if(*s != '9')
-		return Ok("expected this decade [On 9]");
 	t = udate2time(get_string(&s));
 
 /* N6ZFJ/U @ N0ARY.#NOCAL.CA.USA.NA zip 94086 Connie Sunnyvale, CA */
