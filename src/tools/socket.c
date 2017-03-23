@@ -89,7 +89,7 @@ socket_listen(const char *bind_addr, int *port)
 	struct sockaddr_in server;
 	socklen_t length = sizeof(server);
 	int sock = ERROR;
-	int linger = 0;
+	int opt;
 
 	server.sin_family = AF_INET;
 
@@ -127,6 +127,11 @@ socket_listen(const char *bind_addr, int *port)
 
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		return error_log("socket_listen.socket: %s", sys_errlist[errno]);
+
+	opt = 1;
+	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
+		return  error_log("socket_listen.setsockopt(REUSEADDR): %s",
+			sys_errlist[errno]);
 
 	if(bind(sock, (struct sockaddr *)&server, length) < 0)
 		return  error_log("socket_listen.bind: %s", sys_errlist[errno]);
