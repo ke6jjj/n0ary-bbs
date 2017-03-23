@@ -208,7 +208,7 @@ msg_fwd_dumb_cmd(char *buf)
 {
 	char result[80];
 
-	socket_write(tnc_fd, buf);
+	fd_putln(tnc_fd, buf);
 
 	if(tnc_getline(tnc_fd, result, 80, 300))
 		return ERROR;
@@ -220,7 +220,7 @@ msg_fwd_cmd(char *buf)
 {
 	char result[80];
 
-	socket_write(tnc_fd, buf);
+	fd_putln(tnc_fd, buf);
 
 	if(tnc_getline(tnc_fd, result, 80, 300))
 		return ERROR;
@@ -244,7 +244,7 @@ msg_fwd_body(char *buf)
 {
 	if(!strncmp(buf, "***", 3))
 		socket_raw_write(tnc_fd, ">");
-	socket_write(tnc_fd, buf);
+	fd_putln(tnc_fd, buf);
 	return OK;
 }
 
@@ -261,10 +261,10 @@ msg_tcp_fwd_body(char *buf)
 		char str[128];
 		strncpy(str, buf, 127);
 		str[127] = 0;
-		socket_write(tnc_fd, str);
+		fd_putln(tnc_fd, str);
 		return msg_tcp_fwd_body(&buf[127]);
 	}
-	socket_write(tnc_fd, buf);
+	fd_putln(tnc_fd, buf);
 	return OK;
 }
 
@@ -273,7 +273,7 @@ msg_fwd_dumb_term(void)
 {
 	char result[80];
 
-	socket_write(tnc_fd, "\n\032");
+	fd_putln(tnc_fd, "\n\032");
 	while(TRUE) {
 		if(tnc_getline(tnc_fd, result, 80, 600))
 			return ERROR;
@@ -289,7 +289,7 @@ msg_fwd_term_ex(void)
 {
 	char result[80];
 
-	socket_write(tnc_fd, "\n/EX");
+	fd_putln(tnc_fd, "\n/EX");
 	
 	while(TRUE) {
 		if(tnc_getline(tnc_fd, result, 80, 600))
@@ -306,7 +306,7 @@ msg_fwd_term(void)
 {
 	char result[80];
 
-	socket_write(tnc_fd, "");
+	fd_putln(tnc_fd, "");
 	
 	while(TRUE) {
 		if(tnc_getline(tnc_fd, result, 80, 600))
@@ -398,7 +398,7 @@ socket_watcher(tnc_fd);
 			break;
 			
 		case chatSEND:
-			socket_write(tnc_fd, chat->txt);
+			fd_putln(tnc_fd, chat->txt);
 
 			sprintf(buf, "Sending %s", chat->txt);
 			bbsd_msg(buf);
@@ -441,7 +441,7 @@ socket_watcher(tnc_fd);
 	if(sys->options & optDUMBTNC)
 		result = msg_forward(msg_fwd_dumb_cmd, msg_tcp_fwd_body, msg_fwd_dumb_term);
 	else {
-		socket_write(tnc_fd, build_sid());
+		fd_putln(tnc_fd, build_sid());
 		while(TRUE) {
 			if(tnc_getline(tnc_fd, buf, 256, 30)) {
 				close(tnc_fd);
@@ -544,7 +544,7 @@ forward_by_tnc(struct System *sys)
 			break;
 
 		case chatSEND:
-			socket_write(tnc_fd, chat->txt);
+			fd_putln(tnc_fd, chat->txt);
 
 			sprintf(buf, "Sending %s", chat->txt);
 			bbsd_msg(buf);
@@ -588,7 +588,7 @@ forward_by_tnc(struct System *sys)
 	if(sys->options & optDUMBTNC)
 		result = msg_forward(msg_fwd_dumb_cmd, msg_fwd_body, msg_fwd_dumb_term);
 	else {
-		socket_write(tnc_fd, build_sid());
+		fd_putln(tnc_fd, build_sid());
 		while(TRUE) {
 			if(tnc_getline(tnc_fd, buf, 256, 60)) {
 				char lbuf[256];

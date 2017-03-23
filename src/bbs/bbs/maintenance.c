@@ -25,9 +25,6 @@
 
 static int echo(int cond);
 
-extern long
-	inactivity_timer;
-
 time_t
 	time_now;
 
@@ -142,19 +139,6 @@ maint(void)
 		}
 		if(ImSysop)
 			msg_SysopMode();
-		break;
-
-	case TIMER:
-		NEXT(t);
-		tmp = inactivity_timer;
-		if(t->token == ON)
-			inactivity_timer = TRUE;
-		else
-			if(t->token == OFF)
-				inactivity_timer = FALSE;
-
-		if(tmp != inactivity_timer)
-			PRINTF("Timer is %s\n", inactivity_timer ? "ON":"OFF");
 		break;
 
 	case DEBUG:

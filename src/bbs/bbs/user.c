@@ -58,9 +58,6 @@ struct IncludeList
 	*Include = NULL,
 	*Exclude = NULL;
 
-extern long
-	inactivity_timer; 
-
 extern int
 	debug_level;
 
@@ -875,7 +872,6 @@ parse_bbssid(char *str, char *chksid)
 	ImBBS = TRUE;
 	MyHelpLevel = 0;
 	logd_open(usercall);
-	inactivity_timer = FALSE;
 
 	if(ImPotentialBBS) {
 		char prefix[80];

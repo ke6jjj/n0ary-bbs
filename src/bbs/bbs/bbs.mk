@@ -10,7 +10,7 @@ BBS_APP_SRCS := \
 	distrib.c\
 	event.c \
 	file.c filesys.c \
-	help.c history.c\
+	help.c history.c io.c \
 	login.c load.c\
 	maintenance.c message.c msg_addr.c msg_body.c msg_edit.c \
 	msg_fwd.c msg_fwddir.c msg_gen.c msg_group.c msg_hold.c msg_immune.c\

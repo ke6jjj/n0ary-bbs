@@ -19,10 +19,6 @@
 #include <stdlib.h>
 #include <ctype.h>
 
-static void write_socket_translate_nl(const char *buf, size_t len);
-static void log_user(char *str);
-static const char *mem2chr(const char *src, const char *pat, size_t len);
-
 #define DEFINITION		/* define config structures in this module */
 
 #include "c_cmmn.h"
@@ -57,8 +53,7 @@ static int
 	wait_to_die = FALSE,
 	display_motd(int force);
 
-static int DoCRLFEndings = 0;
-static int socket_tnc_safe_raw_write_n(const char *buf, size_t len);
+int DoCRLFEndings = 0;
 
 short bbscallsum;
 
@@ -75,7 +70,7 @@ char
 struct RemoteAddr RemoteAddr;
 
 time_t
-	inactivity_timer = 0,
+	inactivity_time = 0,
 	time_now = 0;
 
 int 
@@ -84,7 +79,7 @@ int
 	bbsd_sock = ERROR,
 	sock = ERROR;
 
-static int
+int
 	monitor_connected = FALSE,
 	monitor_port = 0,
 	monitor_sock = ERROR,
@@ -491,16 +486,16 @@ main(int argc, char **argv)
 
 	switch(port_type(Via)) {
 	case tPHONE:
-		inactivity_timer = Bbs_Timer_Phone;
+		inactivity_time = Bbs_Timer_Phone;
 		break;
 	case tTNC:
-		inactivity_timer = Bbs_Timer_Tnc;
+		inactivity_time = Bbs_Timer_Tnc;
 		break;
 	case tCONSOLE:
-		inactivity_timer = Bbs_Timer_Console;
+		inactivity_time = Bbs_Timer_Console;
 		break;
 	default:
-		inactivity_timer = 10 * tMin;
+		inactivity_time = 10 * tMin;
 	}
 
 	if(login_user())
@@ -647,7 +642,7 @@ exit_bbs(void)
 
 	if(wait_to_die && sock != ERROR) {
 		bbsd_msg("~B sent to tncd");
-		socket_write(sock, "~B");
+		fd_putln(sock, "~B");
 		pause();
 	}
 
@@ -699,241 +694,8 @@ timeout_waiting_for_input()
 {
 	signal(SIGALRM, SIG_IGN);
 	PRINTF("Timeout occured, link was idle for %d minutes.\n",
-		inactivity_timer/60);
+		inactivity_time/60);
 	exit_bbs();
-}
-
-void
-get_socket(char *p, int cnt)
-{
-	char *str = p;
-	fd_set ready;
-	int fd = (sock == ERROR) ? 0:sock;
-	int done = FALSE;
-	int idletime = 0;
-
-
-	if(socket_read_pending(fd) == TRUE) {
-		if(socket_read_line(fd, str, cnt, 30) == sockERROR) {
-			error_log("get_socket.read(): %s", sys_errlist[errno]);
-			exit_bbs();
-		}
-
-		if(monitor_fd != ERROR)
-			socket_raw_write(monitor_fd, p);
-
-		if(ImLogging)
-			log_user(p);
-		return;
-	}
-
-		/* first check for input off of the bbsd port */
-
-	while(!done) {
-		struct timeval t;
-		int result;
-		int fdlimit = fd;
-
-		FD_ZERO(&ready);
-		FD_SET(fd, &ready);
-		if(monitor_fd != ERROR) {
-			FD_SET(monitor_fd, &ready);
-			if(monitor_fd > fdlimit)
-				fdlimit = monitor_fd;
-		} else
-			if(monitor_sock != ERROR) {
-				FD_SET(monitor_sock, &ready);
-				if(monitor_fd > fdlimit)
-					fdlimit = monitor_fd;
-			}
-		FD_SET(bbsd_sock, &ready);
-		if(bbsd_sock > fdlimit)
-			fdlimit = bbsd_sock;
-
-		fdlimit++;
-
-		if(inactivity_timer) {
-			t.tv_sec = PING_INTERVAL;
-			t.tv_usec = 0;
-			result = select(fdlimit, (void*)&ready, NULL, NULL, &t);
-		} else
-			result = select(fdlimit, (void*)&ready, NULL, NULL, NULL);
-
-		switch(result) {
-		case 0:
-			idletime += PING_INTERVAL;
-			if(idletime > inactivity_timer) {
-				PRINTF("Timeout occured, link was idle for %d minutes.\n",
-					inactivity_timer / 60);
-				exit_bbs();
-			}
-#if 0
-			bbsd_ping();
-#endif
-			continue;
-
-		case ERROR:
-			PRINTF("select: %s\n", sys_errlist[errno]);
-			continue;
-		}
-
-		if(monitor_sock != ERROR)
-			if(FD_ISSET(monitor_sock, &ready)) {
-				char buf[80];
-				if((monitor_fd = socket_accept(monitor_sock)) < 0)
-					monitor_fd = ERROR;
-				sprintf(buf, "Connected to %s\n", usercall);
-				socket_raw_write(monitor_fd, buf);
-				continue;
-			}
-
-		if(monitor_fd != ERROR)
-			if(FD_ISSET(monitor_fd, &ready)) {
-				if(monitor_service() == ERROR) {
-					socket_close(monitor_fd);
-					monitor_fd = ERROR;
-				}
-				continue;
-			}
-
-		if(FD_ISSET(bbsd_sock, &ready)) {
-			char *c = bbsd_read();
-			if(c == NULL) {
-	PRINT("Lost connection with bbsd, please reconnect in a few minutes.\n");
-				exit_bbs();
-			}
-			switch(*c++) {
-			case 'P':
-				strcpy(prompt_string, c);
-				break;
-			case 'I':
-				PRINTF("%s\n", c);
-				break;
-			}
-		}
-
-		if(FD_ISSET(fd, &ready)) {
-			if(socket_read_line(fd, str, cnt, 30) == sockERROR) {
-				error_log("get_socket.read(): %s", sys_errlist[errno]);
-				exit_bbs();
-			}
-			done = TRUE;
-		}
-	}
-
-	if(monitor_fd != ERROR)
-		socket_raw_write(monitor_fd, p);
-
-	if(ImLogging)
-		log_user(p);
-}
-
-void
-#ifndef SABER
-printf_socket(char *fmt, ...)
-#else
-printf_socket(va_alist) va_dcl
-#endif
-{
-	va_list ap;
-	char buf[4096];
-	int err;
-
-#ifndef SABER
-	va_start(ap, fmt);
-#else
-	char *fmt;
-	va_start(ap);
-	fmt = va_arg(ap, char*);
-#endif
-	vsnprintf(buf, sizeof(buf)-1, fmt, ap);
-	va_end(ap);
-
-	buf[sizeof(buf)-1] = '\0';
-
-	puts_socket(buf);
-}
-
-void
-puts_socket(char *buf)
-{
-	size_t len;
-
-	if(Cnvrt2Uppercase)
-		uppercase(buf);
-
-	if(ImLogging)
-		log_user(buf);
-
-	len = strlen(buf);
-
-	if(monitor_fd != ERROR && monitor_connected == FALSE)
-		socket_raw_write_n(monitor_fd, buf, len);
-
-	if (DoCRLFEndings)
-		write_socket_translate_nl(buf, len);
-	else
-		write_socket(buf, len);
-}
-
-static void
-write_socket_translate_nl(const char *buf, size_t len)
-{
-	const char *nl;
-
-	while (len > 0 && (nl = memchr(buf, '\n', len)) != NULL) {
-		if (nl != buf)
-			write_socket(buf, nl - buf);
-		write_socket("\r\n", 2);
-		len -= nl - buf + 1;
-		buf = nl + 1;
-	}
-	if (len > 0)
-		write_socket(buf, len);
-}
-
-void
-write_socket(const char *buf, size_t len)
-{
-	int err;
-
-	if(sock != ERROR) {
-		if (escape_tnc_commands)
-			err = socket_tnc_safe_raw_write_n(buf, len);
-		else
-			err = socket_raw_write_n(sock, buf, len);
-
-		if (err == ERROR)
-			error_log("write_socket.write(): %s", sys_errlist[errno]);
-	} else {
-		fwrite(buf, len, 1, stdout);
-		fflush(stdout);
-	}
-}
-
-static void
-log_user(char *str)
-{
-	if(logfile == NULL) {
-		char fn[80];
-		time_t t = Time(NULL);
-		struct tm *dt = localtime(&t);
-
-		sprintf(fn, "%s/%s", Bbs_Log_Path, usercall);
-		if((logfile = fopen(fn, "a+")) == NULL)
-			return;
-		
-		fprintf(logfile, "\n===========================\n");
-		fprintf(logfile, "======[%02d/%02d @ %02d:%02d]======\n",
-			dt->tm_mon+1, dt->tm_mday, dt->tm_hour, dt->tm_min);
-		fprintf(logfile, "===========================\n");
-	}
-
-	if(index(str, '\n'))
-		fprintf(logfile, "%s", str);
-	else
-		fprintf(logfile, "%s\n", str);
-	fflush(logfile);
 }
 
 int
@@ -1008,69 +770,4 @@ Time(time_t *t)
 	if(t != NULL)
 		*t = now;
 	return now;
-}
-
-/*
- * Write a buffer to the user output socket in such a way that no in-band
- * TNC commands will appear in the stream (this is a requirement when talking
- * to an AX.25 connection that is mediated by tncd).
- */
-static int
-socket_tnc_safe_raw_write_n(const char *buf, size_t len)
-{
-	static int tnc_command_state = 0;
-	const char *unsafe;
-	ssize_t err;
-
-	if (len < 1)
-		return 0;
-
-	if (tnc_command_state == 1 && buf[0] == '~') {
-		err = socket_raw_write_n(sock, "~", 1);
-		if (err == ERROR)
-			return ERROR;
-		tnc_command_state = 0;
-	}
-
-	while ((unsafe = mem2chr(buf, "\n~", len)) != NULL) {
-		size_t subsz = unsafe - buf + 2;
-		err = socket_raw_write_n(sock, buf, subsz);
-		if (err == ERROR)
-			return ERROR;
-		err = socket_raw_write_n(sock, "~", 1);
-		if (err == ERROR)
-			return ERROR;
-		buf += subsz;
-		len -= subsz;
-	}
-
-	if (len) {
-		err = socket_raw_write_n(sock, buf, len);
-		if (err == ERROR)
-			return ERROR;
-		tnc_command_state = buf[len-1] == '\n';
-	}
-
-	return 0;
-}
-
-static const char *
-mem2chr(const char *src, const char *pat, size_t len)
-{
-	const char *f;
-
-	do {
-		f = memchr(src, pat[0], len);
-		if (f == NULL)
-			return NULL;
-		len -= f - src + 1;
-		if (len == 0)
-			return NULL;
-		if (f[1] == pat[1])
-			return f;
-		src = f + 1;
-		len--;
-	} while (len > 0);
-
-	return NULL;
 }

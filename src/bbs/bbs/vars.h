@@ -1,4 +1,7 @@
+#include <stdio.h>
+
 extern char
+	prompt_string[4096],
 	*Bbs_Call,
 	*Bbs_MyCall,
 	*Bbs_FwdCall,
@@ -33,18 +36,28 @@ extern char
 	*Bbs_Hloc_Script,
 	*Bbs_Personal_File,
 	*Bbs_Reject_File,
-	*Bbs_Log_Path;
-
-extern char
-	*Msgd_System_File;
+	*Bbs_Log_Path,
+	*Msgd_System_File,
+	*Via;
 
 extern int
+	sock,
+	bbsd_sock,
 #if 0
 	Smtp_Port,
 #endif
 	Bbs_Import_Size,
 	Bbs_Msg_Loop,
-	Bbsd_Port;
+	Bbsd_Port,
+	DoCRLFEndings,
+        monitor_connected,
+        monitor_port,
+        monitor_sock,
+        monitor_fd,
+        escape_tnc_commands;
+
+extern time_t
+	inactivity_time;
 
 extern long
 	Bbs_Timer_Tnc,
@@ -53,5 +66,4 @@ extern long
 
 extern struct ConfigurationList ConfigList[];
 
-extern char
-	*Via;
+extern FILE *logfile;
