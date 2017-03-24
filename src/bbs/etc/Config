@@ -171,7 +171,7 @@ USERD_DEF_APPROVED	TRUE
 ; Show: The user can display a list of ports from inside the bbs. 
 ;	Rather than have to keep explaining to users what port
 ;	TCP is and why they can't use it you simply set the SHOW
-;	field to FALSE. It will hide it's existance from the user.
+;	field to FALSE. It will hide its existance from the user.
 ;
 ; Alias: This is the name for this port in verbose text. When a user
 ;	asks to see the ports TNC0 will probably not mean much to 
@@ -366,7 +366,7 @@ BIDD_AGE	3 months
 ; soon as that address hasn't been used for GATED_AGE_WARN time. If
 ; the user doesn't use that address before GATED_AGE_KILL time the
 ; entry will be deleted. If all users addresses are killed then when
-; userd runs it's aging the user will be purged.
+; userd runs its aging process, the user will be purged.
 
 GATED_FILE	etc/gate.db
 GATED_AGE_WARN	4 months
@@ -391,7 +391,7 @@ MSGD_ROUTE_FILE		etc/Route
 MSGD_SYSTEM_FILE	etc/Systems
 MSGD_GROUP_FILE		etc/Group
  
-; msgd will age it's messages every MSGD_AGE_INTERVAL. Don't do this
+; msgd will age its messages every MSGD_AGE_INTERVAL. Don't do this
 ; too often or the daemon will always be busy. Users are locked out while
 ; aging is being done. Of course if you don't age often enough then it
 ; takes longer to do and the users are locked out for longer periods of
@@ -400,7 +400,7 @@ MSGD_GROUP_FILE		etc/Group
 MSGD_AGE_INTERVAL	1 hour
 
 ; The bbs displays a message as old when it is MSGD_AGE_OLD from being
-; killed. Just a little warning that it's hours are limited.
+; killed. Just a little warning that its hours are limited.
 
 MSGD_AGE_OLD		2 days
 
