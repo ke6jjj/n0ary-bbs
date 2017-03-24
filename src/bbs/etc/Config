@@ -68,8 +68,15 @@ DAEMON TNC2	/bbs/bin/b_tncd TNC2
 BBS_DIR         /bbs
 
 ; Who and where are we? Change this to your call (without the -X) and
-; your hloc. For those of you that have to deal with a second hloc
-; add it as BBS_HLOC_COMP.
+; your hloc. There are two HLOC variables, BBS_HLOC and BBS_HLOC_COMP
+; and they serve different purposes:
+;
+;  BBS_HLOC  - The contents of this variable will be used as the advertised
+;    address of all outgoing messages and all 'received from' lines in message
+;    headers.
+;  BBS_HLOC_COMP - The contents of this variable will be used during
+;   the next-hop determination of the route matching process for an outgoing
+;   message.
 
 BBS_CALL		N0ARY
 BBS_HLOC		#NOCAL.CA.USA.NA
