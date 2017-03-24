@@ -4,6 +4,7 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -79,7 +80,7 @@ read_messages(int key, struct active_processes *ap, struct msg_dir_entry *msg,
 	int in_header = TRUE;
 	char buf[128];
 
-	while(fgets(buf, 127, fp)) {
+	while(fgets(buf, sizeof(buf), fp)) {
 		if(!strcmp(buf, "/EX\n"))
 			break;
 
@@ -113,11 +114,11 @@ read_messages_rfc(struct active_processes *ap, struct msg_dir_entry *msg)
 	FILE *fp = open_message(msg->number);
 	char buf[128];
 
-	while(fgets(buf, 127, fp))
+	while(fgets(buf, sizeof(buf), fp))
 		if(!strcmp(buf, "/EX\n"))
 			break;
 
-	while(fgets(buf, 127, fp)) {
+	while(fgets(buf, sizeof(buf), fp)) {
 		buf[127] = 0;
 		socket_raw_write(ap->fd, buf);
 	}
@@ -127,17 +128,22 @@ read_messages_rfc(struct active_processes *ap, struct msg_dir_entry *msg)
 void
 msg_body_kill(int num)
 {
-	char fn[80];
-	sprintf(fn, "%s/%05d", Msgd_Body_Path, num);
-	unlink(fn);
+	char fn[PATH_MAX], nfn[PATH_MAX];
+	snprintf(fn, sizeof(fn), "%s/%05d", Msgd_Body_Path, num);
+	if (Msgd_Archive_Path != NULL) {
+		snprintf(nfn, sizeof(nfn), "%s/%05d", Msgd_Archive_Path, num);
+		rename(fn, nfn);
+	} else {
+		unlink(fn);
+	}
 }
 
 int
 msg_body_rename(int orig, int new)
 {
-	char ofn[80], nfn[80];
-	sprintf(ofn, "%s/%05d", Msgd_Body_Path, orig);
-	sprintf(nfn, "%s/%05d", Msgd_Body_Path, new);
+	char ofn[PATH_MAX], nfn[PATH_MAX];
+	snprintf(ofn, sizeof(ofn), "%s/%05d", Msgd_Body_Path, orig);
+	snprintf(nfn, sizeof(nfn), "%s/%05d", Msgd_Body_Path, new);
 
 	return rename(ofn, nfn);
 }

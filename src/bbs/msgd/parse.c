@@ -13,53 +13,53 @@ extern int shutdown_daemon;
 static char *
 help_disp(void)
 {
-	output[0] = 0;
-	strcat(output, "USER <call>  ...............  set user\n");
-	strcat(output, "SYSOP  .....................  set sysop mode\n");
-	strcat(output, "NORMAL  ....................  set normal user mode\n");
-	strcat(output, "MINE  ......................  set list mine mode\n");
-	strcat(output, "BBS  .......................  set bbs2bbs mode\n");
-	strcat(output, "SINCE <time>  ..............  set list since mode\n");
-	strcat(output, "KILL[H] <number>  ..........  kill message number [Hard]\n");
-	strcat(output, "ACTIVE <number>  ...........  activate message number\n");
-	strcat(output, "HOLD <number>  .............  hold message number\n");
-	strcat(output, "IMMUNE <number>  ...........  make immune message number\n");
-	strcat(output, "PARSE <number>  ............  re-parse a message body\n");
-	strcat(output, "LIST .......................  list messages, changes\n");
-	strcat(output, "READ <number>  .............  read message number\n");
-	strcat(output, "READH <number>  ............  read message with headers\n");
-	strcat(output, "READRFC <number>  ..........  read rfc822 fields\n");
-	strcat(output, "WHO <number>  ..............  show who has read a message\n");
-	strcat(output, "WHY <number>  ..............  show why a message was held\n");
-	strcat(output, "SEND  ......................  send message\n");
-	strcat(output, "FLUSH  .....................  flush previous listing\n");
-	strcat(output, "CATCHUP  ...................  catchup listing\n");
-	strcat(output, "DISP <mode>  ...............  change disp format\n");
-	strcat(output, "   mode = BINARY   (client/server use)\n");
-	strcat(output, "          NORMAL   (standard bbs use)\n");
-	strcat(output, "          VERBOSE  (human readable form\n");
-	strcat(output, "EDIT <number> <rfc822> .....  edit message fields\n");
-	strcat(output, "               To: \n");
-	strcat(output, "               From: \n");
-	strcat(output, "               Subject: \n");
-	strcat(output, "               X-Type: \n");
-	strcat(output, "               X-Bid: \n");
-	strcat(output, "               X-Password: \n");
-	strcat(output, "ROUTE <number>  ............  show routing for message\n");
-	strcat(output, "ROUTE <address>  ...........  show routing for address\n");
-	strcat(output, "PENDING  ...................  show all pending mail\n");
-	strcat(output, "PENDING <bbs> [msgtype]  ...  show pending mail for bbs\n");
-	strcat(output, "PENDING <number>  ..........  show bbss pending for msg\n");
-	strcat(output, "FORWARD <number> <bbs>  ....  message has been forwarded\n");
-	strcat(output, "GROUP ......................  show possible groups\n");
-	strcat(output, "GROUP <name>  ..............  go to group\n");
-	strcat(output, "GROUP OFF  .................  leave group mode\n");
-	strcat(output, "REHASH  ....................  reinit message lists\n");
-	strcat(output, "AGE  .......................  initiate aging\n");
-	strcat(output, "COMPRESS  ..................  compress message database\n");
-	strcat(output, "DEBUG LOG [ON|OFF|CLR]  ....  logging options\n");
-
-	strcat(output, ".\n");
+	strlcpy(output,
+		"USER <call>  ...............  set user\n"
+		"SYSOP  .....................  set sysop mode\n"
+		"NORMAL  ....................  set normal user mode\n"
+		"MINE  ......................  set list mine mode\n"
+		"BBS  .......................  set bbs2bbs mode\n"
+		"SINCE <time>  ..............  set list since mode\n"
+		"KILL[H] <number>  ..........  kill message number [Hard]\n"
+		"ACTIVE <number>  ...........  activate message number\n"
+		"HOLD <number>  .............  hold message number\n"
+		"IMMUNE <number>  ...........  make immune message number\n"
+		"PARSE <number>  ............  re-parse a message body\n"
+		"LIST .......................  list messages, changes\n"
+		"READ <number>  .............  read message number\n"
+		"READH <number>  ............  read message with headers\n"
+		"READRFC <number>  ..........  read rfc822 fields\n"
+		"WHO <number>  ..............  show who has read a message\n"
+		"WHY <number>  ..............  show why a message was held\n"
+		"SEND  ......................  send message\n"
+		"FLUSH  .....................  flush previous listing\n"
+		"CATCHUP  ...................  catchup listing\n"
+		"DISP <mode>  ...............  change disp format\n"
+		"   mode = BINARY   (client/server use)\n"
+		"          NORMAL   (standard bbs use)\n"
+		"          VERBOSE  (human readable form\n"
+		"EDIT <number> <rfc822> .....  edit message fields\n"
+		"               To: \n"
+		"               From: \n"
+		"               Subject: \n"
+		"               X-Type: \n"
+		"               X-Bid: \n"
+		"               X-Password: \n"
+		"ROUTE <number>  ............  show routing for message\n"
+		"ROUTE <address>  ...........  show routing for address\n"
+		"PENDING  ...................  show all pending mail\n"
+		"PENDING <bbs> [msgtype]  ...  show pending mail for bbs\n"
+		"PENDING <number>  ..........  show bbss pending for msg\n"
+		"FORWARD <number> <bbs>  ....  message has been forwarded\n"
+		"GROUP ......................  show possible groups\n"
+		"GROUP <name>  ..............  go to group\n"
+		"GROUP OFF  .................  leave group mode\n"
+		"REHASH  ....................  reinit message lists\n"
+		"AGE  .......................  initiate aging\n"
+		"COMPRESS  ..................  compress message database\n"
+		"DEBUG LOG [ON|OFF|CLR]  ....  logging options\n"
+		".\n",
+	sizeof(output));
 	return output;
 }
 
@@ -71,7 +71,11 @@ set_parameters(char *s)
 
 	if(!strcmp(opt, "LOG")) {
 		if(*s && *s != 0) {
-			strcpy(opt, get_string(&s));
+			/* Given that the destination of this strcpy()
+			 * is inside the source of this strcpy(), it is
+			 * intrinsically safe. -JJJ
+			 */
+			strcpy(opt, get_string(&s)); /* OK */
 			uppercase(opt);
 			if(!strcmp(opt, "ON"))
 				Logging = logON;
@@ -104,7 +108,7 @@ parse(struct active_processes *ap, char *s)
 	char buf[80];
 	struct msg_dir_entry *msg;
 
-	strcpy(buf, get_string(&s));
+	strlcpy(buf, get_string(&s), sizeof(buf));
 	uppercase(buf);
 
 	if(buf[0] == '?')
@@ -126,7 +130,7 @@ parse(struct active_processes *ap, char *s)
 		return set_parameters(s);
 
 	if(!strcmp(buf, "USER")) {
-		strncpy(ap->call, get_string(&s), 20);
+		strlcpy(ap->call, get_string(&s), sizeof(ap->call));
 		uppercase(ap->call);
 		ap->list_sent = FALSE;
 		return "OK\n";
@@ -184,7 +188,7 @@ parse(struct active_processes *ap, char *s)
 
 	if(!strcmp(buf, "DISP")) {
 		char buf[20];
-		strncpy(buf, get_string(&s), 20);
+		strlcpy(buf, get_string(&s), sizeof(buf));
 		uppercase(buf);
 		if(!strcmp(buf, "NORMAL"))
 			ap->disp_mode = dispNORMAL;
@@ -238,7 +242,7 @@ parse(struct active_processes *ap, char *s)
 
 	if(!strcmp(buf, "SEND")) {
 		int num = send_message(ap);
-		sprintf(output, "OK, %d\n", num);
+		snprintf(output, sizeof(output), "OK, %d\n", num);
 		return output;
 	}
 	if(!strcmp(buf, "LIST")) {

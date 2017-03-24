@@ -36,6 +36,7 @@ char
 	*Bbs_Call,
 	*Msgd_Bind_Addr = NULL,
 	*Msgd_Body_Path,
+	*Msgd_Archive_Path = NULL,
 	*Msgd_Fwd_Dir,
 	*Msgd_Route_File,
 	*Msgd_Group_File,
@@ -50,6 +51,7 @@ struct ConfigurationList ConfigList[] = {
 	{ "MSGD_PORT",			tINT,		(int*)&Msgd_Port },
 	{ "MSGD_BIND_ADDR",		tSTRING,	(int*)&Msgd_Bind_Addr },
 	{ "MSGD_BODY_PATH",		tDIRECTORY,	(int*)&Msgd_Body_Path },
+	{ "MSGD_ARCHIVE_PATH",		tDIRECTORY,	(int*)&Msgd_Archive_Path },
 	{ "MSGD_FWD_DIR",		tDIRECTORY,	(int*)&Msgd_Fwd_Dir },
 	{ "MSGD_ROUTE_FILE",	tFILE,		(int*)&Msgd_Route_File },
 	{ "MSGD_SYSTEM_FILE",	tFILE,		(int*)&Msgd_System_File },
@@ -291,19 +293,9 @@ msg_stats(void)
 
 	output[0] = 0;
 
-#if 0
-	sprintf(output, "%s      HOST %s\n", output, Bbs_Host);
-	sprintf(output, "%s      PORT %d\n", output, Msgd_Port);
-	sprintf(output, "%s     AGING %d (hours)\n", output, Msgd_Age_Interval / tHour);
-	sprintf(output, "%sMSGBODYDIR %s\n", output, Msgd_Body_Path);
-	sprintf(output, "%s    FWDDIR %s\n", output, Msgd_Fwd_Dir);
-	sprintf(output, "%s GROUPFILE %s\n", output, Msgd_Group_File);
-	sprintf(output, "%s ROUTEFILE %s\n", output, Msgd_Route_File);
-	sprintf(output, "%sSYSTEMFILE %s\n\n", output, Msgd_System_File);
-#endif
-
 	while(ap) {
-		sprintf(output, "%s%s\t%s\t%s\tGrp:%s\n", output, ap->call,
+		snprintf(output, sizeof(output), "%s%s\t%s\t%s\tGrp:%s\n",
+			output, ap->call,
 			ap->list_sent ? "SENT":"PEND",
 			(ap->list_mode==NormalMode) ? "NORM" :
 				(ap->list_mode==SysopMode) ? "SYSOP" :
@@ -312,14 +304,15 @@ msg_stats(void)
 			ap->grp ? ap->grp->name :"None");
 		NEXT(ap);
 		if(strlen(output) > 3500) {
-			strcat(output, ".... too large ....\n");
+			strlcat(output, ".... too large ....\n",
+				sizeof(output));
 			break;
 		}
 	}
 
 	type_stats();
 	fwd_stats();
-	strcat(output, ".\n");
+	strlcat(output, ".\n", sizeof(output));
 	return output;
 }
 

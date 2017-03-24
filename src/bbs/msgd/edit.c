@@ -42,7 +42,7 @@ SetMsgKilled(struct msg_dir_entry *m)
 	m->kdate = Time(NULL);
 	fwddir_kill(m->number, NULL);
 
-	sprintf(buf, "%"PRTMd, m->kdate);
+	snprintf(buf, sizeof(buf), "%"PRTMd, m->kdate);
 	rfc822_append(m->number, rKILL, buf);
 }
 
@@ -65,7 +65,7 @@ SetMsgRefresh(struct msg_dir_entry *m)
 	m->odate = 0;
 	m->kdate = 0;
 
-	sprintf(buf, "%"PRTMd, m->cdate);
+	snprintf(buf, sizeof(buf), "%"PRTMd, m->cdate);
 	rfc822_append(m->number, rCREATE, buf);
 }
 
@@ -107,7 +107,7 @@ SetMsgPassword(struct msg_dir_entry *m, char *s)
 {
 	SetMsgSecure(m);
 	m->flags |= MsgPassword;
-	strcpy(m->passwd, s);
+	strlcpy(m->passwd, s, sizeof(m->passwd));
 	rfc822_append(m->number, rPASSWORD, s);
 }
 
@@ -187,7 +187,7 @@ edit_message(struct active_processes *ap, struct msg_dir_entry *msg, char *s)
 			/* not all fields should be editable. Such as KILL which is
 			 * a command itself.
 			 */
-	strcpy(bid, msg->bid);
+	strlcpy(bid, msg->bid, sizeof(bid));
 	field = rfc822_parse(msg, s);
 
 	switch(field) {
@@ -200,12 +200,12 @@ edit_message(struct active_processes *ap, struct msg_dir_entry *msg, char *s)
 		break;
 	case rBID:
 		if(!strcmp(msg->bid, "$")) {
-			sprintf(msg->bid, "%ld_%s", msg->number, Bbs_Call);
+			snprintf(msg->bid, sizeof(buf), "%ld_%s", msg->number, Bbs_Call);
 			rfc822_gen(rBID, msg, buf, 80);
 			s = buf;
 		}
 		if(bid_chk(msg->bid)) {
-			strcpy(msg->bid, bid);
+			strlcpy(msg->bid, bid, sizeof(msg->bid));
 			return Error("Duplicate BID");
 		}
 		bid_add(msg->bid);

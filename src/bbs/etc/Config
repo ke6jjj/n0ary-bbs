@@ -390,6 +390,15 @@ MSGD_FWD_DIR		message/Forward
 MSGD_ROUTE_FILE		etc/Route
 MSGD_SYSTEM_FILE	etc/Systems
 MSGD_GROUP_FILE		etc/Group
+
+; When messages reach their maximum age and are destined to be removed
+; from the system they are normally deleted from the filesystem. You have
+; the option, however, of having the messages simply moved to an archive
+; directory, where they will remain until manually deleted. To enable
+; this feature, define the variable MSGD_ARCHIVE_PATH and assign it
+; the value of a directory into which such messages will be moved.
+;
+; MSGD_ARCHIVE_PATH	message/Archive
  
 ; msgd will age its messages every MSGD_AGE_INTERVAL. Don't do this
 ; too often or the daemon will always be busy. Users are locked out while

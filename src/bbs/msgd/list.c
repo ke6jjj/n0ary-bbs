@@ -35,7 +35,7 @@ append_group(char *name, struct msg_dir_entry *msg)
 
 	if(*grp == NULL) {
 		*grp = malloc_struct(groups);
-		strcpy((*grp)->name, name);
+		strlcpy((*grp)->name, name, sizeof((*grp)->name));
 	}
 
 	if(msg->flags & (MsgActive))
@@ -60,7 +60,7 @@ show_groups(struct active_processes *ap)
 
 	while(grp) {
 		char buf[80];
-		sprintf(buf, "%s\t%d\n", grp->name, grp->cnt);
+		snprintf(buf, sizeof(buf), "%s\t%d\n", grp->name, grp->cnt);
 		socket_raw_write(ap->fd, buf);
 		NEXT(grp);
 	}
@@ -92,13 +92,13 @@ set_groups(struct msg_dir_entry *m)
 {
 	FILE *fp;
 	int found = FALSE;
-	char buf[257];
+	char buf[256];
 	time_t now = Time(NULL);
 
 	if((fp = fopen(Msgd_Group_File, "r")) == NULL)
 		return FALSE;
 
-	while(fgets(buf, 256, fp)) {
+	while(fgets(buf, sizeof(buf), fp)) {
 		char 
 			*match = buf,
 			*replace;
@@ -239,14 +239,19 @@ check_msgdir(void)
 			char buf[256];
 	
 			log_f("msgd", "TERMINAL:", oops);
-			sprintf(buf, "msg #%ld [0x%p]", msg->number, msg);
+			snprintf(buf, sizeof(buf), "msg #%ld [0x%p]",
+				msg->number, msg);
 			log_f("msgd", "TERMINAL:", buf);
 			if(msg->next != NULL) {
-				sprintf(buf, "next: 0x%p, next->last: 0x%p", msg->next, msg->next->last);
+				snprintf(buf, sizeof(buf),
+					"next: 0x%p, next->last: 0x%p",
+					msg->next, msg->next->last);
 				log_f("msgd", "TERMINAL:", buf);
 			}
 			if(msg->last != NULL) {
-				sprintf(buf, "last: 0x%p, last->next: 0x%p", msg->last, msg->last->next);
+				snprintf(buf, sizeof(buf),
+					"last: 0x%p, last->next: 0x%p",
+					msg->last, msg->last->next);
 				log_f("msgd", "TERMINAL:", buf);
 			}
 			log_f("msgd", "ABORTING", "bye");
@@ -328,15 +333,16 @@ type_stats(void)
 		NEXT(msg);
 	}
 		
-	sprintf(output, "\nType\ttotal\tactive\theld\timmune\tkilled\n");
-	sprintf(output, "%s P\t%d\t%d\t%d\t%d\t%d\n",
-			output, pers, cnt[0][0], cnt[0][1], cnt[0][2], cnt[0][3]);
-	sprintf(output, "%s B\t%d\t%d\t%d\t%d\t%d\n",
-			output, bull, cnt[1][0], cnt[1][1], cnt[1][2], cnt[1][3]);
-	sprintf(output, "%s T\t%d\t%d\t%d\t%d\t%d\n",
-			output, nts, cnt[2][0], cnt[2][1], cnt[2][2], cnt[2][3]);
-	sprintf(output, "%s\t%d\t%d\t%d\t%d\t%d\n",
-			output, pers+bull+nts, active, held, immune, killed);
+	snprintf(output, sizeof(output),
+		"\nType\ttotal\tactive\theld\timmune\tkilled\n"
+		" P\t%d\t%d\t%d\t%d\t%d\n"
+		" B\t%d\t%d\t%d\t%d\t%d\n"
+		" T\t%d\t%d\t%d\t%d\t%d\n"
+		"\t%d\t%d\t%d\t%d\t%d\n",
+		 pers, cnt[0][0], cnt[0][1], cnt[0][2], cnt[0][3],
+		 bull, cnt[1][0], cnt[1][1], cnt[1][2], cnt[1][3],
+		nts, cnt[2][0], cnt[2][1], cnt[2][2], cnt[2][3],
+		pers+bull+nts, active, held, immune, killed);
 }
 
 void
@@ -353,7 +359,8 @@ age_messages(void)
 	log_f("msgd", "AGING:", "Start");
 
 	while(msg) {
-		sprintf(log_buf, "%05ld [0x%p last: 0x%p next: 0x%p]", 
+		snprintf(log_buf, sizeof(log_buf),
+			"%05ld [0x%p last: 0x%p next: 0x%p]", 
 			msg->number, msg, msg->last, msg->next);
 
 		switch(msg->flags & MsgTypeMask) {
@@ -486,13 +493,13 @@ build_list_text(struct msg_dir_entry *msg)
 	msg->flags &= ~MsgReadByMe;
 
 	if(msg->passwd[0])
-		sprintf(msg->list_text,
+		snprintf(msg->list_text, sizeof(msg->list_text),
 			"%ld %ld %ld !%s $%s %s@%s %s %"PRTMd" %ld %s\n",
 			msg->number, msg->size, msg->flags, msg->passwd, msg->bid,
 			msg->to.name.str, msg->to.at.str, msg->from.name.str,
 			msg->cdate, msg->read_cnt, msg->sub);
 	else
-		sprintf(msg->list_text,
+		snprintf(msg->list_text, sizeof(msg->list_text),
 			"%ld %ld %ld $%s %s@%s %s %"PRTMd" %ld %s\n",
 			msg->number, msg->size, msg->flags, msg->bid,
 			msg->to.name.str, msg->to.at.str, msg->from.name.str,
@@ -516,7 +523,7 @@ build_display(struct active_processes *ap, struct msg_dir_entry *msg)
 
 	switch(ap->disp_mode) {
 	case dispBINARY:
-		sprintf(buf, "BINARY %ld\n", msg->number);
+		snprintf(buf, sizeof(buf), "BINARY %ld\n", msg->number);
 		break;
 	case dispVERBOSE:
 		if(IsMsgSecure(msg)) stat[0] = 'S';
@@ -549,7 +556,8 @@ build_display(struct active_processes *ap, struct msg_dir_entry *msg)
 		stat[4] = 0;
 
 		strftime(datebuf, 10, "%m%d/%H""%M", dt);
-		sprintf(buf, "%5ld %s %5ld %6s@%-6s %-6s%3ld %9s %-.28s\n",
+		snprintf(buf, sizeof(buf),
+			"%5ld %s %5ld %6s@%-6s %-6s%3ld %9s %-.28s\n",
 			msg->number, stat, msg->size, msg->to.name.str,
 			msg->to.at.str, msg->from.name.str, msg->read_cnt,
 			datebuf, msg->sub);
@@ -558,16 +566,17 @@ build_display(struct active_processes *ap, struct msg_dir_entry *msg)
 	case dispNORMAL:
 		password[0] = 0;
 		if(msg->passwd[0])
-			sprintf(password, " !%s", msg->passwd);
+			snprintf(password, sizeof(password), " !%s",
+				msg->passwd);
 
 		if(ap->list_mode == SysopMode)
-			sprintf(buf,
+			snprintf(buf, sizeof(buf),
 				"%ld %ld %ld%s $%s %s@%s %s %"PRTMd" %ld %s\n",
 				msg->number, msg->size, msg->flags, password, msg->bid,
 				msg->to.name.str, msg->to.at.str, msg->from.name.str,
 				msg->cdate, msg->read_cnt, msg->sub);
 		else
-			sprintf(buf,
+			snprintf(buf, sizeof(buf),
 				"%ld %ld %ld%s $ %s@%s %s %"PRTMd" %ld %s\n",
 				msg->number, msg->size, msg->flags, password, 
 				msg->to.name.str, msg->to.at.str, msg->from.name.str,
@@ -588,15 +597,15 @@ show_message(struct active_processes *ap, struct msg_dir_entry *msg)
 
 		{
 			char buf[256];
-			strcpy(buf, msg->list_text);
-			buf[strlen(buf)-1] = 0;
+			strlcpy(buf, msg->list_text, sizeof(buf));
 			log_f("msgd", "L:", buf);
 		}
 	} else {
 		char *buf = build_display(ap, msg);
 		socket_raw_write(ap->fd, buf);
 
-		buf[strlen(buf)-1] = 0;
+		if (buf[0] != '\0')
+			buf[strlen(buf)-1] = 0;
 		log_f("msgd", "L:", buf);
 	}
 }
@@ -653,7 +662,7 @@ read_who(struct active_processes *ap, struct msg_dir_entry *msg)
 	char buf[80];
 
 	while(by) {
-		sprintf(buf, "%s\n", by->s);
+		snprintf(buf, sizeof(buf), "%s\n", by->s);
 		socket_raw_write(ap->fd, buf);
 		NEXT(by);
 	}
@@ -694,14 +703,16 @@ send_message(struct active_processes *ap)
 
 		if(in_rfc) {
 			char rfc[256];
-			strcpy(rfc, buf);
+			strlcpy(rfc, buf, sizeof(rfc));
 
 			switch(rfc822_parse(msg, rfc)) {
 			case rBID:
 				if(!strcmp(msg->bid, "$\n")) {
-					sprintf(msg->bid, "%ld_%s", msg->number, Bbs_Call);
+					snprintf(msg->bid, sizeof(msg->bid),
+						"%ld_%s", msg->number,
+						Bbs_Call);
 					rfc822_gen(rBID, msg, buf, 80);
-					strcat(buf, "\n");
+					strlcat(buf, "\n", sizeof(buf));
 				}
 				if(bid_chk(msg->bid))
 					dup = TRUE;
@@ -710,7 +721,7 @@ send_message(struct active_processes *ap)
 				break;
 			case rCREATE:
 			case rKILL:
-				sprintf(buf, "%s\n", rfc);
+				snprintf(buf, sizeof(buf), "%s\n", rfc);
 				break;
 			}
 		}
@@ -766,7 +777,7 @@ check_route(struct active_processes *ap, char *s)
 		}
 		
 	msg = malloc_struct(msg_dir_entry);
-	sprintf(buf, "To: %s\n", s);
+	snprintf(buf, sizeof(buf), "To: %s\n", s);
 	rfc822_parse(msg, buf);
 	set_forwarding(ap, msg, TRUE);
 	free(msg);

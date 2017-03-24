@@ -11,6 +11,7 @@ extern int
 extern char
 	*Bbs_Call,
 	*Msgd_Body_Path,
+	*Msgd_Archive_Path,
 	*Msgd_Fwd_Dir,
 	*Msgd_Route_File,
 	*Msgd_Group_File,

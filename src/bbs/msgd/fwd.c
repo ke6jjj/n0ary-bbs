@@ -5,6 +5,7 @@
 #include <dirent.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <limits.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -54,22 +55,23 @@ read_systems_file()
 {
 	FILE *fp = fopen(Msgd_System_File, "r");
 	struct Systems **sys = &System;
-	char buf[257];
+	char buf[256];
 
 	if(fp == NULL)
 		return;
 
-	while(fgets(buf, 256, fp)) {
+	while(fgets(buf, sizeof(buf), fp)) {
 		char *p = buf, bbs[20];
 		if(*p == ';' ||  *p == '\n' || isspace(*p))
 			continue;
 		
-		strcpy(bbs, get_string(&p));
+		strlcpy(bbs, get_string(&p), sizeof(bbs));
 
 		while(*p) {
 			(*sys) = malloc_struct(Systems);
-			strcpy((*sys)->alias, get_string(&p));
-			strcpy((*sys)->name, bbs);
+			strlcpy((*sys)->alias, get_string(&p),
+				sizeof((*sys)->alias));
+			strlcpy((*sys)->name, bbs, sizeof((*sys)->name));
 			sys = &((*sys)->next);
 		}
 	}
@@ -111,7 +113,7 @@ fwddir_open(void)
 
 	for(dp=readdir(dirp); dp!=NULL; dp=readdir(dirp)) {
 		char type;
-		char fn[256];
+		char fn[PATH_MAX];
 		int number;
 		char *p;
 
@@ -134,11 +136,11 @@ fwddir_open(void)
 			continue;
 
 		*fwddir = malloc_struct(FwdDir);
-		strcpy((*fwddir)->alias, p);
+		strlcpy((*fwddir)->alias, p, sizeof((*fwddir)->alias));
 		(*fwddir)->type = type;
 		(*fwddir)->number = number;
 
-		sprintf(fn, "%s/%s", Msgd_Fwd_Dir, dp->d_name);
+		snprintf(fn, sizeof(fn), "%s/%s", Msgd_Fwd_Dir, dp->d_name);
 		if(stat(fn, &sbuf) == 0)
 			(*fwddir)->ctime = sbuf.st_mtime;	
 
@@ -170,11 +172,13 @@ fwddir_rename(int orig, int new)
 
 	while(fwddir) {
 		if(fwddir->number == orig) {
-			char ofn[128], nfn[128];
-			sprintf(ofn, "%s/%c.%05d.%s", Msgd_Fwd_Dir,
-				fwddir->type, orig, fwddir->alias);
-			sprintf(nfn, "%s/%c.%05d.%s", Msgd_Fwd_Dir,
-				fwddir->type, new, fwddir->alias);
+			char ofn[PATH_MAX], nfn[PATH_MAX];
+			snprintf(ofn, sizeof(ofn), "%s/%c.%05d.%s",
+				Msgd_Fwd_Dir, fwddir->type, orig,
+				fwddir->alias);
+			snprintf(nfn, sizeof(nfn), "%s/%c.%05d.%s",
+				Msgd_Fwd_Dir, fwddir->type, new,
+				fwddir->alias);
 			if(rename(ofn, nfn) < 0)
 				return ERROR;
 		}
@@ -186,8 +190,9 @@ fwddir_rename(int orig, int new)
 static int
 fwddir_remove_stamp(char type, int number, char *alias)
 {
-	char fn[80];
-	sprintf(fn, "%s/%c.%05d.%s", Msgd_Fwd_Dir, type, number, alias);
+	char fn[PATH_MAX];
+	snprintf(fn, sizeof(fn), "%s/%c.%05d.%s", Msgd_Fwd_Dir, type, number,
+		alias);
 	unlink(fn);
 	return OK;
 }
@@ -233,7 +238,7 @@ fwddir_kill(int number, char *alias)
 int
 fwddir_touch(int type, int number, char *alias)
 {
-	char c, fn[80];
+	char c, fn[PATH_MAX];
 	FILE *fp;
 
 	switch(type & MsgTypeMask) {
@@ -247,7 +252,8 @@ fwddir_touch(int type, int number, char *alias)
 		return ERROR;
 	}
 
-	sprintf(fn, "%s/%c.%05d.%s", Msgd_Fwd_Dir, c, number, alias);
+	snprintf(fn, sizeof(fn), "%s/%c.%05d.%s", Msgd_Fwd_Dir, c, number,
+		alias);
 	if((fp = fopen(fn, "w")) == NULL) {
 		if(dbug_level & dbgVERBOSE)
 			printf("Couldn't touch fwd stamp file\n");
@@ -260,8 +266,8 @@ fwddir_touch(int type, int number, char *alias)
 static void
 read_route_aliases(FILE *fp)
 {
-	char *p, buf[81];
-	while(fgets(buf, 80, fp)) {
+	char *p, buf[80];
+	while(fgets(buf, sizeof(buf), fp)) {
 		if(buf[0] == '_') {
 			struct route_aliases *ra = malloc_struct(route_aliases);
 			if(RouteAliases != NULL)
@@ -273,8 +279,8 @@ read_route_aliases(FILE *fp)
 			if(p) *p = 0;
 
 			p = buf;
-			strcpy(ra->name, get_string(&p));
-			strcpy(ra->group, p);
+			strlcpy(ra->name, get_string(&p), sizeof(ra->name));
+			strlcpy(ra->group, p, sizeof(ra->group));
 		}
 	}
 }
@@ -302,7 +308,7 @@ fwd_check_name(struct active_processes *ap, struct msg_dir_entry *m,
 
 			while(*p) {
 				char q[80];
-				strcpy(q, get_string(&p));
+				strlcpy(q, get_string(&p), sizeof(q));
 				fwd_check_name(ap, m, q, tl, check);
 			}
 			return;
@@ -311,7 +317,7 @@ fwd_check_name(struct active_processes *ap, struct msg_dir_entry *m,
 	}
 
 	if(check == TRUE) {
-		sprintf(output, "%s\n", bbs);
+		snprintf(output, sizeof(output), "%s\n", bbs);
 		log_f("msgd", "F:", output);
 		socket_raw_write(ap->fd, output);
 	} else {
@@ -340,14 +346,14 @@ struct text_line *
 read_message_path(struct msg_dir_entry *m)
 {
 	struct text_line *list = NULL;
-	char buf[1025];
+	char buf[1024];
 	FILE *fp;
 
-	sprintf(buf, "%s/%05ld", Msgd_Body_Path, m->number);
+	snprintf(buf, sizeof(buf), "%s/%05ld", Msgd_Body_Path, m->number);
 	if((fp = fopen(buf, "r")) == NULL)
 		return NULL;
 
-	while(fgets(buf, 1024, fp)) {
+	while(fgets(buf, sizeof(buf), fp)) {
 		char *s;
 		if(buf[0] != 'R')
 			break;
@@ -374,7 +380,7 @@ forward_message_to(struct active_processes *ap,
 	m->fwd_cnt = 0;
 	while(*list) {
 		char bbs[80];
-		strcpy(bbs, get_string(&list));
+		strlcpy(bbs, get_string(&list), sizeof(bbs));
 		fwd_check_name(ap, m, bbs, tl, check);
 	}
 	textline_free(tl);
@@ -410,7 +416,7 @@ int
 set_forwarding(struct active_processes *ap, struct msg_dir_entry *m, int check)
 {
 	FILE *fp = fopen(Msgd_Route_File, "r");
-	char buf[257];
+	char buf[256];
 	int found = FALSE;
 	time_t now = Time(NULL);
 
@@ -426,7 +432,7 @@ set_forwarding(struct active_processes *ap, struct msg_dir_entry *m, int check)
 	read_route_aliases(fp);
 	rewind(fp);
 
-	while(fgets(buf, 256, fp)) {
+	while(fgets(buf, sizeof(buf), fp)) {
 		char *p = buf;
 		char *list;
 
@@ -461,7 +467,8 @@ set_forwarding(struct active_processes *ap, struct msg_dir_entry *m, int check)
 		
 		if(message_matches_criteria(buf, m, now) == TRUE) {
 			if(check == TRUE) {
-				sprintf(output, "FwdOn: %s\n", buf);
+				snprintf(output, sizeof(output), "FwdOn: %s\n",
+					buf);
 				log_f("msgd", "F:", output);
 				socket_raw_write(ap->fd, output);
 			}
@@ -500,7 +507,7 @@ pending_fwd_num(struct active_processes *ap, int num)
 	while(fwddir) {
 		char buf[80];
 		if(fwddir->number == num) {
-			sprintf(buf, "%s\n", fwddir->alias);
+			snprintf(buf, sizeof(buf), "%s\n", fwddir->alias);
 			log_f("msgd", "F:", buf);
 			socket_raw_write(ap->fd, buf);
 		}
@@ -523,13 +530,15 @@ pending_fwd(struct active_processes *ap, char *call, char msgtype)
 	while(fwddir) {
 		char buf[80];
 		if(call == NULL) {
-			sprintf(buf, "%c.%05d.%s\n", fwddir->type, fwddir->number, fwddir->alias);
+			snprintf(buf, sizeof(buf), "%c.%05d.%s\n",
+				fwddir->type, fwddir->number, fwddir->alias);
 			log_f("msgd", "F:", buf);
 			socket_raw_write(ap->fd, buf);
 		} else
 			if(!strcmp(call, fwddir->alias)) {
 				if(msgtype == 0 || msgtype == fwddir->type) {
-					sprintf(buf, "%05d\n", fwddir->number);
+					snprintf(buf, sizeof(buf), "%05d\n",
+						fwddir->number);
 					log_f("msgd", "F:", buf);
 					socket_raw_write(ap->fd, buf);
 				}
@@ -562,7 +571,7 @@ fwd_stats(void)
 			fp = malloc_struct(FwdPool);
 			fp->next = FwdPool;
 			FwdPool = fp;
-			strcpy(fp->alias, fwddir->alias);
+			strlcpy(fp->alias, fwddir->alias, sizeof(fp->alias));
 		}
 
 		switch(fwddir->type) {
@@ -592,12 +601,12 @@ fwd_stats(void)
 */
 
 	fp = FwdPool;
-	sprintf(output,
+	snprintf(output, sizeof(output),
 		"%s\nCall\tp/b/t\ttotal\t<1h\t<4h\t<8h\t<1d\t<2d\t<3d\t>3d\n", output);
 
 	while(fp) {
 		struct FwdPool *tmp = fp;
-		sprintf(output,
+		snprintf(output, sizeof(output),
 			"%s%s\t%d/%d/%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
 			output, fp->alias, fp->cnt[0], fp->cnt[1], fp->cnt[2],
 			fp->cnt[0]+fp->cnt[1]+fp->cnt[2],
