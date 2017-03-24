@@ -122,6 +122,15 @@ if ! ${makecb} \
 	error 1 "Callbook processing failed".
 fi
 
+# Sort all the generated indicies
+sort_cb=${BBS_HOME_DIR}/bin/sort_cb
+for index in city firstname lastname zip; do
+	${sort_cb} ${new_cbdir}/${index}.indx
+done
+
+# Make the new directory world readable (and group writable)
+chmod -R 755 ${new_cbdir}
+
 # Move old directory aside
 mv ${bbs_cbdir} ${bbs_cbdir}.old
 
