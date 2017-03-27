@@ -3,6 +3,7 @@
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <unistd.h>
 #include "c_cmmn.h"
 #include "bbslib.h"
 #include "bbscommon.h"
@@ -50,7 +51,7 @@ static int fd_tncd_safe_write(int fd, const char *buf, size_t len);
 void
 user_gets(char *p, int cnt)
 {
-	int fd = (sock == ERROR) ? 0:sock;
+	int fd = (sock == ERROR) ? STDIN_FILENO : sock;
 
 	fd_gets(fd, p, cnt);
 }
@@ -183,7 +184,7 @@ fd_gets(int fd, char *p, int cnt)
 void
 user_printf(char *fmt, ...)
 {
-	int fd = (sock == ERROR) ? 0:sock;
+	int fd = (sock == ERROR) ? STDOUT_FILENO : sock;
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -220,7 +221,7 @@ fd_vprintf(int fd, const char *fmt, va_list ap)
 void
 user_puts(char *buf)
 {
-	int fd = (sock == ERROR) ? 0:sock;
+	int fd = (sock == ERROR) ? STDOUT_FILENO : sock;
 
 	fd_puts(fd, buf);
 }
@@ -261,7 +262,7 @@ fd_putln(int fd, char *buf)
 void
 user_write(const char *buf, size_t len)
 {
-	int fd = (sock == ERROR) ? 0:sock;
+	int fd = (sock == ERROR) ? STDOUT_FILENO : sock;
 
 	fd_write(fd, buf, len);
 }
