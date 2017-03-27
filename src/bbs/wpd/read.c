@@ -77,7 +77,7 @@ read_user_file(char *filename, int depth)
 		}
 	}
 
-    if(fgets(s, 256, fp) == 0) {
+	if(fgets(s, sizeof(s), fp) == 0) {
 		fclose(fp);
 		return ERROR;
 	}
@@ -87,7 +87,7 @@ read_user_file(char *filename, int depth)
 
 	if(version == ERROR) {
 		char *p = s;
-		while(fgets(s, 256, fp)) {
+		while(fgets(s, sizeof(s), fp)) {
 			if(*p == '+')
 				break;
 		}
@@ -111,7 +111,7 @@ read_user_file(char *filename, int depth)
 		rewind(fp);
 	}
 
-	while(fgets(s, 256, fp)) {
+	while(fgets(s, sizeof(s), fp)) {
 		char buf[80];
 		char *p = s;
 		struct wp_user_entry *wp;
@@ -132,7 +132,7 @@ read_user_file(char *filename, int depth)
 			break;
 		}
 
-		strcpy(buf, get_string(&p));
+		strlcpy(buf, get_string(&p), sizeof(buf));
 
 		if(!preparsed)
 			if(iscall(buf) == FALSE)
@@ -141,7 +141,7 @@ read_user_file(char *filename, int depth)
 		if((wp = hash_get_user(buf)) == NULL)
 			wp = hash_create_user(buf);
 
-		strcpy(wp->call, buf);
+		strlcpy(wp->call, buf, sizeof(wp->call));
 		wp->level = get_number(&p);
 
 
@@ -165,22 +165,22 @@ read_user_file(char *filename, int depth)
 			if((unsigned)wp->last_update_sent > (unsigned)now)
 				wp->last_update_sent = now - (3 * tMonth);
 
-			strncpy(wp->home, get_string(&p), LenCALL);
-			strncpy(wp->fname, get_string(&p), LenFNAME);
-			strncpy(wp->zip, get_string(&p), LenZIP);
+			strlcpy(wp->home, get_string(&p), sizeof(wp->home));
+			strlcpy(wp->fname, get_string(&p), sizeof(wp->fname));
+			strlcpy(wp->zip, get_string(&p), sizeof(wp->zip));
 			qth[0] = 0;
 			if(*p == 0)
-				strcat(qth, "?");
+				strlcat(qth, "?", sizeof(qth));
 			else {
 				while(TRUE) {
-					strcat(qth, get_string(&p));
+					strlcat(qth, get_string(&p),
+						sizeof(qth));
 					if(*p == 0)
 						break;
-					strcat(qth, " ");
+					strlcat(qth, " ", sizeof(qth));
 				}
-				qth[LenQTH-1] = 0;
 			}
-			strcpy(wp->qth, qth);
+			strlcpy(wp->qth, qth, sizeof(wp->qth));
 			cnt++;
 			continue;
 		} else {
@@ -190,28 +190,26 @@ read_user_file(char *filename, int depth)
 			wp->last_update_sent = date2time(get_string(&p));
 
 			if(*p) {
-				strncpy(buf, get_string(&p), 80);
-				buf[LenCALL-1] = 0;
-				strcpy(wp->home, buf);
+				strlcpy(wp->home, get_string(&p),
+					sizeof(wp->home));
 				if(wp->home[0] == '?') {
 					hash_delete_user(wp->call);
 					continue;
 				}
 	
 				if(*p) {
-					strncpy(buf, get_string(&p), 80);
-					buf[LenFNAME-1] = 0;
-					strcpy(wp->fname, buf);
+					strlcpy(wp->fname, get_string(&p),
+						sizeof(wp->fname));
 	
 					if(*p) {
-						strncpy(buf, get_string(&p), 80);
-						buf[LenZIP-1] = 0;
-						strcpy(wp->zip, buf);
+						strlcpy(wp->zip,
+							get_string(&p),
+							sizeof(wp->zip));
 				
 						if(*p) {
-							strncpy(buf, p, 80);
-							buf[LenQTH-1] = 0;
-							strcpy(wp->qth, buf);
+							strlcpy(wp->qth, p,
+								sizeof(wp->qth)
+							);
 							continue;
 						}
 					}
@@ -240,9 +238,6 @@ read_bbs_file(char *filename)
 	char s[256];
 	int cnt = 0;
 	FILE *fp = fopen(filename, "r");
-#if 0
-	int version = 1;
-#endif
 	time_t t0;
 	if(dbug_level & dbgVERBOSE)
 		t0 = time(NULL);
@@ -250,17 +245,12 @@ read_bbs_file(char *filename)
 	if(fp == NULL)
 		return ERROR;
 
-    if(fgets(s, 256, fp) == 0) {
+	if(fgets(s, sizeof(s), fp) == 0) {
 		fclose(fp);
 		return ERROR;
 	}
 
-#if 0
-	if(s[2] == 'v')
-		version = atoi(&s[3]);
-#endif
-
-	while(fgets(s, 256, fp)) {
+	while(fgets(s, sizeof(s), fp)) {
 		char buf[80];
 		char *p = s;
 		struct wp_bbs_entry *wp;
@@ -276,7 +266,7 @@ read_bbs_file(char *filename)
 			preparsed = TRUE;
 		}
 
-		strcpy(buf, get_string(&p));
+		strlcpy(buf, get_string(&p), sizeof(buf));
 		if(!preparsed)
 			if(iscall(buf) == FALSE)
 				continue;
@@ -284,9 +274,9 @@ read_bbs_file(char *filename)
 		if((wp = hash_get_bbs(buf)) == NULL)
 			wp = hash_create_bbs(buf);
 
-		strcpy(wp->call, buf);
+		strlcpy(wp->call, buf, sizeof(wp->call));
 		wp->level = get_number(&p);
-		strncpy(wp->hloc, p, LenHLOC-1);
+		strlcpy(wp->hloc, p, sizeof(wp->hloc));
 		cnt++;
 	}
 
