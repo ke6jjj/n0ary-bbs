@@ -357,7 +357,7 @@ alEvent_setFdEvents(alEventHandle evp, int newflags)
   size_t i;
   int fd;
 
-  if (evh->subjectType != AL_FILE_DESCRIPTOR)
+  if (evh->subjectType != AL_FILE_DESCRIPTOR || !evh->active)
     return -1;
 
   if (evh->enabledFlags == newflags)
@@ -417,7 +417,7 @@ alEvent_setProcEvents(alEventHandle evp, int newflags)
   size_t i;
   pid_t pid;
   
-  if (evh->subjectType != AL_PROCESS)
+  if (evh->subjectType != AL_PROCESS || !evh->active)
     return -1;
 
   if (evh->enabledFlags == newflags)
