@@ -6,6 +6,11 @@
 
 #define dbgNOCONNECTBACK	2
 
+enum {
+	sendPRIVATE = 0,
+	sendBULLETIN
+};
+
 extern int operation;
 extern long new_level;
 extern long bbs_mode;
@@ -110,7 +115,7 @@ struct wp_bbs_entry
 int
 	iscall(char *call),
 	generate_wp_update(struct active_processes *ap),
-	msg_generate(struct smtp_message *msg),
+	msg_generate(struct smtp_message *msg, int type),
 	disp_update(struct active_processes *ap, struct smtp_message *msg),
 	read_new_user_file(char *filename),
 	read_user_file(char *filename, int depth),

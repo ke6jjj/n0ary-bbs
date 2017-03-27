@@ -56,7 +56,7 @@ match(int fd, char *s)
 }
 
 int
-msg_generate(struct smtp_message *msg)
+msg_generate(struct smtp_message *msg, int type)
 {
 	int to_bbs[2], to_gate[2], res;
 	char buf[SMTP_BUF_SIZE];
@@ -103,7 +103,9 @@ msg_generate(struct smtp_message *msg)
 			goto Failure;
 		}
 
-		sprintf(buf, "SP %s < %s\n", msg->rcpt->s, msg->from->s);
+		sprintf(buf, "S%c %s < %s\n",
+			type == sendPRIVATE ? 'P' : 'B',
+			msg->rcpt->s, msg->from->s);
 		log_f("wpd", "M:", buf);
 		write(to_bbs[1], buf, strlen(buf));
 

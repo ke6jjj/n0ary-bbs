@@ -79,7 +79,7 @@ generate_wp_update(struct active_processes *ap)
 		if(ap != NULL)
 			disp_update(ap, g_smtpmsg);
 		if(fork() == 0) {
-			msg_generate(g_smtpmsg);
+			msg_generate(g_smtpmsg, sendBULLETIN);
 			exit(0);
 		}
 	}
@@ -98,7 +98,7 @@ generate_wp_update(struct active_processes *ap)
 			if(ap != NULL)
 				disp_update(ap, l_smtpmsg);
 			if(fork() == 0) {
-				msg_generate(l_smtpmsg);
+				msg_generate(l_smtpmsg, sendPRIVATE);
 				exit(0);
 			}
 		}
