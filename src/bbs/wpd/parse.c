@@ -15,7 +15,7 @@ static char *
 wpd_status(void)
 {
 	static char buf[1024];
-	sprintf(buf, "%s%s", hash_bbs_cnt(), hash_user_cnt());
+	snprintf(buf, sizeof(buf), "%s%s", hash_bbs_cnt(), hash_user_cnt());
 	return buf;
 }
 
@@ -46,7 +46,7 @@ parse_cmd(struct active_processes *ap, int token, char *s)
 	case wUPLOAD:
 		return upload(s);
 	case wSEARCH:
-		return "OK\n";
+		return Error("Not implemented!");
 	}
 
 	if(ap->wpu == NULL)
@@ -58,16 +58,13 @@ parse_cmd(struct active_processes *ap, int token, char *s)
 		ap->wpu->last_update_sent = Time(NULL);
 		return "OK\n";
 	case wCALL:
-		if(ap->wpu == NULL)
-			return Error("no user currently selected");
-		sprintf(output, "%s\n", ap->wpu->call);
+		snprintf(output, sizeof(output), "%s\n", ap->wpu->call);
 		return output;
 	case wADDRESS:
-		if(ap->wpu == NULL)
-			return Error("no user currently selected");
 		if(ap->wpb == NULL)
 			return Error("home bbs is invalid");
-		sprintf(output, "%s.%s\n", ap->wpb->call, ap->wpb->hloc);
+		snprintf(output, sizeof(output), "%s.%s\n", ap->wpb->call,
+			ap->wpb->hloc);
 		return output;
 	case wSEEN:
 		{
@@ -93,20 +90,25 @@ char *
 set_call(struct active_processes *ap, char *call, char *s)
 {
 	if((ap->wpu = hash_get_user(call)) == NULL) {
-		sprintf(output, "NO, user %s not in local white pages database\n", call);
+		snprintf(output, sizeof(output),
+			"NO, user %s not in local white pages database\n",
+			call);
 		return output;
 	}
 
 	ap->wpb = hash_get_bbs(ap->wpu->home);
 
 	if(*s == 0) {
-		sprintf(output, "%s @", ap->wpu->call);
 		if(ap->wpu->home[0])
-			sprintf(output, "%s %s.%s %s %s %s\n", output, ap->wpu->home,
-				ap->wpb ? ap->wpb->hloc : "[unknown]", ap->wpu->fname,
+			snprintf(output, sizeof(output),
+				"%s @ %s.%s %s %s %s\n", ap->wpu->call,
+				ap->wpu->home,
+				ap->wpb ? ap->wpb->hloc : "[unknown]",
+				ap->wpu->fname,
 				ap->wpu->zip, ap->wpu->qth);
 		else
-			sprintf(output, "%s [no home] %s %s %s\n", output, 
+			snprintf(output, sizeof(output),
+				"%s @ [no home] %s %s %s\n", ap->wpu->call,
 				ap->wpu->fname, ap->wpu->zip, ap->wpu->qth);
 		return output;
 	}
@@ -117,64 +119,66 @@ set_call(struct active_processes *ap, char *call, char *s)
 static char *
 help_disp(void)
 {
-	output[0] = 0;
-	strcat(output, "<call>  ....................  show user entry\n");
-	strcat(output, "CALL  ......................  show last current call\n");
-	strcat(output, "[call] ADDRESS  ............  show home bbs and hloc\n");
-	strcat(output, "[call] SHOW  ...............  show home bbs and hloc\n");
-	strcat(output, "[call] SEEN [time_t]  ......  set user last seen date\n");
-	strcat(output, "[call] CHANGED  ............  full dump of user\n");
-	strcat(output, "[call] FNAME  ..............  user's first name\n");
-	strcat(output, "[call] ZIP  ................  user's zip code\n");
-	strcat(output, "[call] QTH  ................  user's city, state\n");
-	strcat(output, "[call] HOME  ...............  user's home bbs\n");
-	strcat(output, "[call] HLOC  ...............  user's home bbs's hloc\n");
-	strcat(output, "[call] UPDATE  .............  flag user as updated\n");
-	strcat(output, "    if [call] is omitted the last call will be used\n");
-	strcat(output, "\n");
+	strlcpy(output,
+		"<call>  ....................  show user entry\n"
+		"CALL  ......................  show last current call\n"
+		"[call] ADDRESS  ............  show home bbs and hloc\n"
+		"[call] SHOW  ...............  show home bbs and hloc\n"
+		"[call] SEEN [time_t]  ......  set user last seen date\n"
+		"[call] CHANGED  ............  full dump of user\n"
+		"[call] FNAME  ..............  user's first name\n"
+		"[call] ZIP  ................  user's zip code\n"
+		"[call] QTH  ................  user's city, state\n"
+		"[call] HOME  ...............  user's home bbs\n"
+		"[call] HLOC  ...............  user's home bbs's hloc\n"
+		"[call] UPDATE  .............  flag user as updated\n"
+		"    if [call] is omitted the last call will be used\n"
+		"\n"
+		"AGE ........................  run outgoing update cycle\n"
+		"CREATE <call>  .............  create user\n"
+		"KILL <call>  ...............  remove user\n"
+		"BBS CREATE <call>  .........  create bbs entry\n"
+		"STAT  ......................  show wp stats\n"
+		"WRITE  .....................  write wp databases to disk\n"
+		"UPLOAD <wp entry>  .........  feed wp update\n"
+		"\n"
+		"Editing\n"
+		"  <call> <level> <field> <value>\n"
+		"\n"
+		"     level = GUESS  (lowest level)\n"
+		"             USER   (trusted, assumed good)\n"
+		"             SYSOP  (highest, cannot be chgd by bbs)\n"
+		"\n"
+		"     field = FNAME  (first name)\n"
+		"             QTH    (city, st)\n"
+		"             ZIP    (zip code)\n"
+		"             HOME   (homebbs)\n"
+		"             HLOC   (bbs hloc, only valid for bbss)\n"
+		"\n"
+		"SEARCH <field> <regexp>\n"
+		"\n"
+		"     XXX - This is not yet implemented!\n"
+		"     field = CALL   (user call)\n"
+		"             FNAME  (first name)\n"
+		"             QTH    (city, st)\n"
+		"             ZIP    (zip code)\n"
+		"             HOME   (homebbs)\n"
+		"\n"
+		"BBS SEARCH <field> <regexp>\n"
+		"\n"
+		"     XXX - This is not yet implemented!\n"
+		"     field = CALL   (bbs call)\n"
+		"             HLOC   (bbs hloc)\n\n"
+		"DEBUG TIME <time_t>  .......  set clock to fixed time\n"
+		"                              (set to 0 to resume)\n"
+		"DEBUG REFRESH <days>  ......  set refresh\n"
+		"DEBUG AGE <months>  ........  set aging\n"
+		"DEBUG REHASH  ..............  reread databases\n"
+		"DEBUG USERFILE <file> ......  spec new user databases\n"
+		"DEBUG BBSFILE <file> .......  spec new bbs databases\n"
+		"DEBUG LOG [ON|OFF|CLR]  ....  logging options\n"
+		".\n", sizeof(output));
 
-	strcat(output, "CREATE <call>  .............  create user\n");
-	strcat(output, "KILL <call>  ...............  remove user\n");
-	strcat(output, "BBS CREATE <call>  .........  create bbs entry\n");
-	strcat(output, "STAT  ......................  show wp stats\n");
-	strcat(output, "WRITE  .....................  write wp databases to disk\n");
-	strcat(output, "UPLOAD <wp entry>  .........  feed wp update\n");
-	strcat(output, "\n");
-
-	strcat(output, "Editing\n");
-	strcat(output, "  <call> <level> <field> <value>\n");
-	strcat(output, "\n");
-	strcat(output, "     level = GUESS  (lowest level)\n");
-	strcat(output, "             USER   (trusted, assumed good)\n");
-	strcat(output, "             SYSOP  (highest, cannot be chgd by bbs)\n");
-	strcat(output, "\n");
-	strcat(output, "     field = FNAME  (first name)\n");
-	strcat(output, "             QTH    (city, st)\n");
-	strcat(output, "             ZIP    (zip code)\n");
-	strcat(output, "             HOME   (homebbs)\n");
-	strcat(output, "             HLOC   (bbs hloc, only valid for bbss)\n");
-	strcat(output, "\n");
-
-	strcat(output, "SEARCH <field> <regexp>\n");
-	strcat(output, "\n");
-	strcat(output, "     field = CALL   (user call)\n");
-	strcat(output, "             FNAME  (first name)\n");
-	strcat(output, "             QTH    (city, st)\n");
-	strcat(output, "             ZIP    (zip code)\n");
-	strcat(output, "             HOME   (homebbs)\n");
-	strcat(output, "\n");
-	strcat(output, "BBS SEARCH <field> <regexp>\n");
-	strcat(output, "\n");
-	strcat(output, "     field = CALL   (bbs call)\n");
-	strcat(output, "             HLOC   (bbs hloc)\n\n");
-	strcat(output, "DEBUG TIME <time_t>  .......  set clock to fixed time\n");
-	strcat(output, "DEBUG REFRESH <days>  ......  set refresh\n");
-	strcat(output, "DEBUG AGE <months>  ........  set aging\n");
-	strcat(output, "DEBUG REHASH  ..............  reread databases\n");
-	strcat(output, "DEBUG USERFILE <file> ......  spec new user databases\n");
-	strcat(output, "DEBUG BBSFILE <file> .......  spec new bbs databases\n");
-	strcat(output, "DEBUG LOG [ON|OFF|CLR]  ....  logging options\n");
-	strcat(output, ".\n");
 	return output;
 }
 
@@ -182,8 +186,9 @@ char *
 set_parameters(char *s)
 {
 	char opt[40];
+	char *newval;
 	
-	strncpy(opt, get_string(&s), 39);
+	strlcpy(opt, get_string(&s), sizeof(opt));
 	uppercase(opt);
 
 	if(!strcmp(opt, "REFRESH")) {
@@ -200,22 +205,36 @@ set_parameters(char *s)
 	}
 	if(!strcmp(opt, "USERFILE")) {
 		char *val = get_string(&s);
-		Wpd_User_File = (char *)malloc(strlen(val)+1);
-		strcpy(Wpd_User_File, val);
-		sprintf(output, "OK, USERFILE = %s\n", Wpd_User_File);
+		if (val == NULL)
+			return Error("Nothing provided");
+		newval = strdup(val);
+		if (newval == NULL)
+			return Error("Out of memory");
+		if (Wpd_User_File != NULL)
+			free(Wpd_User_File);
+		Wpd_User_File = newval;
+		snprintf(output, sizeof(output),
+			"OK, USERFILE = %s\n", Wpd_User_File);
 		return output;
 	}
 	if(!strcmp(opt, "BBSFILE")) {
 		char *val = get_string(&s);
-		Wpd_Bbs_File = (char *)malloc(strlen(val)+1);
-		strcpy(Wpd_Bbs_File, val);
-		sprintf(output, "OK, BBSFILE = %s\n", Wpd_Bbs_File);
+		if (val == NULL)
+			return Error("Nothing provided");
+		newval = strdup(val);
+		if (newval == NULL)
+			return Error("Out of memory");
+		if (Wpd_Bbs_File != NULL)
+			free(Wpd_Bbs_File);
+		Wpd_Bbs_File = newval;
+		snprintf(output, sizeof(output),
+			"OK, BBSFILE = %s\n", Wpd_Bbs_File);
 		return output;
 	}
 
 	if(!strcmp(opt, "LOG")) {
 		if(*s && *s != 0) {
-			strcpy(opt, get_string(&s));
+			strlcpy(opt, get_string(&s), sizeof(opt));
 			uppercase(opt);
 			if(!strcmp(opt, "ON"))
 				Logging = logON;
@@ -232,7 +251,7 @@ set_parameters(char *s)
 		case logONnCLR:
 			return Ok("logging is on with clearing enabled");
 		}
-		return Ok("unknown logging status");
+		return Error("unknown logging status");
 	}
 
 	if(!strcmp(opt, "TIME")) {
@@ -249,7 +268,7 @@ parse(struct active_processes *ap, char *s)
 	char buf[80];
 
 	struct WpdCommands *wc = WpdCmds;
-	strncpy(buf, get_string(&s), 79);
+	strlcpy(buf, get_string(&s), sizeof(buf));
 	uppercase(buf);
 
 	if(buf[0] == '?')
