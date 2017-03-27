@@ -281,7 +281,7 @@ parse(struct active_processes *ap, char *s)
 		return set_parameters(s);
 
 	if(!strcmp(buf, "AGE")) {
-		generate_wp_update(NULL);
+		generate_wp_update(ap);
 		return "OK\n";
 	}
 

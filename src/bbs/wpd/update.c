@@ -78,17 +78,15 @@ generate_wp_update(struct active_processes *ap)
 		smtp_set_max_size(g_smtpmsg, Wpd_Update_Size);
 		if(ap != NULL)
 			disp_update(ap, g_smtpmsg);
-		else
-			if(fork() == 0) {
-				msg_generate(g_smtpmsg);
-				exit(0);
-			}
+		if(fork() == 0) {
+			msg_generate(g_smtpmsg);
+			exit(0);
+		}
 	}
 
 	smtp_free_message(g_smtpmsg);
 	free(g_smtpmsg);
 	unlink(gfn);
-
 
 	if(l_smtpmsg != NULL) {
 		if(lcnt) {
@@ -99,11 +97,10 @@ generate_wp_update(struct active_processes *ap)
 			smtp_set_max_size(l_smtpmsg, Wpd_Update_Size);
 			if(ap != NULL)
 				disp_update(ap, l_smtpmsg);
-			else
-				if(fork() == 0) {
-					msg_generate(l_smtpmsg);
-					exit(0);
-				}
+			if(fork() == 0) {
+				msg_generate(l_smtpmsg);
+				exit(0);
+			}
 		}
 
 		smtp_free_message(l_smtpmsg);
