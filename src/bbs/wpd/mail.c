@@ -26,7 +26,7 @@ wait_for_line(int fd, char *match)
 		case sockTIMEOUT:
 			return TRUE;
 		case sockOK:
-log_f("wpd", "r:", buf);
+			log_f("wpd", "r:", buf);
 			if(re_exec(buf))
 				return OK;
 		}
@@ -58,7 +58,7 @@ match(int fd, char *s)
 int
 msg_generate(struct smtp_message *msg)
 {
-	int to_bbs[2], to_gate[2];
+	int to_bbs[2], to_gate[2], res;
 	char buf[SMTP_BUF_SIZE];
 	struct text_line *line, *body;
 
@@ -73,6 +73,7 @@ msg_generate(struct smtp_message *msg)
 
 	if(fork() == 0) {
 		char cmd[256];
+
 		close(to_bbs[1]);
 		close(0);
 		dup(to_bbs[0]);
@@ -84,7 +85,7 @@ msg_generate(struct smtp_message *msg)
 		close(to_gate[1]);
 
 		sprintf(cmd, "%s/b_bbs", Bin_Dir);
-		execl(cmd, "b_bbs", "-U", "-v", "SMTP", "gatewy", 0);
+		execl(cmd, "b_bbs", "-c", "1", "-U", "-v", "SMTP", "gatewy", 0);
 		exit(1);
 	}
 
@@ -95,22 +96,24 @@ msg_generate(struct smtp_message *msg)
 	while(body) {
 		int csize;
 
-log_f("wpd", "M:", "waiting on prompt >");
-    	if(wait_for_line(to_gate[0], ".*>$") != OK) {
+		log_f("wpd", "M:", "waiting on prompt >");
+    		if(wait_for_line(to_gate[0], ".*>$") != OK) {
 			printf("expected >\n");
-			return ERROR;
+			res = ERROR;
+			goto Failure;
 		}
 
 		sprintf(buf, "SP %s < %s\n", msg->rcpt->s, msg->from->s);
-log_f("wpd", "M:", buf);
+		log_f("wpd", "M:", buf);
 		write(to_bbs[1], buf, strlen(buf));
 
 		if(match(to_gate[0], "OK") == ERROR) {
 			printf("expected OK\n");
-			return ERROR;
+			res = ERROR;
+			goto Failure;
 		}
 
-			/* would wait for the OK here */
+		/* would wait for the OK here */
 
 		if(msg->sub[0] == 0)
 			sprintf(buf, "[no subject]\n");
@@ -151,11 +154,21 @@ log_f("wpd", "M:", buf);
 		}
 		write(to_bbs[1], "/EX\n", 4);
 	}
+
+    	if(wait_for_line(to_gate[0], ".*>$") != OK) {
+		printf("expected >\n");
+		res = ERROR;
+		goto Failure;
+	}
+
+	res = OK;
+
+Failure:
 	write(to_bbs[1], "EXIT\n", 5);
 	close(to_gate[0]);
 	close(to_bbs[1]);
 	wait3(NULL, WNOHANG, NULL);
-	return OK;
+	return res;
 }
 
 int
