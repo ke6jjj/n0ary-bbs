@@ -196,8 +196,8 @@ main(int argc, char *argv[])
 	int bbsd_sock;
 	struct timeval t;
 	struct active_processes *ap;
-	time_t flush_time = Time(NULL) + Wpd_Flush;
-	time_t wp_update_time = calc_wp_time(0);
+	time_t flush_time;
+	time_t wp_update_time;
 	parse_options(argc, argv, ConfigList, "WPD - White Pages Daemon");
 
 	if(dbug_level & dbgTESTHOST)
@@ -210,6 +210,9 @@ main(int argc, char *argv[])
 	error_clear();
 	bbsd_get_configuration(ConfigList);
 	bbsd_sock = bbsd_socket();
+
+	flush_time = Time(NULL) + Wpd_Flush;
+	wp_update_time = calc_wp_time(0);
 
 	startup();
 
