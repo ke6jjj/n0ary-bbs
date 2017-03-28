@@ -10,7 +10,7 @@
 ;  . string		HLOC component
 ;  @ string		AT field
 ;  $ string		BID
-;  & string		Subject field
+;  & string		Subject field (uppercased)
 ;  + int		if older than x days
 ;  - int		if younger than x days
 ;  | char		message flags
