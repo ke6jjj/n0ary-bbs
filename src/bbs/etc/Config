@@ -466,7 +466,7 @@ USERD_AGE_SUSPECT	1 week
 ; I think W0RLI requires this exact subject line on WP updates. Also
 ; how often and how big the updates can be. Update larger than 
 ; WPD_UPDATE_SIZE will be broken into smaller pieces. The WPD_HOUR
-; variable defines when the update is run.
+; variable defines when the update is run, in the local time zone.
 
 WPD_UPDATE_SUBJECT	WP Update
 WPD_UPDATE		1 day
