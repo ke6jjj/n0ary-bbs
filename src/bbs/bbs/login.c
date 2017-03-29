@@ -36,6 +36,10 @@ logout_user(void)
 	int min, sec;
 	int result = ERROR;
 
+	if (login_time == 0)
+		/* No user ever logged in*/
+		return OK;
+
 	logout_time = Time(NULL);
 	sec = logout_time - login_time;
 	min = sec/60;
