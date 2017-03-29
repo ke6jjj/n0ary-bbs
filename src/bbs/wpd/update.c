@@ -66,9 +66,9 @@ generate_wp_update(struct active_processes *ap)
 		smtp_set_subject(g_smtpmsg, Wpd_Update_Subject);
 		smtp_set_max_size(g_smtpmsg, Wpd_Update_Size);
 		if(ap != NULL)
-			disp_update(ap, g_smtpmsg);
+			disp_update(ap, g_smtpmsg, Wpd_Global_Type);
 		if(fork() == 0) {
-			msg_generate(g_smtpmsg, sendBULLETIN);
+			msg_generate(g_smtpmsg, Wpd_Global_Type);
 			exit(0);
 		}
 		smtp_free_message(g_smtpmsg);
@@ -89,9 +89,9 @@ generate_wp_update(struct active_processes *ap)
 		smtp_set_subject(l_smtpmsg, Wpd_Update_Subject);
 		smtp_set_max_size(l_smtpmsg, Wpd_Update_Size);
 		if(ap != NULL)
-			disp_update(ap, l_smtpmsg);
+			disp_update(ap, l_smtpmsg, Wpd_Local_Type);
 		if(fork() == 0) {
-			msg_generate(l_smtpmsg, sendPRIVATE);
+			msg_generate(l_smtpmsg, Wpd_Local_Type);
 			exit(0);
 		}
 		smtp_free_message(l_smtpmsg);

@@ -34,7 +34,9 @@ time_t
 int
 	Wpd_Hour,
 	Wpd_Update_Size,
-	Wpd_Port;
+	Wpd_Port,
+	Wpd_Global_Type,
+	Wpd_Local_Type;
 
 char
 	*Bbs_Call,
@@ -42,7 +44,9 @@ char
 	*Wpd_Bind_Addr = NULL,
 	*Wpd_Update_Subject,
 	*Wpd_Global_Server,
+	*Wpd_Global_Type_Str,
 	*Wpd_Local_Distrib,
+	*Wpd_Local_Type_Str,
 	*Wpd_User_File,
 	*Wpd_Bbs_File,
 	*Wpd_Dump_File;
@@ -56,8 +60,10 @@ struct ConfigurationList ConfigList[] = {
 	{ "",					tCOMMENT,	NULL },
 	{ "WPD_PORT",			tINT,		(int*)&Wpd_Port },
 	{ "WPD_GLOBAL_SERVER",	tSTRING,	(int*)&Wpd_Global_Server },
+	{ "WPD_GLOBAL_TYPE",	tSTRING,	(int*)&Wpd_Global_Type_Str },
 	{ "WPD_BIND_ADDR",	tSTRING,	(int*)&Wpd_Bind_Addr },
 	{ "WPD_LOCAL_DISTRIB",	tSTRING,	(int*)&Wpd_Local_Distrib },
+	{ "WPD_LOCAL_TYPE",	tSTRING,	(int*)&Wpd_Local_Type_Str },
 	{ "WPD_UPDATE_SUBJECT",	tSTRING,	(int*)&Wpd_Update_Subject },
 	{ "WPD_USER_FILE",		tFILE,		(int*)&Wpd_User_File },
 	{ "WPD_BBS_FILE",		tFILE,		(int*)&Wpd_Bbs_File },
@@ -70,6 +76,9 @@ struct ConfigurationList ConfigList[] = {
 	{ "WPD_UPDATE_SIZE",	tINT,		(int*)&Wpd_Update_Size },
 	{ "WPD_HOUR",			tINT,		(int*)&Wpd_Hour },
 	{ NULL, 0, NULL}};
+
+static int get_message_type(const char *varname, const char *str, int def);
+static void log_wpd(char *str);
 
 int
 service_port(struct active_processes *ap)
@@ -203,13 +212,19 @@ main(int argc, char *argv[])
 	if(dbug_level & dbgTESTHOST)
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
-		daemon(1, 1);
+		daemon(0, 0);
 
 	if(bbsd_open(Bbs_Host, Bbsd_Port, "wpd", "DAEMON") == ERROR)
 		error_print_exit(0);
 	error_clear();
 	bbsd_get_configuration(ConfigList);
 	bbsd_sock = bbsd_socket();
+
+	Wpd_Global_Type = get_message_type("WPD_GLOBAL_TYPE",
+		Wpd_Global_Type_Str, sendPRIVATE);
+	Wpd_Local_Type = get_message_type("WPD_LOCAL_TYPE",
+		Wpd_Local_Type_Str, sendPRIVATE);
+	error_report(log_wpd, TRUE);
 
 	flush_time = Time(NULL) + Wpd_Flush;
 	wp_update_time = calc_wp_time(0);
@@ -346,4 +361,31 @@ Time(time_t *t)
 	if(t != NULL)
 		*t = now;
 	return now;
+}
+
+static void
+log_wpd(char *str)
+{
+	log_f("wpd", "%s", str);
+}
+
+static int
+get_message_type(const char *varname, const char *str, int def)
+{
+	if (str == NULL)
+		return def;
+
+	switch (str[0]) {
+	case 'p':
+	case 'P':
+		return sendPRIVATE;
+	case 'b':
+	case 'B':
+		return sendBULLETIN;
+	default:
+		error_log("%s: invalid message type '%c'.\n", varname, str[0]);
+		break;
+	}
+
+	return def;
 }

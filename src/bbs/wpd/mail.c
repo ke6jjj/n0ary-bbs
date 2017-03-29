@@ -174,7 +174,7 @@ Failure:
 }
 
 int
-disp_update(struct active_processes *ap, struct smtp_message *msg)
+disp_update(struct active_processes *ap, struct smtp_message *msg, int type)
 {
 	char buf[SMTP_BUF_SIZE];
 	struct text_line *line, *body;
@@ -186,7 +186,8 @@ disp_update(struct active_processes *ap, struct smtp_message *msg)
 	while(body) {
 		int csize;
 
-		sprintf(buf, "SP %s < %s\n", msg->rcpt->s, msg->from->s);
+		sprintf(buf, "S%c %s < %s\n", type == sendPRIVATE ? 'P' : 'B',
+			msg->rcpt->s, msg->from->s);
 		socket_raw_write(ap->fd, buf);
 		
 		if(msg->sub[0] == 0)

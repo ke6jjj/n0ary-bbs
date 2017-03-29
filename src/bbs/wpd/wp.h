@@ -26,14 +26,18 @@ extern int
 	dbug_level,
 	Wpd_Update_Size,
 	Wpd_Hour,
-	Wpd_Port;
+	Wpd_Port,
+	Wpd_Global_Type,
+	Wpd_Local_Type;
 
 extern char
 	*Bbs_Call,
 	*Bbs_Host,
 	*Bin_Dir,
 	*Wpd_Global_Server,
+	*Wpd_Global_Type_Str,
 	*Wpd_Local_Distrib,
+	*Wpd_Local_Type_Str,
 	*Wpd_Update_Subject,
 	*Wpd_Dump_File,
 	*Wpd_User_File,
@@ -116,7 +120,8 @@ int
 	iscall(char *call),
 	generate_wp_update(struct active_processes *ap),
 	msg_generate(struct smtp_message *msg, int type),
-	disp_update(struct active_processes *ap, struct smtp_message *msg),
+	disp_update(struct active_processes *ap, struct smtp_message *msg,
+		int type),
 	read_new_user_file(char *filename),
 	read_user_file(char *filename, int depth),
 	read_new_bbs_file(char *filename),

@@ -270,8 +270,13 @@ PHONE	PHONE1	/dev/ttyr1	bbshost	ATE1V1 OK
 PHONE	PHONE2	/dev/ttyr2	bbshost	ATE1V1 OK
 
 ; This is the WP stuff. Where do you want your updates sent
+WPD_GLOBAL_SERVER	WP@WW
 
-WPD_GLOBAL_SERVER	WP@N6IYA.#NOCAL.CA.USA.NA
+; The message type to use when sending the global update. One of
+;  P - Private
+;  B - Bulletin
+; If not specified, the message will be sent as Private.
+WPD_GLOBAL_TYPE		B
 
 ; This is for something we use in northern CA. You have probably
 ; noticed that WP is a write only database, you send updates in
@@ -281,8 +286,11 @@ WPD_GLOBAL_SERVER	WP@N6IYA.#NOCAL.CA.USA.NA
 ; guesses and assumptions that show up in the normal updates.
 ; Comment this line out if you don't want to support this 
 ; feature.
-
 WPD_LOCAL_DISTRIB	WP@NCWP
+
+; Like WPD_GLOBAL_TYPE, this is the message type to use when sending
+; the local update. If not specified, the default, Private, will be used.
+WPD_LOCAL_TYPE		B
 
 ;===============================================================
 ; That should do it. If you don't change anything else in this
