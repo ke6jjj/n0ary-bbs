@@ -23,35 +23,34 @@ static void
 	welcome_new_user(void),
 	welcome_old_user(void);
 
-time_t login_time;
-time_t logout_time;
 char *login_method;
 long login_method_num;
 
 int
 logout_user(void)
 {
-	char buf[256];
+	char buf[256], addr[256];
 	int fd;
 	int min, sec;
 	int result = ERROR;
+	time_t stop_time;
 
-	if (login_time == 0)
-		/* No user ever logged in*/
-		return OK;
-
-	logout_time = Time(NULL);
-	sec = logout_time - login_time;
+	stop_time = Time(NULL);
+	sec = stop_time - start_time;
 	min = sec/60;
 	sec %= 60;
 
-	sprintf(buf, "%"PRTMd" %"PRTMd" %s %ld\t; %s for %d:%02d on %s",
-		login_time, logout_time,
+	print_remote_addr(&RemoteAddr, addr, sizeof(addr));
+
+	snprintf(buf, sizeof(buf),
+		"%"PRTMd" %"PRTMd" %s %ld\t; %s for %d:%02d from %s on %s",
+		start_time, stop_time,
 		Via,
 		user_get_value(uNUMBER),
 		usercall,
 		min, sec,
-		ctime(&login_time));
+		addr,
+		ctime(&start_time));
 
 	if((fd = open(Bbs_History_File, O_WRONLY|O_APPEND|O_CREAT, 0666)) > 0) {
 
@@ -159,7 +158,6 @@ login_user(void)
 
 	wp_seen(usercall);
 	user_login(Via);
-	login_time = Time(NULL);
 
 	if(port_type(Via) == tPHONE && ImHalfDuplex)
 		if(echo_off() == ERROR)

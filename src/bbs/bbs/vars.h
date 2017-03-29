@@ -57,7 +57,8 @@ extern int
         escape_tnc_commands;
 
 extern time_t
-	inactivity_time;
+	inactivity_time,
+	start_time;
 
 extern long
 	Bbs_Timer_Tnc,
@@ -67,3 +68,5 @@ extern long
 extern struct ConfigurationList ConfigList[];
 
 extern FILE *logfile;
+
+extern struct RemoteAddr RemoteAddr;

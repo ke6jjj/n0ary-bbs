@@ -71,7 +71,8 @@ struct RemoteAddr RemoteAddr;
 
 time_t
 	inactivity_time = 0,
-	time_now = 0;
+	time_now = 0,
+	start_time = 0;
 
 int 
 	batch_mode = FALSE,
@@ -381,6 +382,7 @@ read_options(int argc, char **argv)
 
 	time_now = bbsd_get_time();
 	bbsd_sock = bbsd_socket();
+	start_time = Time(NULL);
 
 	initialize_help_message();
 	history_init(40);
