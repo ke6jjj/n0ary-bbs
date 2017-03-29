@@ -131,7 +131,8 @@ msg_body_kill(int num)
 	char fn[PATH_MAX], nfn[PATH_MAX];
 	snprintf(fn, sizeof(fn), "%s/%05d", Msgd_Body_Path, num);
 	if (Msgd_Archive_Path != NULL) {
-		snprintf(nfn, sizeof(nfn), "%s/%05d", Msgd_Archive_Path, num);
+		snprintf(nfn, sizeof(nfn), "%s/%05d.%"PRTMd, Msgd_Archive_Path,
+			num, time(NULL));
 		rename(fn, nfn);
 	} else {
 		unlink(fn);
