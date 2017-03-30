@@ -299,7 +299,7 @@ monitor_command(struct Monitor_Session *mp, char *buf)
 static void
 monitor_dump(struct Monitor_Session *mp)
 {
-	struct mboxsess *mpb = base;
+	struct mboxsess *mpb;
 	struct Monitor_Session *mpp = mp;
 
 	monitor_printf(&mpp,
@@ -316,7 +316,7 @@ monitor_dump(struct Monitor_Session *mp)
 	if (mpp == NULL)
 		return;
 
-	while(mpb != NULLMBS) {
+	LIST_FOREACH(mpb, &base, listEntry) {
 		char *state;
 
 		if (mpp == NULL)
@@ -342,8 +342,6 @@ monitor_dump(struct Monitor_Session *mp)
 			mpb->axbbscb->vs, mpb->axbbscb->vr,
 			mpb->axbbscb->unack, mpb->axbbscb->retries,
 			state);
-
-		NEXT(mpb);
 	}
 }
 

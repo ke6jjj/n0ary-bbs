@@ -1,3 +1,4 @@
+#include <sys/queue.h>
 #include "alib.h"
 
 /* see comment at the head of ax_mbx.c - Bdale */
@@ -30,7 +31,7 @@ struct mboxsess{			/*mailbox session structure*/
 	char cmd_state;
 	char networkfull;
 	char nagle_gate_down; /* whether to wait before sending small packet */
-	struct mboxsess *next;	/*pointer to next session*/
+	LIST_ENTRY(mboxsess) listEntry;
 };
 
 #define MBOX_NAGLE_GATE_SIZE 50   /* characters to queue before sending */
@@ -39,9 +40,9 @@ struct mboxsess{			/*mailbox session structure*/
 #define NULLMBS  (struct mboxsess *)0
 #define NULLFWD  (struct ax25_cb *)0
 
-extern struct mboxsess
-	*base;
+LIST_HEAD(mboxlist, mboxsess);
+
+extern struct mboxlist base;
 
 int ax_control_init(char *c_bindaddr, int c_port);
-
 void mbx_state(struct ax25_cb *axp, int old, int new);

@@ -58,7 +58,7 @@ static int
 static struct mboxsess
 	*newmbox(void);
 
-struct mboxsess *base = NULLMBS;  /*pointer to base of mailbox chain*/
+struct mboxlist base;  /*pointer to base of mailbox chain*/
 static struct mboxsess *newmbox();
 
 int control = 0;
@@ -186,36 +186,14 @@ static struct mboxsess *
 newmbox(void)
 {
 	struct mboxsess *mbp ;
-#ifdef DEBUG1
-	int cnt = 2;
-	char buf[80];
-#endif
 
-	if(base == NULLMBS){
-		base = (struct mboxsess *)malloc(sizeof(struct mboxsess));
-		base->next = NULLMBS;
-		initmbox(base);
-#ifdef DEBUG1
-		bbsd_msg("usrcnt=1");
-#endif
-		return base;
-	} else{
-		mbp = base;
-		while(mbp->next != NULLMBS) {	   /*go up the chain to the top*/
-			mbp = mbp->next;
-#ifdef DEBUG1
-			cnt++;
-#endif
-		}
-		mbp->next = (struct mboxsess *)malloc(sizeof(struct mboxsess));
-		mbp->next->next = NULLMBS;
-		initmbox(mbp->next);
-#ifdef DEBUG1
-		sprintf(buf, "usrcnt=%d", cnt);
-		bbsd_msg(buf);
-#endif
-		return mbp->next;
-	}
+	mbp = (struct mboxsess *)malloc(sizeof(struct mboxsess));
+
+	initmbox(mbp);
+
+	LIST_INSERT_HEAD(&base, mbp, listEntry);
+
+	return mbp;
 }
 
 static void
@@ -240,44 +218,10 @@ initmbox(struct mboxsess *mbp)
 static void
 freembox(struct mboxsess *mbp)
 {
-	struct mboxsess *p;
-#ifdef DEBUG1
-	int cnt = 0;
-	char buf[80];
-#endif
-	
-	if(mbp == base){					/*special case for base session*/
-		base = base->next;				/*make base point to next session*/
-		free(mbp);						/*free up the storage*/
-	} else {
-
-		if(mbp->orig)
-			free(mbp->orig);
-
-		p = base;
-		for(;;){
-			if(p->next == mbp) {		/*if next upward session is THE one*/
-				p->next = mbp->next;	/*eliminate the next upward session*/
-				free(mbp);
-				break;
-			}
-			if(p->next == NULLMBS) {	/*something is wrong here!*/
-				free(mbp);				/*try to fix it*/
-				break;
-			}
-			p = p->next;
-		}
-	}
-
-#ifdef DEBUG1
-	p = base;
-	while(p != NULLMBS) {	   /*go up the chain to the top*/
-		NEXT(p);
-		cnt++;
-	}
-	sprintf(buf, "usrcnt=%d", cnt);
-	bbsd_msg(buf);
-#endif
+	LIST_REMOVE(mbp, listEntry);
+	if(mbp->orig)
+		free(mbp->orig);
+	free(mbp);
 }
 
 static void
