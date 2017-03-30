@@ -37,7 +37,7 @@ static void mbx_notify_sendable(struct mboxsess *mbp, size_t amount, int q);
 static void mbx_sendable_changed(void *obj, void *arg0, int arg1);
 static void mbx_process_tx_queue(struct mboxsess *mbp);
 static void mbx_nagle_timer(void *obj, void *arg0, int arg1);
-static void mbx_bbs_connect(struct mboxsess *mbp);
+static void mbx_bbs_connect(struct ax25_cb *axp);
 
 static void
 	convrt2cr(char *data, int cnt),
@@ -599,6 +599,7 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 		if (mbp->al_fd_handle != NULL)
 			alEvent_deregister(mbp->al_fd_handle);
 		close(mbp->fd);
+		mbp->fd = ERROR;
 	}
 	if(mbp->socket != ERROR) {
 		if(dbug_level & dbgVERBOSE)
@@ -606,6 +607,7 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 		if (mbp->al_socket_handle != NULL)
 			alEvent_deregister(mbp->al_socket_handle);
 		close(mbp->socket);
+		mbp->socket = ERROR;
 	}
 
 	if(issue_disc) {
@@ -613,25 +615,19 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 			printf("Issue disconnect\n");
 		if(mbp->axbbscb != NULL)
 			disc_ax25(mbp->axbbscb);
+		mbp->axbbscb->user = NULL;
+		mbp->axbbscb = NULL;
 	}
 	if(mbp->nagle_timer_id != -1)
 		alEvent_cancelTimer(mbp->nagle_timer_id);
 
+	if(mbp->spawned)
+		/* We need to wait for the process to exit before
+		 * proceeding. We'll get a callback when that happens.
+		 */
+		return;
 
-	/* it should have died by now. Let's get it's completion
-	 * status.
-	 */
-
-	if(mbp->spawned) {
-		if (mbp->al_proc_handle != NULL)
-			alEvent_deregister(mbp->al_proc_handle);
-		waitpid(mbp->pid, NULL, WNOHANG);
-	}
-		
-#if 0
-	if(mbp->orig)
-		delete_call(mbp->orig);
-#endif
+	assert(mbp->al_proc_handle == NULL);
 
 	freembox(mbp);
 	if(dbug_level & dbgVERBOSE)
@@ -641,8 +637,6 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 void
 mbx_state(struct ax25_cb *axp, int old, int new)
 {
-	char call[10], port[10];
-	int j;
 	struct mboxsess *mbp;
 
 	if(dbug_level & dbgVERBOSE)
@@ -690,35 +684,8 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 			break;
 		}
 
-		if(dbug_level & dbgVERBOSE)
-			printf("mbx_state(isCONNECTED)\n");
-		mbp =newmbox();
+		mbx_bbs_connect(axp);
 
-		/*after this, this is a mailbox connection*/
-		/*so, make a new mailbox session*/
-
-		axp->r_upcall = mbx_rx ;
-		axp->t_upcall = mbx_tx ;
-
-		mbp->axbbscb=axp;
-		axp->user=mbp;
-		mbx_notify_sendable(mbp, 500, 1); /*jump start the upcall*/
-
-		for(j=0;j<6;j++){			   /*now, get incoming call letters*/
-			call[j]=axp->addr.dest.call[j];
-			call[j]=call[j] >> 1;
-			call[j]=call[j] & (char)0x7f;
-			if(call[j]==' ') call[j]='\0';
-		}
-		call[6]='\0';			/*terminate call letters*/
-		strcpy(mbp->call,call);   /*Copy call to session*/
-
-		if(mbp->pid == 0) {
-			mbx_bbs_connect(mbp);
-		} else {
-			char *buf = "CONNECTED\n";
-			write(mbp->fd, buf, strlen(buf));
-		}
 		break;
 	}
 }
@@ -729,12 +696,35 @@ mbx_state(struct ax25_cb *axp, int old, int new)
  */
 /*ARGSUSED*/
 void
-mbx_bbs_connect(struct mboxsess *mbp)
+mbx_bbs_connect(struct ax25_cb *axp)
 {
-	int pid;
+	int pid, j;
 	char addr[256];
 	char call[10], port[10];
 	alCallback cb;
+	struct mboxsess *mbp;
+
+	if(dbug_level & dbgVERBOSE)
+		printf("mbx_bbs_connect()\n");
+
+	mbp = newmbox();
+	mbp->axbbscb = axp;
+
+	axp->user = mbp;
+	axp->r_upcall = mbx_rx ;
+	axp->t_upcall = mbx_tx ;
+
+	mbx_notify_sendable(mbp, 500, 1); /*jump start the upcall*/
+
+	/*now, get incoming call letters*/
+	for(j=0;j<6;j++) {
+		call[j]=axp->addr.dest.call[j];
+		call[j]=call[j] >> 1;
+		call[j]=call[j] & (char)0x7f;
+		if(call[j]==' ') call[j]='\0';
+	}
+	call[6]='\0';	/*terminate call letters*/
+	strcpy(mbp->call,call);   /*Copy call to session*/
 
 	/* Create a socket for the BBS to connect to to receive all I/O */
 	mbp->port = 0;

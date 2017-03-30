@@ -117,7 +117,7 @@ chk_bbsd_callback(void *obj, void *arg0, int arg1)
 {
 	char c;
 
-	if(read(bbsd_sock, &c, 1) == ERROR)
+	if(read(bbsd_sock, &c, 1) != 1)
 		exit(1);
 }
 
