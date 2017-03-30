@@ -1,0 +1,64 @@
+Random notes on new design.
+
+To support XKISS in multi-drop mode we need to introduct an abstraction called
+an Interface. An interface handles all communications with a single serial
+port (or TCP/IP connection to a terminal server).
+
+Thereafter, a TNC can be bound to an interface. I'm imagining the BBS
+configuration would look something like:
+
+  AX0_MODE       kiss
+  AX0_DEVICE     /dev/cuaU0
+  AX0_BAUDRATE   9600
+  AX0_KNWDFIX    ON  ; Work around Kenwood KISS mode bug
+  TNC0_LABEL     50.60
+  TNC0_INTERFACE ax0
+  TNC0_T1        100ms
+  TNC0_T2        3s
+  TNC0_T3        5
+  TNC0_BBSCALL   KE6JJJ-1
+
+  AX1_MODE       kiss
+  AX1_DEVICE     /dev/cuaU1
+  AX1_BAUDRATE   9600
+  TNC1_LABEL     145.05
+  TNC1_INTERFACE ax1
+  TNC1_T1        100ms
+  TNC1_T2        3s
+  TNC1_T3        5
+  TNC1_BBSCALL   KE6JJJ-2
+
+or, under XKISS multi-drop
+
+  AX0_MODE        xkiss
+  AX0_DEVICE      /dev/cuaU0
+  AX0_BAUDRATE    9600
+  AX0_XK_CKSUM    ON
+  AX0_XK_POLL     ON
+  AX0_XK_POLLRATE 100ms
+
+  TNC0_LABEL      50.60
+  TNC0_DROP       0
+  TNC0_INTERFACE  ax0
+  TNC0_T1         100ms
+  TNC0_T2         3s
+  TNC0_T3         5
+  TNC0_BBSCALL   KE6JJJ-1
+
+  TNC1_LABEL      145.05
+  TNC1_DROP       1
+  TNC1_INTERFACE  ax0
+  TNC1_T1         100ms
+  TNC1_T2         3s
+  TNC1_T3         5
+  TNC1_BBSCALL   KE6JJJ-2
+
+or with AXUDP:
+
+  AX0_MODE       axudp
+  AX0_ADDRESS    127.0.0.1
+  AX0_PORT       87
+
+  TNC0_LABEL     AX0.UDP
+  TNC0_INTERFACE ax0
+  etc
