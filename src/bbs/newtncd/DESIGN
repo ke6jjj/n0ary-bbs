@@ -11,6 +11,8 @@ configuration would look something like:
   AX0_DEVICE     /dev/cuaU0
   AX0_BAUDRATE   9600
   AX0_KNWDFIX    ON  ; Work around Kenwood KISS mode bug
+  AX0_PERSIST    xxx
+  AX0_TXDELAY    xxx
   TNC0_LABEL     50.60
   TNC0_INTERFACE ax0
   TNC0_T1        100ms
@@ -33,6 +35,8 @@ or, under XKISS multi-drop
   AX0_MODE        xkiss
   AX0_DEVICE      /dev/cuaU0
   AX0_BAUDRATE    9600
+  AX0_PERSIST     xxx
+  AX0_TXDELAY     xxx
   AX0_XK_CKSUM    ON
   AX0_XK_POLL     ON
   AX0_XK_POLLRATE 100ms
@@ -43,7 +47,7 @@ or, under XKISS multi-drop
   TNC0_T1         100ms
   TNC0_T2         3s
   TNC0_T3         5
-  TNC0_BBSCALL   KE6JJJ-1
+  TNC0_BBSCALL    KE6JJJ-1
 
   TNC1_LABEL      145.05
   TNC1_DROP       1
@@ -51,7 +55,7 @@ or, under XKISS multi-drop
   TNC1_T1         100ms
   TNC1_T2         3s
   TNC1_T3         5
-  TNC1_BBSCALL   KE6JJJ-2
+  TNC1_BBSCALL    KE6JJJ-2
 
 or with AXUDP:
 
