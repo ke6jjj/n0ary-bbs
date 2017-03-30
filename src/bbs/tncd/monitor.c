@@ -310,7 +310,7 @@ monitor_dump(struct Monitor_Session *mp)
 		"t1/2/3 = %d %d %d\n",
 		Tncd_T1init, Tncd_T2init, Tncd_T3init);
 	monitor_printf(&mpp,
-		"maxframe = %d\npaclen = %d\n2 = %d\nflags = %d",
+		"maxframe = %d\npaclen = %d\n2 = %d\nflags = %d\n",
 		Tncd_Maxframe, Tncd_Paclen, Tncd_N2, Tncd_SLIP_Flags);
 
 	if (mpp == NULL)
