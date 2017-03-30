@@ -37,6 +37,7 @@ static void mbx_notify_sendable(struct mboxsess *mbp, size_t amount, int q);
 static void mbx_sendable_changed(void *obj, void *arg0, int arg1);
 static void mbx_process_tx_queue(struct mboxsess *mbp);
 static void mbx_nagle_timer(void *obj, void *arg0, int arg1);
+static void mbx_bbs_connect(struct mboxsess *mbp);
 
 static void
 	convrt2cr(char *data, int cnt),
@@ -58,7 +59,6 @@ static struct mboxsess
 	*newmbox(void);
 
 struct mboxsess *base = NULLMBS;  /*pointer to base of mailbox chain*/
-struct mboxsess fwdstruct;	/*forwarding session*/
 static struct mboxsess *newmbox();
 
 int control = 0;
@@ -179,18 +179,6 @@ mbx_accept(void *obj, void *arg0, int arg1)
 		fprintf(stderr, "mbx network i/o register problem\n");
 		exit(1);
 	}
-
-	/*
-	 * We can also stop listening for child exit events. We'll
-	 * receive such notifications as closures on the control
-	 * socket.
-	 */
-	res = alEvent_deregister(mbp->al_proc_handle);
-	if (res != 0) {
-		fprintf(stderr, "mbx remove proc callback problem\n");
-		exit(1);
-	}
-	mbp->al_proc_handle = NULL;
 }
 
 
@@ -367,13 +355,9 @@ command(struct mboxsess *mbp)
 			while(*p != '>') *q++ = *p++;
 			*q = 0;
 			mbp->orig = (struct ax25_addr *)malloc(sizeof(struct ax25_addr));
-#if 1
 			setcall(&addr.source, call);
 			setcall(mbp->orig, call);
-#else
-			setcall(&addr.source, Bbs_My_Call);
-			setcall(mbp->orig, Bbs_My_Call);
-#endif
+
 			p++;
 
 			q = call;
@@ -394,7 +378,8 @@ command(struct mboxsess *mbp)
 				return ERROR;
 
 			mbp->axbbscb =
-				open_ax25(&addr,axwindow,mbx_rx,mbx_tx,mbx_state,0,(char *)0);
+				open_ax25(&addr,axwindow,mbx_rx,mbx_tx,
+					mbx_state,0,mbp);
 		}
 	}
 	mbp->cmd_cnt = 0;
@@ -637,8 +622,11 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 	 * status.
 	 */
 
-	if(mbp->spawned)
+	if(mbp->spawned) {
+		if (mbp->al_proc_handle != NULL)
+			alEvent_deregister(mbp->al_proc_handle);
 		waitpid(mbp->pid, NULL, WNOHANG);
+	}
 		
 #if 0
 	if(mbp->orig)
@@ -654,9 +642,8 @@ void
 mbx_state(struct ax25_cb *axp, int old, int new)
 {
 	char call[10], port[10];
-	int pid, j;
+	int j;
 	struct mboxsess *mbp;
-	alCallback cb;
 
 	if(dbug_level & dbgVERBOSE)
 		printf("mbx_state(%d, %d)\n", old, new);
@@ -666,21 +653,16 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 			printf("mbx_state(DISCONNECTED)\n");
 		if((old == DISCONNECTED) || (old == DISCPENDING))
 		   return;
-		if(base == NULLMBS)
+		mbp = (struct mboxsess *)axp->user;
+		if(mbp == NULLMBS)
 			break;
 		if(dbug_level & dbgVERBOSE)
 			printf("mbx_state(isDISCONNECTED)\n");
-		mbp = base;
-		while(mbp != NULLMBS){
-			if(axp == mbp->axbbscb){
-				if(dbug_level & dbgVERBOSE)
-					printf("mbx_state:Killing BBS, disconnect recv\n");
-				shutdown_process(mbp, FALSE);
-				break; /* from while loop */
-			}
-			mbp = mbp->next;
-		}
-		break;   /*end of DISCONNECTED case*/
+		assert(axp == mbp->axbbscb);
+		if(dbug_level & dbgVERBOSE)
+			printf("mbx_state:Killing BBS, disconnect recv\n");
+		shutdown_process(mbp, FALSE);
+		break;
 					
 	case CONNECTED:
 		switch(old) {
@@ -689,11 +671,9 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 			 * This code can only be reached by outbound
 			 * connections. Any inbound connections wouldn't
 			 * be in SETUP state. Can I place an assert to
-			 * double check?
+			 * double check? -JJJ
 			 */
-			mbp = base;
-			while(mbp != NULLMBS && axp != mbp->axbbscb)
-				mbp = mbp->next;
+			mbp = (struct mboxsess *)axp->user;
 			if(mbp == NULLMBS) {
 				if(dbug_level & dbgVERBOSE)
 					printf("couldn't find the process\n");
@@ -710,34 +690,22 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 			break;
 		}
 
-		/*
-		 * Is this code even ever called???
-		 */
-		FILE *ke6jjj = fopen("/tmp/n0ary_ax25_mystery.log", "a");
-		if (ke6jjj != NULL) {
-			time_t now;
-			time(&now);
-			fprintf(ke6jjj, "mystery code A called. %s\n", ctime(&now));
-			fclose(ke6jjj);
-		}
-
-		if(!calleq(axp,&bbscall)) { /*not for the mailbox*/
-			axp->s_upcall = NULL;
-			return;
-		}
-	
 		if(dbug_level & dbgVERBOSE)
 			printf("mbx_state(isCONNECTED)\n");
-		mbp =newmbox();		/*after this, this is a mailbox connection*/
-								/* so, make a new mailbox session*/
+		mbp =newmbox();
+
+		/*after this, this is a mailbox connection*/
+		/*so, make a new mailbox session*/
+
 		axp->r_upcall = mbx_rx ;
 		axp->t_upcall = mbx_tx ;
 
 		mbp->axbbscb=axp;
+		axp->user=mbp;
 		mbx_notify_sendable(mbp, 500, 1); /*jump start the upcall*/
 
 		for(j=0;j<6;j++){			   /*now, get incoming call letters*/
-			call[j]=mbp->axbbscb->addr.dest.call[j];
+			call[j]=axp->addr.dest.call[j];
 			call[j]=call[j] >> 1;
 			call[j]=call[j] & (char)0x7f;
 			if(call[j]==' ') call[j]='\0';
@@ -746,49 +714,7 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 		strcpy(mbp->call,call);   /*Copy call to session*/
 
 		if(mbp->pid == 0) {
-			mbp->port = 0;
-			mbp->socket = socket_listen(NULL, &(mbp->port));
-				
-			sprintf(port, "%d", mbp->port);
-
-			AL_CALLBACK(&cb, mbp, mbx_accept);
-			int res = alEvent_registerFd(mbp->socket, ALFD_READ,
-				cb, &mbp->al_socket_handle);
-			if (res != 0) {
-				fprintf(stderr, "bbs accept register error\n");
-				exit(1);
-			}
-
-			char addr[256];
-			snprintf(addr, sizeof(addr), "ax25:%s-%d", call,
-				(mbp->axbbscb->addr.dest.ssid >> 1) & 0xf);
-
-			if(dbug_level & dbgVERBOSE) {
-				printf("Starting bbs process [1]:\n");
-				printf("\t%s/b_bbs -v %s -e -s %s -a %s %s\n",
-					Bin_Dir, Tncd_Name, port, addr, call);
-			}
-
-			/*now, fork and exec the bbs*/
-			if((pid=fork()) == 0){			/*if we are the child*/
-				char cmd[256];
-
-				sprintf(cmd, "%s/b_bbs", Bin_Dir);
-				execl(cmd, "b_bbs", "-v", Tncd_Name, "-s",
-					port, "-e", "-a", addr, call, 0);
-				exit(1);
-			}
-
-			mbp->pid=pid;				/* save pid of new baby*/
-			mbp->spawned = TRUE;
-
-			AL_CALLBACK(&cb, mbp, mbx_handle_child_exit);
-			res = alEvent_registerProc(mbp->pid, ALPROC_EXIT, cb,
-				&mbp->al_proc_handle);
-			if (res != 0) {
-				fprintf(stderr, "bbs wait register error\n");
-				exit(1);
-			}
+			mbx_bbs_connect(mbp);
 		} else {
 			char *buf = "CONNECTED\n";
 			write(mbp->fd, buf, strlen(buf));
@@ -797,83 +723,69 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 	}
 }
 
-/* Incoming mailbox session via ax.25 */
-
-/* * This is the ax25 receive upcall function
- *it gathers incoming data and stuff it down the IPC queue to the proper BBS
+/*
+ * An incoming connection to the mailbox address has been established via
+ * ax.25. Set it up to talk to the BBS.
  */
-
 /*ARGSUSED*/
 void
-mbx_incom(struct ax25_cb *axp, int cnt)
+mbx_bbs_connect(struct mboxsess *mbp)
 {
+	int pid;
+	char addr[256];
 	char call[10], port[10];
-	int pid, j;
-	struct mboxsess *mbp;
-	struct mbuf *bp;
+	alCallback cb;
 
-	/*
-	 * Is this code even ever called???
-	 */
-	FILE *ke6jjj = fopen("/tmp/n0ary_ax25_mystery.log", "a");
-	if (ke6jjj != NULL) {
-		time_t now;
-		time(&now);
-		fprintf(ke6jjj, "mystery code B called. %s\n", ctime(&now));
-		fclose(ke6jjj);
-	}
-	
-	if(dbug_level & dbgVERBOSE)
-		printf("mbx_incom()\n");
-
-	mbp = newmbox();	/*after this, this is a mailbox connection*/
-						/* so, make a new mailbox session*/
-	axp->r_upcall = mbx_rx ;
-	axp->t_upcall = mbx_tx ;
-	axp->s_upcall = mbx_state;
-
-	mbp->axbbscb=axp;
-	mbx_notify_sendable(mbp, 500, 1); /*jump start the upcall*/
-
-	bp = recv_ax25(axp) ;	/* get the initial input */
-	free_p(bp) ;			/* and throw it away to avoid confusion */
-
-
-	for(j=0;j<6;j++){			   /*now, get incoming call letters*/
-		call[j] = mbp->axbbscb->addr.dest.call[j];
-		call[j] = call[j] >> 1;
-		call[j] = call[j] & (char)0x7f;
-		if(call[j]==' ')
-			call[j]='\0';
-	}
-	call[6]='\0';					/*terminate call letters*/
-	strcpy(mbp->call, call);   		/*Copy call to session*/
-
-	mbp->fd = ERROR;
+	/* Create a socket for the BBS to connect to to receive all I/O */
 	mbp->port = 0;
 	mbp->socket = socket_listen(NULL, &(mbp->port));
+	if (mbp->socket == ERROR) {
+		fprintf(stderr, "bbs backsocket listen error\n");
+		exit(1);
+	}
+				
 	sprintf(port, "%d", mbp->port);
 
-	char addr[256];
+	/* Establish a notification callback for when the BBS connects */
+	AL_CALLBACK(&cb, mbp, mbx_accept);
+	int res = alEvent_registerFd(mbp->socket, ALFD_READ, cb,
+		&mbp->al_socket_handle);
+	if (res != 0) {
+		fprintf(stderr, "bbs accept register error\n");
+		exit(1);
+	}
+
+	/* Create a printable description of the remote station */
 	snprintf(addr, sizeof(addr), "ax25:%s-%d", call,
 		(mbp->axbbscb->addr.dest.ssid >> 1) & 0xf);
 
-	/*now, fork and exec the bbs*/
- 
 	if(dbug_level & dbgVERBOSE) {
-		printf("Starting bbs process [2]:\n");
-		printf("\t%s/b_bbs -v %s -s %s -a %s %s\n",
+		printf("Starting bbs process [1]:\n");
+		printf("\t%s/b_bbs -v %s -e -s %s -a %s %s\n",
 			Bin_Dir, Tncd_Name, port, addr, call);
 	}
 
+	/*now, fork and exec the bbs*/
 	if((pid=fork()) == 0){			/*if we are the child*/
 		char cmd[256];
+
 		sprintf(cmd, "%s/b_bbs", Bin_Dir);
-		execl(cmd, "b_bbs", "-v", Tncd_Name, "-e", "-s", port, call, 0);
+		execl(cmd, "b_bbs", "-v", Tncd_Name, "-s", port, "-e", "-a",
+			addr, call, 0);
 		exit(1);
 	}
+
 	mbp->pid=pid;				/* save pid of new baby*/
 	mbp->spawned = TRUE;
+
+	/* Establish a notification callback when the process exits. */
+	AL_CALLBACK(&cb, mbp, mbx_handle_child_exit);
+	res = alEvent_registerProc(mbp->pid, ALPROC_EXIT, cb,
+				&mbp->al_proc_handle);
+	if (res != 0) {
+		fprintf(stderr, "bbs wait register error\n");
+		exit(1);
+	}
 }	
 
 /*ARGSUSED*/
@@ -883,26 +795,23 @@ mbx_rx(struct ax25_cb *axp, int cnt)
 	struct mbuf *bp;
 	struct mboxsess * mbp;
 
-	
-	if(base == NULLMBS)
+	mbp = (struct mboxsess *)axp->user;
+	if(mbp == NULL)
 		return;
+	assert(mbp->axbbscb == axp);
 
 	if(dbug_level & dbgVERBOSE)
 		printf("mbx_rx()\n");
-	mbp = base;
-	while(mbp != NULLMBS){
-		if(mbp->axbbscb == axp){  /* match requested block? */
-			if((bp = recv_ax25(axp)) == NULLBUF)  /*nothing there*/
-				continue;
-			while(bp != NULLBUF){
-				convrt2nl(bp->data, bp->cnt);
-				if(dbug_level & dbgVERBOSE)
-					write(2, bp->data, bp->cnt);
-				write(mbp->fd, bp->data, bp->cnt);
-				bp = free_mbuf(bp);   /*free the mbuf and get the next */
-			}
-		}
-	mbp = mbp->next;
+
+	if ((bp = recv_ax25(axp)) == NULLBUF)  /*nothing there*/
+		return;
+
+	while(bp != NULLBUF){
+		convrt2nl(bp->data, bp->cnt);
+		if(dbug_level & dbgVERBOSE)
+			write(2, bp->data, bp->cnt);
+		write(mbp->fd, bp->data, bp->cnt);
+		bp = free_mbuf(bp);   /*free the mbuf and get the next */
 	}
 }
 
@@ -910,17 +819,16 @@ static void
 mbx_tx(struct ax25_cb *axp, int cnt)
 {
 	struct mboxsess *mbp;
-	if(base == NULLMBS)
-		return;					 /*no sessions*/
+
+	mbp = (struct mboxsess *)axp->user;
+	if(mbp == NULL)
+		return;
+	assert(mbp->axbbscb == axp);
 
 	if(dbug_level & dbgVERBOSE)
 		printf("mbx_tx()\n");
-	mbp = base;
-	while(mbp != NULLMBS){
-		if(mbp->axbbscb == axp)
-			mbx_notify_sendable(mbp, cnt, 1);
-		mbp = mbp->next;
-	}
+
+	mbx_notify_sendable(mbp, cnt, 1);
 }
 
 static int
@@ -956,8 +864,7 @@ convrt2cr(char *data, int cnt)
 }
 
 /*
- * bbs process exited before it established a connection with
- * us.
+ * Bbs process exited.
  */
 static void
 mbx_handle_child_exit(void *obj, void *arg0, int arg1)
@@ -969,8 +876,6 @@ mbx_handle_child_exit(void *obj, void *arg0, int arg1)
 
 	res = waitpid(mbp->pid, NULL, WNOHANG);
 	assert(res == mbp->pid);
-
-	fprintf(stderr, "bbs exited before making control connection.\n");
 
 	mbp->pid = 0;
 	mbp->spawned = FALSE;

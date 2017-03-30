@@ -100,7 +100,7 @@ sendframe(
 /* Process incoming AX.25 packets.
  * After optional tracing, the address field is examined. If it is
  * directed to us as a digipeater, repeat it.  If it is addressed to
- * us or to QST-0, kick it upstairs depending on the protocol ID.
+ * us and is LAPB, kick it upstairs.
  */
 void
 ax_recv(int dev, struct mbuf *bp)
@@ -111,23 +111,23 @@ ax_recv(int dev, struct mbuf *bp)
 	struct ax25 hdr;
 	struct ax25_cb *axp;
 
-				/* Pull header off packet and convert to host structure */
-				/* returns -1 if too many digis */
+	/* Pull header off packet and convert to host structure */
+	/* returns -1 if too many digis */
 	if(ntohax25(&hdr, &bp) < 0){
 		free_p(bp);
 		return;
 	}
 
-		/* Scan, looking for our call in the repeater fields, if any.
-		 * Repeat appropriate packets.
-		 */
+	/* Scan, looking for our call in the repeater fields, if any.
+	 * Repeat appropriate packets.
+	 */
 	for(ap=&hdr.digis[0]; ap<&hdr.digis[hdr.ndigis]; ap++){
 		if(ap->ssid & REPEATED)
 			continue; /* Already repeated */
 
-					/* Check if packet is directed to us as a digipeater */
+		/* Check if packet is directed to us as a digipeater */
 		if(digipeat && addreq(ap, &bbscall)){
-					/* Yes, kick it back out */
+			/* Yes, kick it back out */
 			ap->ssid |= REPEATED;
 			if((hbp = htonax25(&hdr, bp)) != NULLBUF){
 				kiss_raw(dev, hbp);
@@ -138,50 +138,49 @@ ax_recv(int dev, struct mbuf *bp)
 		return;
 	}
 
-			/* Packet has passed all repeaters, now look at destination */
+	/* Packet has passed all repeaters, now look at destination */
 
-			/* all hits are allowed on "bbscall" address, this is where we
-			 * accept connects. All other addresses are only passed if we
-			 * originated the call from our end.
-			 */
-
-	if(addreq(&hdr.dest,&bbscall) == FALSE)
-		if(scan_calls(&hdr.dest, &hdr.source) == FALSE) {
-					/* Not for us */
-			free_p(bp);
-			return;
-		}
-
-	if(bp == NULLBUF){
-			/* Nothing left */
-		return;
-	}
-
-	/* Sneak a peek at the control field. This kludge is necessary because
-		* AX.25 lacks a proper protocol ID field between the address and LAPB
-		* sublayers; a control value of UI indicates that LAPB is to be
-		* bypassed.
-		*/
-	control = *bp->data & ~PF;
-
-	if(control == UI){
-		if(dbug_level & dbgVERBOSE)
-			printf("ax25.c:ax_recv why am I here 'if(control == UI)'\n");
+	/* all hits are allowed on "bbscall" address, this is where we
+	 * accept connects. All other addresses are only passed if we
+	 * originated the call from our end (which is determined if
+	 * we find a match for the address pair).
+	 */
+	axp = find_ax25(&hdr.dest, &hdr.source);
+	if(axp == NULLAX25 && addreq(&hdr.dest,&bbscall) == FALSE){
+		/* Not for us */
 		free_p(bp);
 		return;
 	}
 
-		/* Everything from here down is LAPB stuff, so drop anything
-		 * not directed to us:
+	if(bp == NULLBUF){
+		/* Nothing left */
+		return;
+	}
+
+	/* Sneak a peek at the control field. This kludge is necessary because
+	 * AX.25 lacks a proper protocol ID field between the address and LAPB
+	 * sublayers; a control value of UI indicates that LAPB is to be
+	 * bypassed.
+	 */
+	control = *bp->data & ~PF;
+
+	if(control == UI){
+		/* This would happen if we were to receive, say, a TCP/IP
+		 * packet. But we wouldn't.
 		 */
+		free_p(bp);
+		return;
+	}
 
-		/* Find the source address in hash table */
+	/* Everything from here down is LAPB stuff. */
 
-	if((axp = find_ax25(&hdr.dest, &hdr.source)) == NULLAX25){
-					/* Create a new ax25 entry for this guy,
-					 * insert into hash table keyed on his address,
-					 * and initialize table entries
-					 */
+	/* Find the source address in hash table */
+
+	if(axp == NULLAX25){
+		/* Create a new ax25 entry for this guy,
+		 * insert into hash table keyed on his address,
+		 * and initialize table entries
+		 */
 		if((axp = cr_ax25(dev, &hdr.dest, &hdr.source)) == NULLAX25){
 			free_p(bp);
 			return;
@@ -189,20 +188,20 @@ ax_recv(int dev, struct mbuf *bp)
 
 		axp->dev = dev;
 
-					/* Swap source and destination, reverse digi string */
-		memcpy((char*)&axp->addr.dest, (char*)&hdr.source, sizeof(struct ax25_addr));
-		memcpy((char*)&axp->addr.source, (char*)&hdr.dest, sizeof(struct ax25_addr));
+		/* Swap source and destination, reverse digi string */
+		memcpy(&axp->addr.dest, &hdr.source, sizeof(struct ax25_addr));
+		memcpy(&axp->addr.source, &hdr.dest, sizeof(struct ax25_addr));
 
 		if(hdr.ndigis > 0){
 			int i,j;
-					/* Construct reverse digipeater path */
+			/* Construct reverse digipeater path */
 			for(i=hdr.ndigis-1,j=0; i >= 0; i--,j++) {
-				memcpy((char*)&axp->addr.digis[j], (char*)&hdr.digis[i], 
+				memcpy(&axp->addr.digis[j], &hdr.digis[i], 
 					sizeof(struct ax25_addr));
 				axp->addr.digis[j].ssid &= ~(E|REPEATED);
 			}
 
-					/* Scale timers to account for extra delay */
+			/* Scale timers to account for extra delay */
 			axp->t1.start *= hdr.ndigis+1;
 			axp->t2.start *= hdr.ndigis+1;
 			axp->t3.start *= hdr.ndigis+1;

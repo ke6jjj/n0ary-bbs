@@ -17,7 +17,7 @@ open_ax25(
 	void (*t_upcall)(),		/* Transmitter upcall handler */
 	void (*s_upcall)(),		/* State-change upcall handler */
 	int dev,
-	char *user)			/* User linkage area */
+	void *user)			/* User linkage area */
 {
 	struct ax25_cb *axp;
 

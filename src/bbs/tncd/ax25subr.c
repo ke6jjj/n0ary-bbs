@@ -52,24 +52,6 @@ find_ax25(struct ax25_addr *my_addr, struct ax25_addr *their_addr)
 	return NULLAX25;
 }
 
-int
-scan_calls(struct ax25_addr *us, struct ax25_addr *them)
-{
-	int hashval;
-	struct ax25_cb *axp;
-
-				/* Find appropriate hash chain */
-	hashval = ax25hash(them);
-
-						/* Search hash chain */
-	for(axp = ax25_cb[hashval]; axp != NULLAX25; axp = axp->next){
-		if(addreq(&axp->addr.dest, them))
-			if(addreq(&axp->addr.source, us))
-				return TRUE;
-	}
-	return FALSE;
-}
-
 		/* Remove address entry from hash table */
 void
 del_ax25(struct ax25_cb *axp)
@@ -155,7 +137,6 @@ cr_ax25(int dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr)
 	axp->t3.arg = (char *)axp;
 
 	axp->s_upcall = mbx_state;
-	axp->r_upcall = mbx_incom;
 
 	axp->dev = dev;
 	return axp;

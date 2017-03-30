@@ -130,7 +130,7 @@ struct ax25_cb {
 	void (*r_upcall)();		/* Receiver upcall */
 	void (*t_upcall)();		/* Transmit upcall */
 	void (*s_upcall)();		/* State change upcall */
-	char *user;			/* User pointer */
+	void *user;			/* User pointer */
 };
 
 #define	NULLAX25	((struct ax25_cb *)0)
@@ -183,7 +183,6 @@ extern int
 	send_ax25(struct ax25_cb *axp, struct mbuf *bp),
 	ntohax25(struct ax25 *hdr, struct mbuf **bpp),
 	ftype(char control),
-	scan_calls(struct ax25_addr *my_addr, struct ax25_addr *their_addr),
 	addreq_sid(struct ax25_addr *a, struct ax25_addr *b),
 	addreq(struct ax25_addr *a, struct ax25_addr *b),
 	setcall(struct ax25_addr *out, char *call),
@@ -192,7 +191,7 @@ extern int
 extern struct ax25_cb
 	*open_ax25(struct ax25 *addr, int window,
 		void (*r_upcall)(), void (*t_upcall)(), void (*s_upcall)(),
-		int dev, char *user),
+		int dev, void *user),
 	*cr_ax25(int dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr),
 	*find_ax25(struct ax25_addr *my_addr, struct ax25_addr *their_addr);
 

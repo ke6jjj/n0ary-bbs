@@ -45,4 +45,3 @@ extern struct mboxsess
 int ax_control_init(char *c_bindaddr, int c_port);
 
 void mbx_state(struct ax25_cb *axp, int old, int new);
-void mbx_incom(struct ax25_cb *axp, int cnt);
