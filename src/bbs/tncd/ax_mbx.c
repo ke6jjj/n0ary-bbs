@@ -530,12 +530,7 @@ static void
 shutdown_process(struct mboxsess *mbp, int issue_disc)
 {
 	if(dbug_level & dbgVERBOSE)
-		printf("Shutdown process %d..\n", mbp->pid);
-	if(mbp->spawned) {
-		if(dbug_level & dbgVERBOSE)
-			printf("Killing process %d..\n", mbp->pid);
-		kill(mbp->pid,9);
-	}
+		printf("Shutdown session %p..\n", mbp);
 
 	if(mbp->fd != ERROR) {
 		if(dbug_level & dbgVERBOSE)
