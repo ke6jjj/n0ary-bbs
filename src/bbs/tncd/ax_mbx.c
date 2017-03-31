@@ -548,12 +548,12 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 		close(mbp->socket);
 		mbp->socket = ERROR;
 	}
-
-	if(issue_disc) {
-		if(dbug_level & dbgVERBOSE)
-			printf("Issue disconnect\n");
-		if(mbp->axbbscb != NULL)
+	if(mbp->axbbscb != NULL) {
+		if(issue_disc) {
+			if(dbug_level & dbgVERBOSE)
+				printf("Issue disconnect\n");
 			disc_ax25(mbp->axbbscb);
+		}
 		mbp->axbbscb->user = NULL;
 		mbp->axbbscb = NULL;
 	}
