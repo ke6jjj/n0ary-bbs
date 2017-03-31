@@ -447,19 +447,8 @@ read_options(int argc, char **argv)
 
 		while(pd) {
 			if(!strcmp(pd->name, Via))
-				if(debug_level & DBG_MSGFWD) {
-					init_forwarding(Via, to_whom);
-					exit(0);
-				}
-#if 0
-				if(bbsd_check("FWD", Via) == 1) {
-					init_forwarding(Via, to_whom);
-					exit(0);
-				}
-#else
 				init_forwarding(Via, to_whom);
 				exit(0);
-#endif
 			NEXT(pd);
 		}
 		exit(0);

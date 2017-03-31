@@ -338,12 +338,14 @@ forward_by_tcp(struct System *sys)
 	sprintf(buf, "Connecting to %s @ port %d", host, port);
 	bbsd_msg(buf);
 
-
 	if((tnc_fd = socket_open(host, port)) == ERROR) {
 		sprintf(buf, "***Problem connecting to %s", host);
 		logd(buf);
 		return;
 	}
+
+	/* Save the other party's remote address so that we can log it */
+	get_remote_addr(tnc_fd, &RemoteAddr);
 
 /* put alarm call here to check for timeout */
 
@@ -502,6 +504,9 @@ forward_by_tnc(struct System *sys)
 		logd(buf);
 		return;
 	}
+
+	snprintf(buf, sizeof(buf), "ax25:%s", sys->connect);
+	parse_remote_addr(buf, &RemoteAddr);
 
 	tnc_set_ax25(&sys->ax25);
 
