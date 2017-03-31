@@ -149,7 +149,7 @@ cr_ax25(int dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr)
  *   Return -1 on error, 0 if OK
  */
 int
-setcall(struct ax25_addr *out, char *call)
+setcall(struct ax25_addr *out, const char *call)
 {
 	int csize;
 	unsigned ssid;

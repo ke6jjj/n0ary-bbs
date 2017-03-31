@@ -5,6 +5,7 @@ TNCD_APP_OBJDIR := $(BBS_OBJDIR)/tncd
 TNCD_APP_PROD := b_tncd
 
 TNCD_APP_SRCS := ax25.c ax25dump.c ax25subr.c ax25user.c ax_mbx.c\
+		beacon.c\
 		bsd_io.c\
 		kiss.c\
 		lapb.c lapbtime.c\

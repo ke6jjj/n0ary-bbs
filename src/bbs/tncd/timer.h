@@ -1,3 +1,6 @@
+#ifndef TNCD_TIMER_H
+#define TNCD_TIMER_H
+
 #include <sys/time.h>
 
 #include "alib.h"
@@ -38,3 +41,5 @@ struct timer {
 int init_timer(struct timer *t);
 int start_timer(struct timer *t);
 int stop_timer(struct timer *t);
+
+#endif

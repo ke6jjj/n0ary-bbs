@@ -1,3 +1,6 @@
+#include "timer.h"
+#include "mbuf.h"
+
 /* AX.25 datagram (address) sub-layer definitions */
 
 /* Maximum number of digipeaters */
@@ -185,7 +188,7 @@ extern int
 	ftype(char control),
 	addreq_sid(struct ax25_addr *a, struct ax25_addr *b),
 	addreq(struct ax25_addr *a, struct ax25_addr *b),
-	setcall(struct ax25_addr *out, char *call),
+	setcall(struct ax25_addr *out, const char *call),
 	sendframe(struct ax25_cb *axp, char cmdrsp, char ctl, struct mbuf *data);
 
 extern struct ax25_cb

@@ -1,3 +1,6 @@
+#ifndef TNCD_MBUF_H
+#define TNCD_MBUF_H
+
 /* Basic message buffer structure */
 struct mbuf {
 	struct mbuf *next;		/* Links mbufs belonging to single packets */
@@ -29,3 +32,5 @@ extern struct mbuf
 	*free_p(struct mbuf *bp),
 	*free_mbuf(struct mbuf *bp),
 	*alloc_mbuf(int size);
+
+#endif

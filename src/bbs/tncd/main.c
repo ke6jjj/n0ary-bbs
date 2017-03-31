@@ -17,6 +17,7 @@
 #include "tnc.h"
 #include "slip.h"
 #include "bsd.h"
+#include "beacon.h"
 
 #include "ax_mbx.h"
 
@@ -137,7 +138,7 @@ main(int argc, char *argv[])
 	extern int optind;
 	struct timeval now, nextexpire, waittime, *pwaittime;
 	alCallback cb;
-
+	beacon_task *beacon;
 
 	parse_options(argc, argv, ConfigList,
 		"TNCD - Terminal Node Controller (KISS) Daemon");
@@ -146,6 +147,7 @@ main(int argc, char *argv[])
 		error_print_exit(0);
 
 	bbsd_sock = bbsd_socket();
+	srandomdev();
 
 	error_clear();
 	bbsd_get_configuration(ConfigList);
@@ -183,10 +185,22 @@ main(int argc, char *argv[])
 	slip_init(0);
 	slip_start(0);
 
+	beacon = beacon_task_new("KE6JJJ-1", "ID",
+		"KE6JJJ-1/R KE6JJJ-1/B Full Service Packet BBS",
+		 10 * 60, 0);
+	if (beacon == NULL)
+		return 1;
+
+	if (beacon_task_start(beacon, random() % 30) != 0)
+		return 1;
+
 	bbsd_msg("");
 
 	while (alEvent_pending())
 		alEvent_poll();
+
+	beacon_task_stop(beacon);
+	beacon_task_free(beacon);
 
 	slip_stop(0);
 
