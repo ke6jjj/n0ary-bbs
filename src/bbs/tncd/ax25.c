@@ -76,8 +76,10 @@ sendframe(
 {
 	struct mbuf *hbp,*cbp;
 
-	if(axp == NULLAX25 || tnc[axp->dev].inuse == FALSE)
+	if(axp == NULLAX25 || tnc[axp->dev].inuse == FALSE) {
+		free_p(data);
 		return ERROR;
+	}
 
 				/* Add control field */
 	if((cbp = pushdown(data, 1)) == NULLBUF){
