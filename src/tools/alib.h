@@ -30,6 +30,7 @@
 #ifndef JSC_ALIB_H
 #define JSC_ALIB_H
 
+#include <sys/time.h>
 #include <sys/types.h>
 
 #define alEvent_doCallback(cb, arg0, arg1) ((cb).fn((cb).obj, arg0, arg1))
@@ -80,6 +81,13 @@ enum alFdEvent_flags {
  */
 enum alProcEvent_flags {
   ALPROC_EXIT = 1,
+};
+
+/*
+ * Timer flags.
+ */
+enum alTimer_flags {
+  ALTIMER_REPEAT = 1
 };
   
 /*
@@ -164,8 +172,26 @@ void alEvent_poll(void);
  * alEvent_addTimer
  *
  * Schedule a callback to be issued after a certain time period has elapsed.
+ *
+ * Flags:
+ *
+ *   ALTIMER_REPEAT - Automatically reschedule the timer to fire again. The
+ *     rescheduling will be performed in such a way that the timer is
+ *     scheduled to fire exactly timeMs after its last _scheduled_ fire time.
+ *     This guarantees that the timer will not drift away from a regular
+ *     schedule, even it system processing and other delays prevent it from
+ *     being delivered exactly as scheduled.
  */
 int alEvent_addTimer(int timeMs, int flags, alCallback cb);
+
+/*
+ * alEvent_addTimerAbs
+ *
+ * Schedule a callback to be issued at a specific time. (Contrast with
+ * alEvent_addTimer(), which schedules the callback to occur after a specific
+ * delay).
+ */
+int alEvent_addTimerAbs(const struct timeval *timesp, alCallback cb);
 
 /*
  * alEvent_cancelTimer

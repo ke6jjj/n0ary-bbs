@@ -50,9 +50,9 @@
         do {                                                            \
                 (vsp)->tv_sec = (tsp)->tv_sec + (usp)->tv_sec;          \
                 (vsp)->tv_nsec = (tsp)->tv_nsec + (usp)->tv_nsec;       \
-                if ((vvp)->tv_ssec >= 1000000000) {                     \
-                        (vvp)->tv_sec++;                                \
-                        (vvp)->tv_nsec -= 1000000000;                   \
+                if ((vsp)->tv_nsec >= 1000000000) {                     \
+                        (vsp)->tv_sec++;                                \
+                        (vsp)->tv_nsec -= 1000000000;                   \
                 }                                                       \
         } while (0)
 #define timespecsub(tsp, usp, vsp)                                      \
@@ -85,6 +85,9 @@ typedef enum alSubjectType {
  */
 typedef struct alTimerEntry {
   int id;
+  int active;
+  int flags;
+  int delay_ms;  /* For repeating timers */
   struct timespec targetTime;
   alCallback cb;
   LIST_ENTRY(alTimerEntry) listEntry;
@@ -119,12 +122,17 @@ typedef struct alQueuedCallbackEntry {
 /*****************************************************************************
  * PRIVATE PROTOTYPES                                                        *
  *****************************************************************************/
+static int alEvent__addTimerInternal(const struct timeval *tv, int flags,
+  alCallback cb, alTimerEntry **r);
+static void alEvent__rescheduleTimer(alTimerEntry *entry);
+static void alEvent__insertTimer(alTimerEntry *entry);
 static void alEvent__resizeKeventFilters(int newsize);
 
 /*****************************************************************************
  * GLOBALS                                                                   *
  *****************************************************************************/
 static LIST_HEAD(, alTimerEntry) alTimerQueue;
+static LIST_HEAD(, alTimerEntry) alDestroyingTimerQueue;
 static LIST_HEAD(, alEventDescriptorEntry) alEventDescriptors;
 static LIST_HEAD(, alEventDescriptorEntry) alDestroyingEventDescriptors;
 static SLIST_HEAD(, alQueuedCallbackEntry) alQueuedCallbacks;
@@ -151,6 +159,7 @@ alEvent_init(void)
   alNextTimerId = 0;
   alKeventList = NULL;
   LIST_INIT(&alTimerQueue);
+  LIST_INIT(&alDestroyingTimerQueue);
   LIST_INIT(&alEventDescriptors);
   LIST_INIT(&alDestroyingEventDescriptors);
   SLIST_INIT(&alQueuedCallbacks);
@@ -486,7 +495,7 @@ alEvent_poll(void)
 {
   struct timespec waitTime, *pWaitTime = NULL, nowTS;
   struct timeval now;
-  alTimerEntry *timerEntry;
+  alTimerEntry *timerEntry, *timerEntryNext;
   alEventDescriptorEntry *evEntry, *evNext;
   alQueuedCallbackEntry *cbEntry;
   int nevents, i;
@@ -502,13 +511,26 @@ alEvent_poll(void)
   }
   
   /*
+   * Free any timers that are pending deletion.
+   */
+  timerEntry = LIST_FIRST(&alDestroyingTimerQueue);
+  while (timerEntry != NULL) {
+    timerEntryNext = LIST_NEXT(timerEntry, listEntry);
+    free(timerEntry);
+    timerEntry = timerEntryNext;
+  }
+  LIST_INIT(&alDestroyingTimerQueue);
+
+  /*
    * Free any event descriptor notifications that are pending deletion.
    */
-  while (!LIST_EMPTY(&alDestroyingEventDescriptors)) {
-    evEntry = LIST_FIRST(&alDestroyingEventDescriptors);
-    LIST_REMOVE(evEntry, listEntry);
+  evEntry = LIST_FIRST(&alDestroyingEventDescriptors);
+  while (evEntry != NULL) {
+    evNext = LIST_NEXT(evEntry, listEntry);
     free(evEntry);
+    evEntry = evNext;
   }
+  LIST_INIT(&alDestroyingEventDescriptors);
 
   /*
    * If there are any timers pending, compute how soon the earliest one
@@ -595,36 +617,40 @@ alEvent_poll(void)
       /*
        * This timer has expired and should be triggered.
        */
-      LIST_REMOVE(timerEntry, listEntry);
       alEvent_doCallback(timerEntry->cb, NULL, timerEntry->id);
-      free(timerEntry);
+
+      /*
+       * Now remove the timer from whatever list it may be one. (It could
+       * have been moved to the pending-destruction list by the recipient
+       * of the callback, in which case it isn't on the list we're iterating
+       * through right now anymore).
+       */
+      LIST_REMOVE(timerEntry, listEntry);
+
+      /*
+       * If it's a repeating timer and it hasn't been cancelled, it should
+       * be rescheduled now.
+       */
+      if ((timerEntry->flags & ALTIMER_REPEAT) && timerEntry->active) {
+        alEvent__rescheduleTimer(timerEntry);
+      } else {
+        free(timerEntry);
+      }
     } else
       break;
   }
 }
 
-
 int
 alEvent_addTimer(int timeMs, int flags, alCallback cb)
 {
+  alTimerEntry *entry;
   struct timeval now, add, tv;
-  struct timespec target;
-  alTimerEntry *entry, *entry2, *latestEntry = NULL;
-  
-  /*
-   * Allocate a timer entry.
-   */
-  entry = alMalloc(alTimerEntry, 1);
-  if (entry == NULL)
+  int res;
+
+  if (flags != 0 && (flags & ALTIMER_REPEAT) == 0)
+    /* Unsupported flags */
     return -1;
-  
-  /*
-   * Assign it a unique id.
-   */
-  entry->cb = cb;
-  entry->id = ++alNextTimerId;
-  if (alNextTimerId < 0)
-    alNextTimerId = 0;
   
   /*
    * Compute the target time.
@@ -633,23 +659,25 @@ alEvent_addTimer(int timeMs, int flags, alCallback cb)
   add.tv_sec = timeMs / 1000;
   add.tv_usec = (timeMs % 1000) * 1000;
   timeradd(&now, &add, &tv);
-  TIMEVAL_TO_TIMESPEC(&tv, &entry->targetTime);
-  
-  /*
-   * Find the first timer that expires after the target
-   * time for this entry.
-   */
-  LIST_FOREACH(entry2, &alTimerQueue, listEntry) {
-    if (timespeccmp(&entry2->targetTime, &entry->targetTime, >))
-      break;
-    latestEntry = entry2;
+
+  res = alEvent__addTimerInternal(&tv, flags, cb, &entry);
+  if (res < 0)
+    return res;
+
+  if (flags & ALTIMER_REPEAT) {
+    entry->delay_ms = timeMs;
   }
-  if (latestEntry == NULL)
-    LIST_INSERT_HEAD(&alTimerQueue, entry, listEntry);
-  else
-    LIST_INSERT_AFTER(latestEntry, entry, listEntry);
-  
-  return entry->id;
+
+  return res;
+}
+
+int
+alEvent_addTimerAbs(const struct timeval *tv, alCallback cb)
+{
+  int res;
+  alTimerEntry *entry;
+
+  return alEvent__addTimerInternal(tv, 0, cb, &entry);
 }
 
 int
@@ -660,7 +688,9 @@ alEvent_cancelTimer(int id)
   LIST_FOREACH(entry, &alTimerQueue, listEntry) {
     if (entry->id == id) {
       LIST_REMOVE(entry, listEntry);
-      free(entry);
+      LIST_INSERT_HEAD(&alDestroyingTimerQueue, entry, listEntry);
+      /* Notify everyone who holds a direct reference to this timer entry */
+      entry->active = 0;
       return 0;
     }
   }
@@ -721,6 +751,78 @@ alEvent_deregister(alEventHandle handle)
 /*****************************************************************************
  * PRIVATE INTERFACES                                                        *
  *****************************************************************************/
+
+static int
+alEvent__addTimerInternal(const struct timeval *tv, int flags, alCallback cb,
+  alTimerEntry **r)
+{
+  struct timespec target;
+  alTimerEntry *entry;
+
+  /*
+   * Allocate a timer entry.
+   */
+  entry = alMalloc(alTimerEntry, 1);
+  if (entry == NULL)
+    return -1;
+  
+  /*
+   * Assign it a unique id.
+   */
+  entry->cb = cb;
+  entry->id = ++alNextTimerId;
+  entry->flags = flags;
+  entry->active = 1;
+  if (alNextTimerId < 0)
+    alNextTimerId = 0;
+
+  TIMEVAL_TO_TIMESPEC(tv, &entry->targetTime);
+  
+  alEvent__insertTimer(entry);
+  
+  *r = entry;
+  return entry->id;
+}
+
+static void
+alEvent__rescheduleTimer(alTimerEntry *entry)
+{
+  struct timespec add;
+
+  /* PRECONDITION: supplied entry is not on any list */
+  /* PRECONDITION: entry must have ALTIMER_REPEAT flag */
+  assert(entry->flags & ALTIMER_REPEAT);
+
+  /*
+   * Compute the target time.
+   */
+  add.tv_sec = entry->delay_ms / 1000;
+  add.tv_nsec = (entry->delay_ms % 1000) * 1000000;
+  timespecadd(&entry->targetTime, &add, &entry->targetTime);
+  alEvent__insertTimer(entry);
+}
+
+static void
+alEvent__insertTimer(alTimerEntry *entry)
+{
+  alTimerEntry *entry2, *latestEntry = NULL;
+
+  /* PRECONDITION: supplied entry is not on any list */
+
+  /*
+   * Find the first timer that expires after the target
+   * time for this entry.
+   */
+  LIST_FOREACH(entry2, &alTimerQueue, listEntry) {
+    if (timespeccmp(&entry2->targetTime, &entry->targetTime, >))
+      break;
+    latestEntry = entry2;
+  }
+  if (latestEntry == NULL)
+    LIST_INSERT_HEAD(&alTimerQueue, entry, listEntry);
+  else
+    LIST_INSERT_AFTER(latestEntry, entry, listEntry);
+}
 
 static void
 alEvent__resizeKeventFilters(int newsize)
