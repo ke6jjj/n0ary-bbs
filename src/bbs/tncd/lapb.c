@@ -194,7 +194,8 @@ lapb_input(struct ax25_cb *axp, char cmdrsp, struct mbuf *bp)
 				if(axp->proto == V1 || !axp->rejsent){
 					axp->rejsent = YES;
 					sendctl(axp,RESPONSE,REJ | pf);
-				}
+				} else if(poll)
+					enq_resp(axp);
 				axp->response = 0;
 				stop_timer(&axp->t2);
 				break;
