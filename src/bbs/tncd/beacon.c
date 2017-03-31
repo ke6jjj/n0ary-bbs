@@ -13,11 +13,13 @@ struct beacon_task {
 	int       dev;
 	char     *text;
 	size_t    textlen;
-	int       repeat_timer;
+	int       timer;
 	int	  repeat_time_ms;
-	alCallback repeat_cb;
+	alCallback jitter_cb;
+	alCallback beacon_cb;
 };
 
+static void beacon_jitter_done(void *obj, void *arg0, int arg1);
 static void beacon_now(void *obj, void *arg0, int arg1);
 
 beacon_task *
@@ -39,10 +41,11 @@ beacon_task_new(const char *from_callsign, const char *to_callsign,
 	task->axcb.dev = dev;
 
 	task->textlen = strlen(text);
-	task->repeat_timer = -1;
+	task->timer = -1;
 	task->repeat_time_ms = repeat_time_s * 1000;
 
-	AL_CALLBACK(&task->repeat_cb, task, beacon_now);
+	AL_CALLBACK(&task->beacon_cb, task, beacon_now);
+	AL_CALLBACK(&task->jitter_cb, task, beacon_jitter_done);
 
 	return task;
 
@@ -54,11 +57,10 @@ TextAllocFailed:
 int
 beacon_task_start(beacon_task *task, int jitter_s)
 {
-	/* Queue the next beacon up */
-	task->repeat_timer = alEvent_addTimer(
-		task->repeat_time_ms + jitter_s*1000, 0, task->repeat_cb);
-	if (task->repeat_timer == -1) {
-		fprintf(stderr, "beacon arm failed\n");
+	/* Queue a small jitter timer before really starting */
+	task->timer = alEvent_addTimer(jitter_s*1000, 0, task->jitter_cb);
+	if (task->timer == -1) {
+		fprintf(stderr, "beacon jitter arm failed\n");
 		goto ArmTimerFailed;
 	}
 
@@ -68,6 +70,22 @@ ArmTimerFailed:
 	return -1;
 }
 
+/* The initial jitter timer has expired. Start regular beaconing */
+static void
+beacon_jitter_done(void *obj, void *arg0, int arg1)
+{
+	beacon_task *task = obj;
+
+	assert(arg1 == task->timer);
+
+	/* Queue the regular beacon up */
+	task->timer = alEvent_addTimer(task->repeat_time_ms,
+		ALTIMER_REPEAT, task->beacon_cb);
+	if (task->timer == -1) {
+		fprintf(stderr, "beacon arm failed\n");
+	}
+}
+
 static void
 beacon_now(void *obj, void *arg0, int arg1)
 {
@@ -75,15 +93,7 @@ beacon_now(void *obj, void *arg0, int arg1)
 	struct mbuf *bp;
 	alCallback cb;
 
-	assert(arg1 == task->repeat_timer);
-
-	/* Queue the next beacon up, first */
-	task->repeat_timer = alEvent_addTimer(task->repeat_time_ms, 0,
-		task->repeat_cb);
-	if (task->repeat_timer == -1) {
-		fprintf(stderr, "beacon rearm failed\n");
-		goto RepeatTimerFailed;
-	}
+	assert(arg1 == task->timer);
 
 	/* Allocate an mbuf to hold the beacon text plus protocol id */
 	bp = alloc_mbuf(task->textlen + 1);
@@ -100,15 +110,16 @@ beacon_now(void *obj, void *arg0, int arg1)
 		fprintf(stderr, "beacon send failed\n");
 
 MBufAllocFailed:
-RepeatTimerFailed:
 	return;
 }
 
 void
 beacon_task_stop(beacon_task *task)
 {
-	if (task->repeat_timer != -1)
-		alEvent_cancelTimer(task->repeat_timer);
+	if (task->timer != -1) {
+		alEvent_cancelTimer(task->timer);
+		task->timer = -1;
+	}
 }
 
 void
