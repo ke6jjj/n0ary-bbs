@@ -245,10 +245,25 @@ PORT	STATUS	SYSTEM	FALSE	FALSE	Status
 ;           the Internet for the subject "Linux AX25 KISS driver for
 ;           Kenwood D700" for more details).
 ;      
-; My strategy on the user ports is to dump as big of frames and as many
-; as possible. I figure the user must be hearing me pretty well, don't
+; Pt:   (OPTIONAL, after Flgs) Set the AX.25 L2V2 resend vs. repoll packet
+;       size (Pthresh). This controls how to deal with a sent data packet that
+;       has timed out waiting for acknowledgment from the remote side.
+;       Below this size the packet will be resent, above this size it will be
+;       queried first.
+;
+;       If not specified, the default value of Plen / 2 will be used.
+;
+;       NOTE: To set this flag you must also provide a value for Flgs first,
+;       otherwise, this value will be interpreted as the Flgs value.
+;
+; N0ARY's strategy on the user ports is to dump as big of frames and as many
+; as possible. He figured the user must be hearing the BBS pretty well so don't
 ; waste a bunch of time with acknoledgments.
-
+;
+; This implies that on forwarding-only ports, however, you might want to bring
+; the packet size and MxF values down to cooperate better with other stations
+; on the channel.
+;
 ;	Name	dPort	cPort	Device	   Host    T1 T2  T3 MxF Plen N2 (Flgs)
 TNC	TNC0	44450	44460	/dev/ttyr5 bbshost 10  4 300 7   220  5  0
 TNC	TNC1	44451	44461	/dev/ttyr6 bbshost 10  4 300 3   128  5  0

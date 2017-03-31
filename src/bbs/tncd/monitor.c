@@ -47,6 +47,7 @@ char *helpmsg[] = {
 	"   T3 300\n",
 	"   MAXFRAME 7\n",
 	"   PACLEN 220\n",
+	"   PTHRESH 110\n",
 	"   N2 10\n",
 	"   FLAGS 1\n",
 	NULL };
@@ -269,7 +270,11 @@ monitor_command(struct Monitor_Session *mp, char *buf)
 				break;
 			}
 			if(!strcmp(q, "PACLEN")) {
-				Tncd_Paclen = Tncd_Pthresh = value;
+				Tncd_Paclen = value;
+				break;
+			}
+			if(!strcmp(q, "PTHRESH")) {
+				Tncd_Pthresh = value;
 				break;
 			}
 			if(!strcmp(q, "N2")) {
@@ -310,8 +315,9 @@ monitor_dump(struct Monitor_Session *mp)
 		"t1/2/3 = %d %d %d\n",
 		Tncd_T1init, Tncd_T2init, Tncd_T3init);
 	monitor_printf(&mpp,
-		"maxframe = %d\npaclen = %d\n2 = %d\nflags = %d\n",
-		Tncd_Maxframe, Tncd_Paclen, Tncd_N2, Tncd_SLIP_Flags);
+		"maxframe = %d\npaclen = %d\npthresh = %d\2 = %d\nflags = %d\n",
+		Tncd_Maxframe, Tncd_Paclen, Tncd_Pthresh, Tncd_N2,
+		Tncd_SLIP_Flags);
 
 	if (mpp == NULL)
 		return;

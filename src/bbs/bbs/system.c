@@ -126,6 +126,9 @@ system_parse_ax25(int check, struct System *sys, char *p)
 		else
 		if(!strcmp(str, "N2"))
 			sys->ax25.n2 = value;
+		else
+		if(!strcmp(str, "PTHRESH"))
+			sys->ax25.pthresh = value;
 	}
 }
 

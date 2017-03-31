@@ -53,6 +53,10 @@ tnc_set_ax25(struct ax25_params *ax25)
 		sprintf(cmd, "~S PACLEN %d\n", ax25->paclen);
 		socket_raw_write(sock, cmd);
 	}
+	if(ax25->pthresh) {
+		sprintf(cmd, "~S PTHRESH %d\n", ax25->pthresh);
+		socket_raw_write(sock, cmd);
+	}
 	if(ax25->n2) {
 		sprintf(cmd, "~S N2 %d\n", ax25->n2);
 		socket_raw_write(sock, cmd);

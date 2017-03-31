@@ -89,7 +89,7 @@ static void
 preload(char *name)
 {
 	int i = 0;
-	struct Tnc_ax25 *tax = tnc_ax25(name);
+	struct ax25_params *tax = tnc_ax25(name);
 
 	Tncd_Control_Bind_Addr = tnc_control_bind_addr(name);
 	Tncd_Control_Port = tnc_port(name);
@@ -104,7 +104,8 @@ preload(char *name)
 	Tncd_T3init = tax->t3;
 	Tncd_Maxframe = tax->maxframe;
 	Tncd_N2 = tax->n2;
-	Tncd_Paclen = Tncd_Pthresh = tax->paclen;
+	Tncd_Pthresh = tax->pthresh;
+	Tncd_Paclen = tax->paclen;
 	Tncd_SLIP_Flags = tax->flags;
 
 	for(i=0; ConfigList[i].token != NULL; i++) {

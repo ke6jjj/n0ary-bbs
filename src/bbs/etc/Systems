@@ -103,6 +103,7 @@
 ;   AX25 T3 seconds
 ;   AX25 MAXFRAME num
 ;   AX25 PACLEN num
+;   AX25 PTHRESH num
 ;   AX25 N2 num
 ;
 ; Refer to the TNC definition portion of the Config file or your tnc

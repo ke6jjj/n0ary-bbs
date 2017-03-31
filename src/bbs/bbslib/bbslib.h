@@ -540,13 +540,6 @@ struct RfcFields {
 	void (*decode)(struct msg_dir_entry *, char *);
 };
 
-struct ax25_params {
-	int t1, t2, t3;
-	int maxframe;
-	int paclen;
-	int n2;
-};
-
 struct active_bbss {
 	struct active_bbss *next;
 	int proc_num;
@@ -598,17 +591,17 @@ struct PortDefinition {
  *
  * A workaround for such radios is to ensure that no ASCII "C" character
  * makes it unescaped into the KISS stream. Setting this flag on a TNC's
- * Tnc_ax25.flags member will cause TNCD to make such an adjustment.
+ * ax25_params.flags member will cause TNCD to make such an adjustment.
  */
 #define TNC_AX25_ESCAPE_ASCII_C 1
 
-struct Tnc_ax25 {
+struct ax25_params {
 		/* AX25 parameters
 		 * t1 = This is how long to wait after a frame is sent before
 		 *      sending a poll request for error recovery.
 		 * t2 = The amount of time to wait after a frame is received for
-		 *		another frame. If the timer expires before another frame
-		 *		is received an ACK is sent.
+		 *		another frame. If the timer expires before
+		 *              another frame is received an ACK is sent.
 		 * t3 = How often to ping the remote site if no other frame
 		 *		has been received.
 		 * maxframe = maximum number of frames to send in a row without
@@ -618,10 +611,12 @@ struct Tnc_ax25 {
 		 * n2 = number of retries to allow.
 		 * flags = Special KISS encoding flags, in ASCII hexadecimal:
 		 *   1 = Escape ASCII 'C' on this port
+		 * pthresh = theshold below which an unack'd packet will be
+		 *   simply resent vs being queried.
 		 */
 
 	int t1, t2, t3;
-	int maxframe, paclen;
+	int maxframe, paclen, pthresh;
 	int n2;
 	int flags;
 };
@@ -635,7 +630,7 @@ struct TncDefinition {
 	int   monitor_port;
 	char *device;
 	char *host;
-	struct Tnc_ax25 ax25;
+	struct ax25_params ax25;
 };
 	
 struct PhoneDefinition {
@@ -799,7 +794,7 @@ char
 	*bbsd_get_variable(char *var),
 	*bbsd_get_orig_variable(char *var);
 
-struct Tnc_ax25
+struct ax25_params
 	*tnc_ax25(char *name);
 
 struct PortDefinition

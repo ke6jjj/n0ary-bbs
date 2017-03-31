@@ -258,6 +258,9 @@ set_ax25_params(char *p, struct ax25_cb *axp)
 	}
 	if(!strcmp(param, "PACLEN")) {
 		axp->paclen = value;
+		return;
+	}
+	if(!strcmp(param, "PTHRESH")) {
 		axp->pthresh = value;
 		return;
 	}

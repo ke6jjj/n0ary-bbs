@@ -176,11 +176,23 @@ build_tncs(char *s)
 	td->ax25.paclen = get_number(&s);
 	td->ax25.n2 = get_number(&s);
 	td->ax25.flags = 0;
+	td->ax25.pthresh = td->ax25.paclen / 2;;
 
-	/* Get SLIP encoding flags, if present. */
+	/*
+	 * Get extra options, if present.
+	 * These options are processed this way to remain backward-compatible
+	 * with existing installations.
+	 */
 	optional_flags = get_number(&s);
-	if (optional_flags != ERROR)
+	if (optional_flags != ERROR) {
+		/* SLIP encoding flags */
 		td->ax25.flags = optional_flags;
+
+		/* Get resend vs. poll threshold size */
+		optional_flags = get_number(&s);
+		if (optional_flags != ERROR)
+			td->ax25.pthresh = optional_flags;
+	}
 
 	while(*tmp != NULL)
 		tmp = &((*tmp)->next);
@@ -390,7 +402,7 @@ tnc_host(char *name)
 	return t->host;
 }
 
-struct Tnc_ax25 *
+struct ax25_params *
 tnc_ax25(char *name)
 {
 	struct TncDefinition *t = tnc_find(name);
