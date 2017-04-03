@@ -446,12 +446,14 @@ read_options(int argc, char **argv)
 		build_full_message_list();
 
 		while(pd) {
-			if(!strcmp(pd->name, Via))
+			if(!strcmp(pd->name, Via)) {
 				init_forwarding(Via, to_whom);
 				exit(0);
+			}
 			NEXT(pd);
 		}
-		exit(0);
+		PRINTF("Unknown port '%s'.\n", Via);
+		exit(1);
 	}
 }
 
