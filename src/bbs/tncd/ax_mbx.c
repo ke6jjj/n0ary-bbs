@@ -201,6 +201,7 @@ initmbox(struct mboxsess *mbp)
 {
 	mbp->pid = 0;	
 	mbp->spawned = FALSE;
+	mbp->al_proc_handle = NULL;
 	mbp->sendable_count = 0;
 	mbp->nagle_timer_id = -1;
 	mbp->nagle_gate_down = 1;
