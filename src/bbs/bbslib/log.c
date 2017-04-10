@@ -28,7 +28,7 @@ log_setdir(void)
 }
 
 void
-log_f(char *name, char *s, char *p)
+log_f(const char *name, const char *s, const char *p)
 {
 	FILE *fp;
 	char fn[80];
@@ -37,7 +37,7 @@ log_f(char *name, char *s, char *p)
 		return;
 
 	log_setdir();
-	sprintf(fn, "%s/%s", Log_Dir, name);
+	snprintf(fn, sizeof(fn), "%s/%s", Log_Dir, name);
 	if((fp = fopen(fn, "a+")) != NULL) {
 		fprintf(fp, "%s%s\n", s, p);
 		fclose(fp);
@@ -45,7 +45,7 @@ log_f(char *name, char *s, char *p)
 }
 
 void
-log_clear(char *name)
+log_clear(const char *name)
 {
 	char fn[80];
 

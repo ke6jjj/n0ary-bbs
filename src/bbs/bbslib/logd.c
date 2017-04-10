@@ -33,7 +33,7 @@ logd_read(void)
 }
 
 int
-logd_open(char *whoami)
+logd_open(const char *whoami)
 {
 	int port;
 
@@ -54,14 +54,13 @@ logd_open(char *whoami)
 }
 
 void
-logd(char *string)
+logd(const char *string)
 {
-	char buf[4096];
 	if(logd_sock == ERROR)
 		return;
 
-	sprintf(buf, "%s\n", string);
-	socket_raw_write(logd_sock, buf);
+	socket_raw_write(logd_sock, string);
+	socket_raw_write(logd_sock, "\n");
 }
 
 void
@@ -72,7 +71,7 @@ logd_close(void)
 }
 
 void
-logd_stamp(char *whoami, char *string)
+logd_stamp(const char *whoami, const char *string)
 {
 	if(logd_sock == ERROR) {
 		logd_open(whoami);

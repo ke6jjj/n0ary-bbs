@@ -652,12 +652,12 @@ void
 	parse_options(int argc, char *argv[],  struct ConfigurationList *cl, char *me),
 	show_configuration_rules(char *fn),
 	show_reqd_configuration(struct ConfigurationList *cl, char *proc_name, char *fn),
-	log_f(char *name, char *s, char *p),
-	log_clear(char *name),
+	log_f(const char *name, const char *s, const char *p),
+	log_clear(const char *name),
 	msgd_close(void),
-	logd(char *string),						/* logd.c */
-	logd_stamp(char *whoami, char *string),				/* logd.c */
-	logd_close(void),						/* logd.c */
+	logd(const char *string),                                  /* logd.c */
+	logd_stamp(const char *whoami, const char *string),        /* logd.c */
+	logd_close(void),                                          /* logd.c */
 	wpd_close(void),						/* wpd.c */
 	userd_close(void),						/* userd.c */
 	gated_close(void);						/* gated.c */
@@ -667,7 +667,7 @@ int
 	msgd_open(void),
 	msgd_fetch_multi(char *cmd, void (*callback)(char *s)),
 	msgd_fetch_textline(char *cmd, struct text_line **tl),
-	logd_open(char *whoami),				/* logd.c */
+	logd_open(const char *whoami),                             /* logd.c */
 	parse_callsign(char *call),				/* common.c */
 	get_daemon_version(char *id),
 	wpd_open(void),							/* wpd.c */
