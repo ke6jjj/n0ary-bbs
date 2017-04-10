@@ -58,7 +58,8 @@ struct ConfigurationList ConfigList[] = {
 static int
 service_port(struct active_processes *ap)
 {
-    char *c, *s, buf[256];
+	const char *c;
+	char *s, buf[256];
 
 	if(socket_read_line(ap->fd, buf, 256, 10) == ERROR)
 		return ERROR;

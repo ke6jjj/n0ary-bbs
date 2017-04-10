@@ -14,7 +14,28 @@ extern int shutdown_daemon;
 static char *
 help(void)
 {
-	return "OK\n";
+	return
+
+	"AGE ................. run aging process.\n"
+	"CREATE <user> ....... create a new user\n"
+	"FLUSH ............... flush user database to disk\n"
+	"KILL <user> ......... remove a user from the system\n"
+	"LOCATE <id> ......... show user with user number <id>\n"
+	"LOG <ON|OFF|CLR> ....\n"
+	"SEARCH .............. not implemented.\n"
+	"STAT ................ show status of connected user clients\n"
+	"SUFFIX <str> ........ find users matching suffix.\n"
+	"TIME <timestr> ...... temporarily pin notional time (0=normal)\n"
+	"USER <name|count> ... display last connect time(s) for user(s).\n"
+	"<user> CLEAR <variable> ...... clear value of user's <variable>\n"
+	"<user> CALL .................. show user's callsign\n"
+	"<user> LOGIN ................. mark user as having logged on\n"
+	"<user> SET <variable> <value>  set user's <variable> to <value>\n"
+        "       Some variables:\n"
+	"            BBS <ON|OFF>\n"
+	"            SYSOP <ON|OFF>\n"
+	"            IMMUNE <ON|OFF>\n"
+	"<user> SHOW ................. show all of user's variables\n";
 }
 
 char *
