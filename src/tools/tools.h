@@ -89,6 +89,10 @@ long
 	get_hexnum(char **str),					/* common.c */
 	get_number(char **str);					/* common.c */
 
+int
+	get_time_interval(char **str, int default_unit, int parse_two_words,
+		long *result);
+
 char
     *modem_read(int fd, int timeout),
 	*copy_string(char *s),					/* common.c */

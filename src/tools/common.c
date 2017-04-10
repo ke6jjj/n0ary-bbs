@@ -134,31 +134,119 @@ get_hexnum(char **str)
     return num;
 }
 
+/* This function replaces the old "get_number()" logic with
+ * a modern version which uses strtol() instead of sscanf().
+ *
+ * The old version was hard-coded to continue parsing past the number by
+ * advancing the cursor to the next non-whitespace character. This version
+ * makes such behavior optional, keyed on "advance".
+ *
+ * Example old behavior: *str = "123 Hello"    -> *str = "Hello", return 123
+ * Example old behavior: *str = "123Hello"     -> *str = "Hello", return 123
+ * Example new, no adv : *str = "123 Hello"    -> *str = " Hello", return 123
+ */
+static long
+get_number_and_advance(char **str, int advance)
+{
+	long num;
+	char *end;
+
+	num = strtol(*str, &end, 10);
+	if (end == *str)
+		/* nothing parsed */
+		return ERROR;
+
+	if (advance) {
+		NextChar(end);
+	}
+
+	*str = end;
+
+	return num;
+}
+
 long
 get_number(char **str)
 {
-    char buf[20], *p = buf;
-    long num;
-	int neg = FALSE;
+	/* Get a number and move to next word */
+	return get_number_and_advance(str, 1);
+}
 
-	if(**str == '-') {
-		neg = TRUE;
-		(*str)++;
+int
+get_time_interval(char **str, int default_unit, int parse_two, long *result)
+{
+	char *p;
+	long base;
+
+	base = get_number_and_advance(str, parse_two);
+	if (base == ERROR)
+		return ERROR;
+
+	p = *str;
+
+	switch (*p) {
+	case 's':
+	case 'S':
+		/* seconds */
+		base *= 1;
+		break;
+	case 'm':
+	case 'M':
+		switch (p[1]) {
+		case 'i':
+		case 'I':
+		 	/* minutes */
+			base *= tMin;
+			break;
+		case 'o':
+		case 'O':
+		 	/* months */
+			base *= tMonth;
+			break;
+		default:
+			return ERROR;
+		}
+		break;
+	case 'h':
+	case 'H':
+		/* hours */
+		base *= tHour;
+		break;
+	case 'd':
+	case 'D':
+		/* days */
+		base *= tDay;
+		break;
+	case 'w':
+	case 'W':
+		/* weeks */
+		base *= tWeek;
+		break;
+	case 'y':
+	case 'Y':
+		/* years */
+		base *= tYear;
+		break;
+	case '\0':
+		/* clean default */
+		base *= default_unit;
+		break;
+	case ' ':
+		/* allowable default if one word */
+		if (parse_two == 0) {
+			base *= default_unit;
+		} else {
+			return ERROR;
+		}
+		break;
+	default:
+		/* unknown unit */
+		return ERROR;
+		break;
 	}
 
-    while(isdigit(**str))
-        *p++ = *(*str)++;
-    *p = 0;
-    NextChar(*str);
-
-    if(buf[0] == 0)
-        return ERROR;
-
-    sscanf(buf, "%ld", &num);
-
-	if(neg)
-		num *= -1;
-    return num;
+	*result = base;
+	return OK;
 }
 
 char *

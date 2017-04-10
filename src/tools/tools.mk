@@ -18,5 +18,18 @@ $(eval $(call create_compile_rules,TOOLS))
 $(TOOLS_LIB): $(TOOLS_OBJS)
 	$(AR) rcv $@ $^
 
+# Make a debugging version of the library available for testing
+TOOLS_DEBUG_SRCDIR := $(TOOLS_SRCDIR)
+TOOLS_DEBUG_OBJDIR := $(TOOLS_OBJDIR)/debug
+TOOLS_DEBUG_SRCS   := $(TOOLS_SRCS)
+TOOLS_DEBUG_CFLAGS := -I$(TOOLS_SRCDIR) $(BBS_O_CFLAGS) -g
+TOOLS_DEBUG_LIB    := $(TOOLS_DEBUG_OBJDIR)/libtools-debug.a
+
+$(eval $(call create_compile_rules,TOOLS_DEBUG))
+
+$(TOOLS_DEBUG_LIB): $(TOOLS_DEBUG_OBJS)
+	$(AR) rcv $@ $^
+
 TOOLS_CLEAN:
 	rm -rf $(TOOLS_OBJDIR)
+	rm -rf $(TOOLS_DEBUG_OBJDIR)

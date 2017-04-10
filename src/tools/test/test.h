@@ -1,5 +1,5 @@
-#ifndef CONTROLLER_TEST_H
-#define CONTROLLER_TEST_H
+#ifndef TOOLS_TEST_H
+#define TOOLS_TEST_H
 
 void TESTSUITE_BEGIN(void);
 void TEST_BEGIN(const char *name);
