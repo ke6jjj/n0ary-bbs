@@ -434,35 +434,16 @@ bbsd_get_configuration(struct ConfigurationList *cl)
 		if(strncmp(result, "NO,", 3)) {
 			switch(cl->type) {
 			case tTIME:
+				{
+				long interval;
 				p = result;
-				*((int*)cl->ptr) = get_number(&p);
-				uppercase(p);
-				if(*p == 'S') {						/* seconds */
-					break;
+				if (get_time_interval(&p,tSec,1,&interval)!=OK)
+				{
+					error_log("bbsd_get_configuration: "
+					          "invalid time interval");
+					return ERROR;
 				}
-				if(*p == 'M' && *(p+1) == 'I') {	/* minutes */
-					*((int*)cl->ptr) *= tMin;
-					break;
-				}
-				if(*p == 'H') {						/* hours */
-					*((int*)cl->ptr) *= tHour;
-					break;
-				}
-				if(*p == 'D') {						/* days */
-					*((int*)cl->ptr) *= tDay;
-					break;
-				}
-				if(*p == 'W') {						/* weeks */
-					*((int*)cl->ptr) *= tWeek;
-					break;
-				}
-				if(*p == 'M' && *(p+1) == 'O') {	/* months */
-					*((int*)cl->ptr) *= tMonth;
-					break;
-				}
-				if(*p == 'Y') {						/* years */
-					*((int*)cl->ptr) *= tYear;
-					break;
+				*((int*)cl->ptr) = interval;
 				}
 				break;
 			case tINT:
