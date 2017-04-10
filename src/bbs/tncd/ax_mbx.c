@@ -1,3 +1,4 @@
+#include <sys/socket.h>
 #include <stdio.h>
 #include <fcntl.h>
 #include <errno.h>
@@ -149,39 +150,6 @@ ax_control_accept(void *obj, void *arg0, int arg1)
 	}
 }
 
-/*
- * Accept an inbound control session for an existing mailbox session
- * (generally this is a newly spawned BBS trying to reach back to
- * its spawning AX25 connection).
- */
-static void
-mbx_accept(void *obj, void *arg0, int arg1)
-{
-	struct mboxsess *mbp = obj;
-
-	if ((mbp->fd = accept_socket(mbp->socket)) == ERROR ) {
-		fprintf(stderr, "mbx_accept() error\n");
-		shutdown_process(mbp, TRUE);
-	}
-
-	/* We can stop listening for new connections now */
-	alEvent_deregister(mbp->al_socket_handle);
-	mbp->al_socket_handle = NULL;
-	close(mbp->socket);
-	mbp->socket = ERROR;
-
-	/* Now start listening for activity on the connection*/
-	alCallback cb;
-	AL_CALLBACK(&cb, mbp, mbx_handle_network);
-	int res = alEvent_registerFd(mbp->fd, ALFD_READ, cb,
-		&mbp->al_fd_handle);
-	if (res != 0) {
-		fprintf(stderr, "mbx network i/o register problem\n");
-		exit(1);
-	}
-}
-
-
 static struct mboxsess *
 newmbox(void)
 {
@@ -211,8 +179,6 @@ initmbox(struct mboxsess *mbp)
 	mbp->orig = NULL;
 	mbp->fd = ERROR;
 	mbp->al_fd_handle = NULL;
-	mbp->socket = ERROR;
-	mbp->al_socket_handle = NULL;
 	mbp->networkfull = 0;
 }
 
@@ -544,14 +510,6 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 		close(mbp->fd);
 		mbp->fd = ERROR;
 	}
-	if(mbp->socket != ERROR) {
-		if(dbug_level & dbgVERBOSE)
-			printf("closing socket %x..\n", mbp->socket);
-		if (mbp->al_socket_handle != NULL)
-			alEvent_deregister(mbp->al_socket_handle);
-		close(mbp->socket);
-		mbp->socket = ERROR;
-	}
 	if(mbp->axbbscb != NULL) {
 		if(issue_disc) {
 			if(dbug_level & dbgVERBOSE)
@@ -641,9 +599,9 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 void
 mbx_bbs_connect(struct ax25_cb *axp)
 {
-	int pid, j;
+	int pid, j, sockpair[2];
 	char addr[256];
-	char call[10], port[10];
+	char call[10];
 	alCallback cb;
 	struct mboxsess *mbp;
 
@@ -669,22 +627,9 @@ mbx_bbs_connect(struct ax25_cb *axp)
 	call[6]='\0';	/*terminate call letters*/
 	strcpy(mbp->call,call);   /*Copy call to session*/
 
-	/* Create a socket for the BBS to connect to to receive all I/O */
-	mbp->port = 0;
-	mbp->socket = socket_listen(NULL, &(mbp->port));
-	if (mbp->socket == ERROR) {
-		fprintf(stderr, "bbs backsocket listen error\n");
-		exit(1);
-	}
-				
-	sprintf(port, "%d", mbp->port);
-
-	/* Establish a notification callback for when the BBS connects */
-	AL_CALLBACK(&cb, mbp, mbx_accept);
-	int res = alEvent_registerFd(mbp->socket, ALFD_READ, cb,
-		&mbp->al_socket_handle);
-	if (res != 0) {
-		fprintf(stderr, "bbs accept register error\n");
+	/* Create a socket pair for the BBS to talk to us */
+	if (socketpair(AF_LOCAL, SOCK_STREAM, 0, sockpair) == -1) {
+		fprintf(stderr, "bbs socket pair spawn error\n");
 		exit(1);
 	}
 
@@ -694,21 +639,43 @@ mbx_bbs_connect(struct ax25_cb *axp)
 
 	if(dbug_level & dbgVERBOSE) {
 		printf("Starting bbs process [1]:\n");
-		printf("\t%s/b_bbs -v %s -e -s %s -a %s %s\n",
-			Bin_Dir, Tncd_Name, port, addr, call);
+		printf("\t%s/b_bbs -v %s -e -a %s %s\n",
+			Bin_Dir, Tncd_Name, addr, call);
 	}
 
 	/*now, fork and exec the bbs*/
 	if((pid=fork()) == 0){			/*if we are the child*/
 		char cmd[256];
-
 		sprintf(cmd, "%s/b_bbs", Bin_Dir);
-		execl(cmd, "b_bbs", "-v", Tncd_Name, "-s", port, "-e", "-a",
-			addr, call, 0);
+
+		/* Setup side B of the socket pair to be both stdin and
+		 * stdout.
+		 */
+		close(sockpair[0]);
+		dup2(sockpair[1], 0);
+		dup2(sockpair[1], 1);
+
+		execl(cmd, "b_bbs", "-v", Tncd_Name,  "-e", "-a", addr,
+			call, 0);
 		exit(1);
 	}
 
-	mbp->pid=pid;				/* save pid of new baby*/
+	/* Close the remote side of the socket pair */
+	close(sockpair[1]);
+
+	/* Save the local side */
+	mbp->fd = sockpair[0];
+
+	/* And start listening for activity on the local side */
+	AL_CALLBACK(&cb, mbp, mbx_handle_network);
+	int res = alEvent_registerFd(mbp->fd, ALFD_READ, cb,
+		&mbp->al_fd_handle);
+	if (res != 0) {
+		fprintf(stderr, "mbx process i/o register problem\n");
+		exit(1);
+	}
+
+	mbp->pid = pid;		/* save pid of new baby*/
 	mbp->spawned = TRUE;
 
 	/* Establish a notification callback when the process exits. */

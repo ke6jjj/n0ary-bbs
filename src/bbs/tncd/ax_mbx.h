@@ -14,11 +14,6 @@ struct mboxsess{			/*mailbox session structure*/
 	int fd;
 	alEventHandle al_fd_handle;
 
-	int socket;
-	alEventHandle al_socket_handle;
-
-	int port;
-
 	int nagle_timer_id; /* id of current small packet timer */
 	int sendable_count; /* number of bytes that can be enqueued now */
 	int byte_cnt; /* number of bytes in buf, waiting to be enqueued */

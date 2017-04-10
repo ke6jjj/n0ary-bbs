@@ -329,9 +329,8 @@ monitor_dump(struct Monitor_Session *mp)
 			return;
 
 		monitor_printf(&mpp,
-			"pid=%d spawned=%s fd=%d socket=%d port=%d\n",
-			mpb->pid, mpb->spawned ? "TRUE":"FALSE", mpb->fd,
-			mpb->socket, mpb->port);
+			"pid=%d spawned=%s fd=%d\n",
+			mpb->pid, mpb->spawned ? "TRUE":"FALSE", mpb->fd);
 
 		switch(mpb->axbbscb->state) {
 		case DISCONNECTED:	state = "DISCONNECTED"; break;
