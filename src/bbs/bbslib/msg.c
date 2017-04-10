@@ -337,22 +337,30 @@ message_matches_criteria(char *match, struct msg_dir_entry *m, long timenow)
 			match++;
 			NextChar(match);
 			{
-				long target =
-					timenow - ((long)get_number(&match) * tDay);
+				long interval, target;
+				if (get_time_interval(&match,tDay,0,&interval)!=OK)
+					return FALSE;
+
+				target = timenow - interval;
 				if(m->edate > target)
 					return FALSE;
 			}
+			NextChar(match);
 			continue;
 
 		case cAGE_NEWER:
 			match++;
 			NextChar(match);
 			{
-				long target =
-					timenow - ((long)get_number(&match) * tDay);
+				long interval, target;
+				if (get_time_interval(&match,tDay,0,&interval)!=OK)
+					return FALSE;
+
+				target = timenow - interval;
 				if(m->edate < target)
 					return FALSE;
 			}
+			NextChar(match);
 			continue;
 
 		case cFLAG:
