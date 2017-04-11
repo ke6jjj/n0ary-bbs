@@ -18,6 +18,7 @@ include $(TOP_SRCDIR)/mk/obj.mk
 # Get the various component rules.
 #
 include $(TOP_SRCDIR)/tools/tools.mk
+include $(TOP_SRCDIR)/tools/test/tools-test.mk
 include $(TOP_SRCDIR)/qa/qa.mk
 include $(TOP_SRCDIR)/bbs/bbs_gmake.mk
 include $(TOP_SRCDIR)/scripts/scripts.mk
