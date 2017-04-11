@@ -3,35 +3,38 @@ BBS_CONFIG_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 include $(BBS_CONFIG_SRCDIR)/site_config.mk
 
 ifdef BBS_DEBUG
-  BBS_CFLAGS += -g
-  BBS_LDFLAGS += -g
+  BBS_OPT_CFLAGS = -g
+  BBS_OPT_LDFLAGS = -g
 else
-  BBS_CFLAGS += -O2
+  BBS_OPT_CFLAGS = -O3
 endif
 
-BBS_CFLAGS += -Werror -I$(TOP_SRCDIR)/include -DBBS_DIR=\"$(BBS_DIR)\"
+BBS_O_CFLAGS += -Werror -I$(TOP_SRCDIR)/include -DBBS_DIR=\"$(BBS_DIR)\"
 
 ifneq ($(ENABLE_DECTALK),0)
-  BBS_CFLAGS += -DDECTALK
+  BBS_O_CFLAGS += -DDECTALK
 endif
 
 ifneq ($(ENABLED_DTMF),0)
-  BBS_CFLAGS += -DDTMF
+  BBS_O_CFLAGS += -DDTMF
 endif
 
 ifdef SUNOS
-  BBS_CFLAGS += -DSUNOS
+  BBS_O_CFLAGS += -DSUNOS
   HAVE_TIMEGM=1
 endif
 ifdef FREEBSD
   HAVE_TIMEGM=1
   HAVE_TERMIOS=1
-  BBS_LDFLAGS+= -lcompat
+  BBS_O_LDFLAGS+= -lcompat
 endif
 
 ifdef HAVE_TIMEGM
-  BBS_CFLAGS += -DHAVE_TIMEGM
+  BBS_O_CFLAGS += -DHAVE_TIMEGM
 endif
 ifdef HAVE_TERMIOS
-  BBS_CFLAGS += -DHAVE_TERMIOS
+  BBS_O_CFLAGS += -DHAVE_TERMIOS
 endif
+
+BBS_CFLAGS = $(BBS_O_CFLAGS) $(BBS_OPT_CFLAGS)
+BBS_LDFLAGS = $(BBS_O_LDFLAGS) $(BBS_OPT_LDFLAGS)
