@@ -437,7 +437,7 @@ bbsd_get_configuration(struct ConfigurationList *cl)
 				{
 				long interval;
 				p = result;
-				if (get_time_interval(&p,tSec,1,&interval)!=OK)
+				if (get_time_interval(&p,1,1,&interval)!=OK)
 				{
 					error_log("bbsd_get_configuration: "
 					          "invalid time interval");
