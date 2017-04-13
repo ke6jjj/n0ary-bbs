@@ -1,0 +1,27 @@
+#!/bin/sh
+ADVENTURE_PROG=/usr/local/bin/adventure
+
+BBS_DIR=$1
+BBS_USERID=$2
+BBS_USER=$3
+BBS_USERNAME=$4
+
+SAVEDIR=${BBS_DIR}/doors/data/adventure
+USER_SAVE=${SAVEDIR}/${BBS_USERID}
+
+#
+# Turn off tty echo. Most users will be running in half duplex on a packet
+# BBS.
+#
+stty -echo
+
+#
+# See if this user has an existing save file.
+#
+if [ -f ${USER_SAVE} ]; then
+	# User has a save file, resume
+	${ADVENTURE_PROG} -r ${USER_SAVE}
+else
+	# User has no save file. Start anew.
+	${ADVENTURE_PROG} ${USER_SAVE}
+fi

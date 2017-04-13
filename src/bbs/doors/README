@@ -1,0 +1,10 @@
+Extending the BBS with "doors".
+
+In the spirit of classical bulletin board systems of old, N0ARY supports
+extending the BBS experience with external programs called "doors". A door
+is a program, separate from the BBS, which can be spawned and which will take
+over interaction with the user until he or she is finished with the program.
+
+TBD describe door protocol.
+
+<prog> <BBS_DIR> <USERID> <USERCALL> <USERNAME>
