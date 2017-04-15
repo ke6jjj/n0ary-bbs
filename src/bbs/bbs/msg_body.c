@@ -422,7 +422,7 @@ include_msg(char *buf, int type)
 
 	tl = m->body;
 	while(tl) {
-		if(strncmp(tl->s, "R:9", 3)) {
+		if(strncmp(tl->s, "R:", 2)) {
 			sprintf(buf, "> %s\n", tl->s);
 			link_line(buf);
 			PRINTF("%s", buf);

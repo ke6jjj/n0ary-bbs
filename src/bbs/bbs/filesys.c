@@ -586,7 +586,7 @@ filesys_write_msg(int msgnum, char *path)
 	while(tl) {
 
 			/* strip routing information */
-		if(!strncmp(tl->s, "R:9", 3))
+		if(!strncmp(tl->s, "R:", 2))
 			continue;
 
 		if(!strcmp(tl->s, "/EX\n"))

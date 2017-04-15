@@ -264,7 +264,7 @@ user_unread(int what, int msgnum)
 			tl = m->body;
 
 			while(tl) {
-				if(strncmp(tl->s, "R:9", 3)) {
+				if(strncmp(tl->s, "R:", 2)) {
 					int len = strlen(tl->s)/15;
 
 							/* let's check for termination indications,
