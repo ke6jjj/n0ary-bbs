@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MAXINDX	1000
+#define MAXINDX	2000
 
 #include "bbslib.h"
 #include "vars.h"
@@ -37,7 +37,7 @@ move_string(char *str)
 int
 main(int argc, char *argv[])
 {
-	int i;
+	int i, maxfound;
 	char buf[256], *msgs, *msgdat, *msgidx;
 
 	msgs = "helpmsg.txt";
@@ -82,14 +82,15 @@ main(int argc, char *argv[])
 			move_string(buf);
 		}
 	}
+
+	maxfound = -1;
+	for(i=0; i<MAXINDX; i++) {
+		if (indx[i] != 0) {
+			maxfound = i;
+		}
+	}
 	
-#if 0
-	for(i=0; i<MAXINDX; i++)
-		putw(indx[i], idx);
-#else
-		/* Fix from Dirk-Jan Koopman */
-	fwrite(indx, MAXINDX*sizeof(int), 1, idx);
-#endif
+	fwrite(indx, (maxfound+1)*sizeof(int), 1, idx);
 
 	fclose(txt);
 	fclose(dat);
