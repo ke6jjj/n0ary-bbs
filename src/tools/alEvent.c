@@ -107,6 +107,7 @@ typedef struct alEventDescriptorEntry {
   int pendingEventFlags; /* Events pending for this entry */
   int enabledFlags;      /* Event types currently enabled */
   LIST_ENTRY(alEventDescriptorEntry) listEntry;
+  LIST_ENTRY(alEventDescriptorEntry) destroyListEntry;
 } alEventDescriptorEntry;
 
 /*
@@ -191,12 +192,6 @@ alEvent_shutdown(void)
 
   while (!LIST_EMPTY(&alEventDescriptors)) {
     evEntry = LIST_FIRST(&alEventDescriptors);
-    LIST_REMOVE(evEntry, listEntry);
-    free(evEntry);
-  }
-
-  while (!LIST_EMPTY(&alDestroyingEventDescriptors)) {
-    evEntry = LIST_FIRST(&alDestroyingEventDescriptors);
     LIST_REMOVE(evEntry, listEntry);
     free(evEntry);
   }
@@ -526,7 +521,9 @@ alEvent_poll(void)
    */
   evEntry = LIST_FIRST(&alDestroyingEventDescriptors);
   while (evEntry != NULL) {
-    evNext = LIST_NEXT(evEntry, listEntry);
+    assert(evEntry->active == 0);
+    LIST_REMOVE(evEntry, listEntry);
+    evNext = LIST_NEXT(evEntry, destroyListEntry);
     free(evEntry);
     evEntry = evNext;
   }
@@ -587,9 +584,9 @@ alEvent_poll(void)
       continue;
     if (alKeventList[i].filter == EVFILT_READ)
       evEntry->pendingEventFlags |= ALFD_READ;
-    if (alKeventList[i].filter == EVFILT_WRITE)
+    else if (alKeventList[i].filter == EVFILT_WRITE)
       evEntry->pendingEventFlags |= ALFD_WRITE;
-    if (alKeventList[i].filter == EVFILT_PROC) {
+    else if (alKeventList[i].filter == EVFILT_PROC) {
       if (alKeventList[i].fflags & NOTE_EXIT)
         evEntry->pendingEventFlags |= ALPROC_EXIT;
     }
@@ -599,13 +596,11 @@ alEvent_poll(void)
    * Issue event callbacks on all triggered event handles.
    */
   for (evEntry = LIST_FIRST(&alEventDescriptors); evEntry != NULL;) {
-	/* Get pointer to next entry as this one may come off the list */
-	alEventDescriptorEntry *evNext = LIST_NEXT(evEntry, listEntry);
-        if (evEntry->pendingEventFlags != 0) {
-          alEvent_doCallback(evEntry->cb, evEntry, evEntry->pendingEventFlags);
-          evEntry->pendingEventFlags = 0;
-        }
-        evEntry = evNext;
+    if (evEntry->active && evEntry->pendingEventFlags != 0) {
+      alEvent_doCallback(evEntry->cb, evEntry, evEntry->pendingEventFlags);
+      evEntry->pendingEventFlags = 0;
+    }
+    evEntry = LIST_NEXT(evEntry, listEntry);
   }
 
   /*
@@ -714,8 +709,7 @@ alEvent_deregister(alEventHandle handle)
   i = 0;
 
   if (entry->active) {
-    LIST_REMOVE(entry, listEntry);
-    LIST_INSERT_HEAD(&alDestroyingEventDescriptors, entry, listEntry);
+    LIST_INSERT_HEAD(&alDestroyingEventDescriptors, entry, destroyListEntry);
     switch (entry->subjectType) {
     case AL_INVALID:
       assert(0); /* Shouldn't happen */
