@@ -890,11 +890,12 @@
 1100 A commands ----------------------------------------------
 1100    ACTivate     unkill a message  <= SYSOP ONLY
 1100    Add          (keyword: EVENT, CLUBS, SKIP), same as +
+1100    ADVenture
 1100    All          (keyword: LIST)
 1100    ASCENDing    (keyword: LIST)
 1100    Approved     (keyword: SET)
 1100    AXRelay      set outgoing SSID (keyword: GATEWAY)
-0010 A     Cmd: AXRelay
+0010 A     Cmd: ADVenture AXRelay
 0010   Keyword: ACTivate Add All ASCENDing Approved
 
 !902
@@ -951,9 +952,9 @@
 
 !907
 1100 G commands ----------------------------------------------
-1100    None at this time
+1100    Games
 0010 G     Cmd: none
-0010   Keyword: none
+0010   Keyword: Games
 
 !908
 1100 H commands ----------------------------------------------
@@ -2329,3 +2330,17 @@
 1110 (until changed).
 1100   AXRELAY 9
 1100   AXRELAY AUTO
+
+!1005
+1110 ADVenture command =======================================================
+1110   ADVenture
+1110
+1110 Play the text-based classic game, "ADVENTURE", in which you explore
+1110 the mythical Colossal Cave, hunting for treasure and glory.
+
+!1006
+1110 Games ===================================================================
+1110   ADVenture
+1110
+1110 This system has one game at the moment, "ADVENTURE", which is a text-
+1110 based classic from the 1970s. See ADVENTURE for more information.

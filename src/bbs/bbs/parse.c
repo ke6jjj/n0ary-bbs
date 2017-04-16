@@ -6,6 +6,7 @@
 
 #include "c_cmmn.h"
 #include "config.h"
+#include "door.h"
 #include "tools.h"
 #include "bbslib.h"
 #include "function.h"

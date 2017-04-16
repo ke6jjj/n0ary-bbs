@@ -7,8 +7,8 @@ BBS_APP_PROD := b_bbs
 BBS_APP_SRCS := \
 	bbs.c body.c\
 	callbk.c cmd_pend.c common.c config.c\
-	distrib.c\
-	event.c \
+	distrib.c door.c \
+	event.c ext_sess.c \
 	file.c filesys.c \
 	help.c history.c io.c \
 	login.c load.c\

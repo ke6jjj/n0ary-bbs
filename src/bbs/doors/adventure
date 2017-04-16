@@ -2,12 +2,10 @@
 ADVENTURE_PROG=/usr/local/bin/adventure
 
 BBS_DIR=$1
-BBS_USERID=$2
-BBS_USER=$3
-BBS_USERNAME=$4
+BBS_USER=$2
 
 SAVEDIR=${BBS_DIR}/doors/data/adventure
-USER_SAVE=${SAVEDIR}/${BBS_USERID}
+USER_SAVE=${SAVEDIR}/${BBS_USER}
 
 #
 # Turn off tty echo. Most users will be running in half duplex on a packet

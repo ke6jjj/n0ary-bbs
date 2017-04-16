@@ -431,6 +431,7 @@ struct possible_tokens HelpOperands[] = {
 	{ pA,	"ACTIVATE",		3, 8, ACTIVATE,	958,NULL,NULL },
 	{ pA,	"ADDRESS",		4, 7, ADDRESS,	940,NULL,NULL },
 	{ pA,	"ADD",			2, 3, ADD,		941,NULL,NULL },
+	{ pA,	"ADVENTURE",	3, 9, ADVENTURE,	1005,NULL,NULL },
 	{ pA,	"ALL",			2, 3, ALL,		942,NULL,NULL },
 	{ pA,	"A",			1, 0, ACMD,		901,NULL,NULL },
 
@@ -636,6 +637,7 @@ struct possible_tokens HelpOperands[] = {
 struct possible_tokens Opcodes[] = {
 	{ pA,	"TEST",			4, 4, ME, 0,			system_open, DummyOperands },
 	{ pS,	"ACTIVATE",		3, 8, ACTIVATE, 0,	msg,		ActOperands },
+	{ pA,   "ADVENTURE",	3, 9,  ADVENTURE, 0,	adventure,	DummyOperands },
 	{ pUS,	"BASE",			2, 4, BASE, 0,		usr,		DummyOperands },
 	{ pUS,	"BYE",			1, 3, BYE, 0,		maint,		DummyOperands },
 	{ pA,	"CD",			2, 2, CD, 0,			filesys,	DummyOperands },

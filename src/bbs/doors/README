@@ -7,4 +7,5 @@ over interaction with the user until he or she is finished with the program.
 
 TBD describe door protocol.
 
-<prog> <BBS_DIR> <USERID> <USERCALL> <USERNAME>
+Now   : <prog> <BBS_DIR> <USERCALL>
+Future: <prog> <BBS_DIR> <USERID> <USERCALL> <USERNAME>
