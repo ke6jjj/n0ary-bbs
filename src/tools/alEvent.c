@@ -123,6 +123,7 @@ typedef struct alQueuedCallbackEntry {
 /*****************************************************************************
  * PRIVATE PROTOTYPES                                                        *
  *****************************************************************************/
+static void alEvent__clean(void);
 static int alEvent__addTimerInternal(const struct timeval *tv, int flags,
   alCallback cb, alTimerEntry **r);
 static void alEvent__rescheduleTimer(alTimerEntry *entry);
@@ -493,11 +494,12 @@ alEvent_poll(void)
   alTimerEntry *timerEntry, *timerEntryNext;
   alEventDescriptorEntry *evEntry, *evNext;
   alQueuedCallbackEntry *cbEntry;
-  int nevents, i;
+  int nevents, i, dirty;
   
   /*
    * Issue any queued callbacks.
    */
+  dirty = !SLIST_EMPTY(&alQueuedCallbacks);
   while (!SLIST_EMPTY(&alQueuedCallbacks)) {
     cbEntry = SLIST_FIRST(&alQueuedCallbacks);
     SLIST_REMOVE_HEAD(&alQueuedCallbacks, listEntry);
@@ -506,28 +508,16 @@ alEvent_poll(void)
   }
   
   /*
-   * Free any timers that are pending deletion.
+   * Free any timers or event descriptors that are no longer valid
+   * as the result of any callbacks.
    */
-  timerEntry = LIST_FIRST(&alDestroyingTimerQueue);
-  while (timerEntry != NULL) {
-    timerEntryNext = LIST_NEXT(timerEntry, listEntry);
-    free(timerEntry);
-    timerEntry = timerEntryNext;
-  }
-  LIST_INIT(&alDestroyingTimerQueue);
+  alEvent__clean();
 
   /*
-   * Free any event descriptor notifications that are pending deletion.
+   * There may be nothing to do now.
    */
-  evEntry = LIST_FIRST(&alDestroyingEventDescriptors);
-  while (evEntry != NULL) {
-    assert(evEntry->active == 0);
-    LIST_REMOVE(evEntry, listEntry);
-    evNext = LIST_NEXT(evEntry, destroyListEntry);
-    free(evEntry);
-    evEntry = evNext;
-  }
-  LIST_INIT(&alDestroyingEventDescriptors);
+  if (!alEvent_pending())
+    return;
 
   /*
    * If there are any timers pending, compute how soon the earliest one
@@ -634,6 +624,9 @@ alEvent_poll(void)
     } else
       break;
   }
+
+  /* Clean up any timers or events that should be culled. */
+  alEvent__clean();
 }
 
 int
@@ -745,6 +738,37 @@ alEvent_deregister(alEventHandle handle)
 /*****************************************************************************
  * PRIVATE INTERFACES                                                        *
  *****************************************************************************/
+
+static void
+alEvent__clean(void)
+{
+  alTimerEntry *timerEntry, *timerEntryNext;
+  alEventDescriptorEntry *evEntry, *evNext;
+
+  /*
+   * Free any timers that are pending deletion.
+   */
+  timerEntry = LIST_FIRST(&alDestroyingTimerQueue);
+  while (timerEntry != NULL) {
+    timerEntryNext = LIST_NEXT(timerEntry, listEntry);
+    free(timerEntry);
+    timerEntry = timerEntryNext;
+  }
+  LIST_INIT(&alDestroyingTimerQueue);
+
+  /*
+   * Free any event descriptor notifications that are pending deletion.
+   */
+  evEntry = LIST_FIRST(&alDestroyingEventDescriptors);
+  while (evEntry != NULL) {
+    assert(evEntry->active == 0);
+    LIST_REMOVE(evEntry, listEntry);
+    evNext = LIST_NEXT(evEntry, destroyListEntry);
+    free(evEntry);
+    evEntry = evNext;
+  }
+  LIST_INIT(&alDestroyingEventDescriptors);
+}
 
 static int
 alEvent__addTimerInternal(const struct timeval *tv, int flags, alCallback cb,
