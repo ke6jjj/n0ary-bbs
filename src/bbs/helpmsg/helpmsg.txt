@@ -2337,6 +2337,9 @@
 1110
 1110 Play the text-based classic game, "ADVENTURE", in which you explore
 1110 the mythical Colossal Cave, hunting for treasure and glory.
+1110
+1110 To quit the game temporarily (your progress is always saved) simply
+1110 type "bye" or "quit". To give up and start over type "giveup".
 
 !1006
 1110 Games ===================================================================
