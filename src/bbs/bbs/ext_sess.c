@@ -32,8 +32,10 @@
 
 static void ExtSession_stdinRead(void *, void *, int);
 static void ExtSession_slaveRead(void *, void *, int);
+static void ExtSession_childDone(ExtSession *ls, int code);
 static void ExtSession_childExit(void *, void *, int);
-static void ExtSession_execChild(ExtSession *);
+static void ExtSession_childWaitTimeout(void *, void *, int);
+static void ExtSession_execChild(ExtSession *ls);
 static void ExtSession_stop(ExtSession *ls);
 
 int
@@ -81,6 +83,7 @@ ExtSession_init(ExtSession *ls, const char *prog, int argc,
 	ls->argv = argv_copy;
 	ls->master_fd = master_fd;
 	ls->slave_path = slave_copy;
+	ls->childWaitTimer = -1;
 
 	return EXTSESS_OK;
 
@@ -120,7 +123,7 @@ ExtSession_run(ExtSession *ls, int stdin_fd, int stdout_fd)
 	ls->stdin_fd = stdin_fd;
 	ls->stdout_fd = stdout_fd;
 
-	/* Get callbacks from data available from login process (and shell */
+	/* Get callbacks from data available from child process */
 	AL_CALLBACK(&cb, ls, ExtSession_slaveRead);
 	res = alEvent_registerFd(ls->master_fd, ALFD_READ, cb,
 		&ls->slaveHandle);
@@ -142,17 +145,12 @@ ExtSession_run(ExtSession *ls, int stdin_fd, int stdout_fd)
 	res = alEvent_registerProc(pid, ALPROC_EXIT, cb, &ls->childHandle);
 	err_if(res < 0, EXTSESS_REGISTER_CHILD, res, RegisterChildPidFailed);
 
-	ls->run = 1;
-
-	while (ls->run && alEvent_pending())
+	while (alEvent_pending())
 		alEvent_poll();
 
-	if (ls->childPid != 0) {
-		int dummy;
-		kill(ls->childPid, SIGHUP);
-		waitpid(ls->childPid, &dummy, 0);
-		res = EXTSESS_UNKNOWN;
-	} else if (ls->childExitCode == -1) {
+	alEvent_shutdown();
+
+	if (ls->childExitCode == -1) {
 		res = EXTSESS_UNKNOWN;
 	} else if (ls->childExitCode != 0) {
 		res = ls->childExitCode;
@@ -160,7 +158,8 @@ ExtSession_run(ExtSession *ls, int stdin_fd, int stdout_fd)
 		res = EXTSESS_OK;
 	}
 
-	alEvent_deregister(ls->childHandle);
+	return res;
+
 RegisterChildPidFailed:
 ForkFailed:
 	alEvent_deregister(ls->slaveHandle);
@@ -212,18 +211,32 @@ ExtSession_deinit(ExtSession *ls)
 {
 	size_t i;
 
-	close(ls->master_fd);
 	free(ls->slave_path);
 	for (i = 0; i < ls->argc; i++)
 		free(ls->argv[i]);
 	free(ls->argv);
 }
 
-/* Cause the event loop to stop */
+/* Stop running due to I/O error or EOF */
 static void
 ExtSession_stop(ExtSession *ls)
 {
-	ls->run = 0;
+	alCallback cb;
+
+	if (ls->stdinHandle != NULL)
+		alEvent_deregister(ls->stdinHandle);
+	if (ls->slaveHandle != NULL) {
+		alEvent_deregister(ls->slaveHandle);
+		close(ls->master_fd);
+		ls->master_fd = -1;
+	}
+	ls->slaveHandle = NULL;
+	ls->stdinHandle = NULL;
+	if (ls->childPid != 0) {
+		/* Wait a moment for the child process to exit on its own */
+		AL_CALLBACK(&cb, ls, ExtSession_childWaitTimeout);
+		ls->childWaitTimer = alEvent_addTimer(5000, 0, cb);
+	}
 }
 
 static void
@@ -289,7 +302,7 @@ static void
 ExtSession_childExit(void *lsp, void *arg0, int arg1)
 {
 	ExtSession *ls = lsp;
-	int res, code;
+	int res, code, exitcode;
 
 	assert(ls->childHandle != NULL);
 	assert(ls->childPid > 0);
@@ -299,17 +312,46 @@ ExtSession_childExit(void *lsp, void *arg0, int arg1)
 		if (res < 0 && errno != EINTR) {
 			fd_printf(ls->stdout_fd, "child wait: %s\n",
 				strerror(errno));
-			ExtSession_stop(ls);
+			ExtSession_childDone(ls, -1);
 			return;
 		}
 	} while (res < 0);
 
 	if (WIFEXITED(code))
-		ls->childExitCode = WEXITSTATUS(code);
+		exitcode = WEXITSTATUS(code);
+	else
+		exitcode = -1;
 
+	ExtSession_childDone(ls, exitcode);
+}
+
+static void
+ExtSession_childDone(ExtSession *ls, int code)
+{
 	ls->childPid = 0;
-
+	ls->childExitCode = code;
+	alEvent_deregister(ls->childHandle);
+	if (ls->childWaitTimer != -1) {
+		alEvent_cancelTimer(ls->childWaitTimer);
+		ls->childWaitTimer = -1;
+	}
 	ExtSession_stop(ls);
+}
+
+static void
+ExtSession_childWaitTimeout(void *lsp, void *arg0, int arg1)
+{
+	ExtSession *ls = lsp;
+
+	if (ls->childPid != 0) {
+		int dummy;
+		fd_puts(ls->stdout_fd, "child wait timeout");
+		alEvent_deregister(ls->childHandle);
+		kill(ls->childPid, SIGKILL);
+		waitpid(ls->childPid, &dummy, 0);
+		ls->childExitCode = -1;
+		ls->childPid = 0;
+	}
 }
 
 const char *
