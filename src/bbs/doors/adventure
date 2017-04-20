@@ -11,7 +11,7 @@ USER_SAVE=${SAVEDIR}/${BBS_USER}
 # Turn off tty echo. Most users will be running in half duplex on a packet
 # BBS.
 #
-#stty -echo
+stty -echo
 
 check_resume() {
 	#
@@ -27,8 +27,18 @@ check_resume() {
 get_prompt() {
 	prpt=$1
 	default=$2
-	echo -n $prpt "[$default]? "
-	read result
+	if [ "$default" != "" ]; then
+		echo -n "$prpt [$default]? "
+	else
+		echo -n "$prpt? "
+	fi
+		
+	if ! read result; then
+		return 1
+	fi
+	if [ "$result" == "" ]; then
+		result=$default
+	fi
 }
 
 display_menu() {
@@ -51,7 +61,7 @@ display_scores() {
 		echo "No one is currently playing the game!"
 		return
 	fi
-	printf "%-12s Score Turns Location\n" 'Player'
+	printf "   %-12s Score Turns Location\n" 'Player'
 	for save_file in ${SAVEDIR}/*; do
 		player=$(basename $save_file)
 		${ADVENTURE_PROG} -d $save_file | \
@@ -74,13 +84,13 @@ display_scores() {
 				set -- $val
 				# Drop the "You're in" prefix
 				shift 2
-				location=`echo "$*" | sed -e s,.$,,`
+				location=$(echo "$*" | sed -e s,.$,,)
 				;;
 			*)
 				;;
 			esac
 		done
-		printf "%-12s %5d %5d %.40s\n" "$player" "$score" "$turns" "$location"
+		printf "   %-12s %5d %5d %.40s\n" "$player" "$score" "$turns" "$location"
 		)
 	done
 }
@@ -98,7 +108,7 @@ play() {
 # Display main menu.
 #
 display_menu
-while get_prompt "Choice" "2"; do
+while get_prompt "Choice"; do
 	case $result in
 	1)
 		display_scores
@@ -106,7 +116,7 @@ while get_prompt "Choice" "2"; do
 	2)
 		play
 		;;
-	q|Q)
+	q*|Q*|b*)
 		break
 		;;
 	esac
