@@ -39,7 +39,7 @@ static void ExtSession_execChild(ExtSession *ls);
 static void ExtSession_stop(ExtSession *ls);
 
 int
-ExtSession_init(ExtSession *ls, const char *prog, int argc,
+ExtSession_init(ExtSession *ls, int translate_crlf, const char *prog, int argc,
 	char * const *argv)
 {
 	size_t i, j;
@@ -84,6 +84,7 @@ ExtSession_init(ExtSession *ls, const char *prog, int argc,
 	ls->master_fd = master_fd;
 	ls->slave_path = slave_copy;
 	ls->childWaitTimer = -1;
+	ls->translate_crlf = translate_crlf;
 
 	return EXTSESS_OK;
 
@@ -244,6 +245,7 @@ ExtSession_stdinRead(void *lsp, void *arg0, int arg1)
 {
 	ExtSession *ls = lsp;
 	ssize_t nread, nwritten;
+	char *cr;
 
 	assert(ls->stdinHandle != NULL);
 
@@ -259,6 +261,13 @@ ExtSession_stdinRead(void *lsp, void *arg0, int arg1)
 			return;
 		}
 	} while (nread <= 0);
+
+	if (ls->translate_crlf) {
+		while ((cr = memchr(ls->buf, '\r', nread)) != NULL) {
+			memmove(cr, cr+1, nread - (cr - ls->buf) - 1);
+			nread -= 1;
+		}
+	} 
 
 	do {
 		nwritten = write(ls->master_fd, ls->buf, nread);
@@ -279,6 +288,7 @@ ExtSession_slaveRead(void *lsp, void *arg0, int arg1)
 {
 	ExtSession *ls = lsp;
 	ssize_t nread;
+	char *b, *lf;
 
 	assert(ls->slaveHandle != NULL);
 
@@ -295,7 +305,19 @@ ExtSession_slaveRead(void *lsp, void *arg0, int arg1)
 		}
 	} while (nread <= 0);
 
-	fd_write(ls->stdout_fd, ls->buf, nread);
+	if (ls->translate_crlf) {
+		b = ls->buf;
+		while ((lf = memchr(b, '\n', nread)) != NULL) {
+			fd_write(ls->stdout_fd, b, lf - b);
+			fd_write(ls->stdout_fd, "\r\n", 2);
+			nread -= (lf - b) + 1;
+			b = lf + 1;
+		}
+		if (nread > 0)
+			fd_write(ls->stdout_fd, b, nread);
+	} else {
+		fd_write(ls->stdout_fd, ls->buf, nread);
+	}
 }
 
 static void

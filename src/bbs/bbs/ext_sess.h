@@ -49,14 +49,15 @@ struct ExtSession {
 	int childExitCode;
 	int childWaitTimer;
 	int run;
+	int translate_crlf;
 	alEventHandle stdinHandle;
 	alEventHandle slaveHandle;
 	alEventHandle childHandle;
 };
 typedef struct ExtSession ExtSession;
 
-int ExtSession_init(ExtSession *ls, const char *prog, int argc,
-	char * const *argv);
+int ExtSession_init(ExtSession *ls, int translate_crlf, const char *prog,
+	int argc, char * const *argv);
 int ExtSession_run(ExtSession *ls, int fd_in, int fd_out);
 void ExtSession_deinit(ExtSession *ls);
 const char *ExtSession_error(ExtSession_Error);

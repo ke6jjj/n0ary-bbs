@@ -31,8 +31,8 @@ adventure(void)
 	argv[0] = "adventure";
 	argv[1] = Bbs_Dir;
 	argv[2] = usercall;
-	res = ExtSession_init(&ls, "/usr/home/bbs/doors/bin/adventure", 3,
-			argv);
+	res = ExtSession_init(&ls, DoCRLFEndings,
+		"/usr/home/bbs/doors/bin/adventure", 3, argv);
 	free(argv);
 
 	if (res != EXTSESS_OK) {

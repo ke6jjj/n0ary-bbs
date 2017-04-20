@@ -15,6 +15,7 @@
 #include "tokens.h"
 #include "c_cmmn.h"
 #include "ext_sess.h"
+#include "vars.h"
 
 extern int sock;
 
@@ -47,7 +48,7 @@ unixlogin(void)
 	argv[0] = "login";
 	argv[1] = t->lexem;
 
-	res = ExtSession_init(&ls, "/usr/bin/login", 2, argv);
+	res = ExtSession_init(&ls, DoCRLFEndings, "/usr/bin/login", 2, argv);
 	free(argv);
 
 	if (res != EXTSESS_OK) {
