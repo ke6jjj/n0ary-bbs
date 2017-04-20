@@ -11,15 +11,104 @@ USER_SAVE=${SAVEDIR}/${BBS_USER}
 # Turn off tty echo. Most users will be running in half duplex on a packet
 # BBS.
 #
-stty -echo
+#stty -echo
 
+check_resume() {
+	#
+	# See if this user has an existing save file.
+	#
+	if [ -f ${USER_SAVE} ]; then
+		resume_possible=1
+	else
+		resume_possible=0
+	fi
+}
+	
+get_prompt() {
+	prpt=$1
+	default=$2
+	echo -n $prpt "[$default]? "
+	read result
+}
+
+display_menu() {
+	check_resume
+	echo ""
+	echo "Adventure Main Menu"
+	echo "1. See current scores"
+	if [ $resume_possible -eq 1 ]; then
+		echo "2. Resume your game"
+	else
+		echo "2. Start a game"
+	fi
+	echo "Q. Return to BBS"
+}
+
+display_scores() {
+	echo ""
+	set -- ${SAVEDIR}/*
+	if [ "$1" == "${SAVEDIR}/*" ]; then
+		echo "No one is currently playing the game!"
+		return
+	fi
+	printf "%-12s Score Turns Location\n" 'Player'
+	for save_file in ${SAVEDIR}/*; do
+		player=$(basename $save_file)
+		${ADVENTURE_PROG} -d $save_file | \
+		(while read line; do
+			set -- $line;
+			if [ $1 == "-" ]; then
+				echo "ERROR"
+				exit
+			fi
+			keywrd=`echo "$line" | cut -f 1 -d =`
+			val=`echo "$line" | cut -f 2 -d =`
+			case $keywrd in
+			score)
+				score=$val
+				;;
+			turns)
+				turns=$val
+				;;
+			location)
+				set -- $val
+				# Drop the "You're in" prefix
+				shift 2
+				location=`echo "$*" | sed -e s,.$,,`
+				;;
+			*)
+				;;
+			esac
+		done
+		printf "%-12s %5d %5d %.40s\n" "$player" "$score" "$turns" "$location"
+		)
+	done
+}
+
+play() {
+	check_resume
+	if [ $resume_possible -eq 1 ]; then
+		${ADVENTURE_PROG} -r ${USER_SAVE}
+	else
+		${ADVENTURE_PROG} ${USER_SAVE}
+	fi
+}
+	
 #
-# See if this user has an existing save file.
+# Display main menu.
 #
-if [ -f ${USER_SAVE} ]; then
-	# User has a save file, resume
-	${ADVENTURE_PROG} -r ${USER_SAVE}
-else
-	# User has no save file. Start anew.
-	${ADVENTURE_PROG} ${USER_SAVE}
-fi
+display_menu
+while get_prompt "Choice" "2"; do
+	case $result in
+	1)
+		display_scores
+		;;
+	2)
+		play
+		;;
+	q|Q)
+		break
+		;;
+	esac
+	display_menu
+done
