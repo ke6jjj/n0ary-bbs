@@ -500,6 +500,7 @@ struct possible_tokens HelpOperands[] = {
 	{ pA,	"K",			1, 0, KCMD,		911,NULL,NULL },
 
 	{ pA,	"LAST",			3, 4, LAST,		942,NULL,NULL },
+	{ pA,	"LISTING",		5, 7, LIST,	987,NULL,NULL },
 	{ pA,	"LINES",		3, 5, LINES,	963,NULL,NULL },
 	{ pA,	"LNAME",		3, 5, LNAME,	964,NULL,NULL },
 	{ pA,	"LASTNAME",		3, 8, LNAME,	964,NULL,NULL },

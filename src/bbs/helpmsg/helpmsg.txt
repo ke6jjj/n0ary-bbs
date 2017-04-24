@@ -373,7 +373,7 @@
 ###############################################################################
 
 !150
-1110 Only one message type my occur in a SEND command
+1110 Only one message type may occur in a SEND command
 
 !151
 1110 Unexpected token in SEND command
@@ -1314,7 +1314,12 @@
 1110
 1110    LIST DESCENDING
 1110    LIST ASCENDING
-
+1110
+1110 UNDERSTANDING A LISTING
+1110
+1110 One the BBS has found the messages you have requested, it will display
+1110 them in a listing. The format of this listing is further described in
+1110 "HELP LISTING".
 
 !943
 1110 WEATHER command ==========================================================
@@ -2097,29 +2102,60 @@
 1110 If your are in the San Francisco area, or this bbs is easy for you to
 1110 connect to, you're welcome to join us here, enter "HOME %B".
 
-!987 
-1110 LIST =====================================================================
-1110 The LIST command will display all the messages that match your search
-1110 criteria. The fields that are present are:
+!987
+1110 Listing format ===========================================================
+1110
+1110 Once the BBS has found the messages you have requested in a "LIST"
+1110 command, it will display them in a listing with the following fields:
 1110 
 1110  Msg#  Stat  Size      To       From  Cnt Date/Time Subject
 1110  5764  abcd  2004 WA6GFY@N0ARY  N6ZFJ   1 0210/2141 Re: Field Day
-1110
-1110 The "Stat" field shows you the current condition of the message. Each
-1110 column has a particular meaning and multiple letters that can appear.
-1110 a - Message Type
-1110     B = Bulletin, P = Personal, N = Nts, S = Secure
-1110 b - Forwarding Status
-1110     P = Pending, I = In process, F = Forwarded, blank = No Forwarding
-1110 c - Message Status
-1110     H = Held, O = Old, K = Killed, blank = Active
-1110 d - Read Flag
-1110     R = Read by you, r = Read by addressee
+1110        |      |                        |  |
+1110        |      |                        |  +--- Date a time received
+1110        |      |                        +--- Number of different people that
+1110        |      |                             have read the message.
+1110        |      +--- size of message in bytes
+1110        +--- status flags (see below)
 1110
 1110 The "Size" field is the size in bytes of the message body.
 1110 The "Cnt" field indicates how many different users have read the message.
 1110 The "Date/Time" field is when the message arrived on our system, in local
 1110 time.
+1110
+1100 The "Stat" field shows you the current condition of the message. Each
+1100 column has a particular meaning and multiple letters that can appear.
+1100
+1100  BPHR
+1100  |||+-- Message read flag
+1100  |||      R - read by addressee
+1100  |||      M - read by you (Me)
+1100  |||      B - read by both you and addressee
+1100  |||
+1100  ||+--- Status flag
+1100  ||       I - immune from aging
+1100  ||       O - old, will be deleted in a couple days
+1100  ||       H - on Hold, requires sysop intervention
+1100  ||       K - killed
+1100  ||       
+1100  |+---- Forward flag
+1100  |        P - pending forwarding
+1100  |
+1100  +----- Message type
+1100           B - Bulletin
+1100           P - Personal
+1100           T - NTS Traffic
+1100           S - Secure
+0010 Status flags:
+0010
+0010 a - Message Type
+0010     B = Bulletin, P = Personal, N = Nts, S = Secure
+0010 b - Forwarding Status
+0010     P = Pending, I = In process, F = Forwarded, blank = No Forwarding
+0010 c - Message Status
+0010     H = Held, O = Old, K = Killed, blank = Active
+0010 d - Read Flag
+0010     R = Read by you, r = Read by addressee
+0010
 
 !988
 1110 SET ======================================================================
