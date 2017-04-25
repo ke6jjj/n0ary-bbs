@@ -61,7 +61,8 @@ display_scores() {
 		echo "No one is currently playing the game!"
 		return
 	fi
-	printf "   %-12s Score Turns Location\n" 'Player'
+	printf "   %-12s  Score  Turns  Location\n" 'Player'
+	printf "   %-12s  -----  -----  --------\n" '------------'
 	for save_file in ${SAVEDIR}/*; do
 		player=$(basename $save_file)
 		${ADVENTURE_PROG} -d $save_file | \
@@ -90,7 +91,7 @@ display_scores() {
 				;;
 			esac
 		done
-		printf "   %-12s %5d %5d %.40s\n" "$player" "$score" "$turns" "$location"
+		printf "   %-12s  %5d  %5d  %.40s\n" "$player" "$score" "$turns" "$location"
 		)
 	done
 }
