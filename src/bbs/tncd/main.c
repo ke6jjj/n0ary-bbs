@@ -25,35 +25,35 @@ char
     versionm[80],
     versionc[80],
     *Bbs_Call,
-	*Bbs_My_Call,
-	*Bbs_Fwd_Call,
-	*Bbs_Dir,
-	*Bin_Dir,
-	*Default_Beacon_Call,
-	*Default_Beacon_Dest,
-	*Default_Beacon_Message,
-	*Tncd_Beacon_Call,
-	*Tncd_Beacon_Dest,
-	*Tncd_Beacon_Message,
-	*Tncd_Control_Bind_Addr = NULL,
-	*Tncd_Monitor_Bind_Addr = NULL,
-	*Tncd_Device;
+    *Bbs_My_Call,
+    *Bbs_Fwd_Call,
+    *Bbs_Dir,
+    *Bin_Dir,
+    *Default_Beacon_Call,
+    *Default_Beacon_Dest,
+    *Default_Beacon_Message,
+    *Tncd_Beacon_Call,
+    *Tncd_Beacon_Dest,
+    *Tncd_Beacon_Message,
+    *Tncd_Control_Bind_Addr = NULL,
+    *Tncd_Monitor_Bind_Addr = NULL,
+    *Tncd_Device;
 
 int
-	Tncd_Control_Port,
-	Tncd_Monitor_Port,
-	Tncd_Maxframe,
-	Tncd_N2,
-	Tncd_Paclen,
-	Tncd_Pthresh,
-	Tncd_Beacon_Interval,
-	Default_Beacon_Interval;
+    Tncd_Control_Port,
+    Tncd_Monitor_Port,
+    Tncd_Maxframe,
+    Tncd_N2,
+    Tncd_Paclen,
+    Tncd_Pthresh,
+    Tncd_Beacon_Interval,
+    Default_Beacon_Interval;
 
 int
-	bbsd_sock,
-	Tncd_T1init,
-	Tncd_T2init,
-	Tncd_T3init;
+    bbsd_sock,
+    Tncd_T1init,
+    Tncd_T2init,
+    Tncd_T3init;
 
 int background = 0;
 int shutdown = FALSE;
@@ -61,46 +61,47 @@ int shutdown = FALSE;
 alEventHandle bbsd_ev;
 
 struct ConfigurationList ConfigList[] = {
-	{ "",						tCOMMENT,	NULL },
-	{ "BBS_MYCALL",				tSTRING,	(int*)&Bbs_My_Call },
-	{ "BBS_FWDCALL",			tSTRING,	(int*)&Bbs_Fwd_Call },
-	{ "BBS_HOST",				tSTRING,	(int*)&Bbs_Host },
-	{ "BBS_DIR",				tSTRING,	(int*)&Bbs_Dir },
-	{ "BBS_CALL",				tSTRING,	(int*)&Bbs_Call },
-	{ "BIN_DIR",				tDIRECTORY,		(int*)&Bin_Dir },
-	{ "BBSD_PORT",				tINT,		(int*)&Bbsd_Port },
-	{ "AX25_BEACON_INTERVAL",		tTIME,		(int*)&Default_Beacon_Interval },
-	{ "AX25_BEACON_MESSAGE",		tSTRING,	(int*)&Default_Beacon_Message },
-	{ "AX25_BEACON_CALL",			tSTRING,	(int*)&Default_Beacon_Call },
-	{ "AX25_BEACON_DEST",			tSTRING,	(int*)&Default_Beacon_Dest },
-	{ NULL, 0, NULL}};
+  { "BBS_MYCALL",                 tSTRING,    (int*)&Bbs_My_Call },
+  { "BBS_FWDCALL",                tSTRING,    (int*)&Bbs_Fwd_Call },
+  { "BBS_HOST",                   tSTRING,    (int*)&Bbs_Host },
+  { "BBS_DIR",                    tSTRING,    (int*)&Bbs_Dir },
+  { "BBS_CALL",                   tSTRING,    (int*)&Bbs_Call },
+  { "BIN_DIR",                    tDIRECTORY, (int*)&Bin_Dir },
+  { "BBSD_PORT",                  tINT,       (int*)&Bbsd_Port },
+  { "AX25_BEACON_INTERVAL",       tTIME,      (int*)&Default_Beacon_Interval },
+  { "AX25_BEACON_MESSAGE",        tSTRING,    (int*)&Default_Beacon_Message },
+  { "AX25_BEACON_CALL",           tSTRING,    (int*)&Default_Beacon_Call },
+  { "AX25_BEACON_DEST",           tSTRING,    (int*)&Default_Beacon_Dest },
+  { NULL,                         tEND,       NULL}
+};
 
 struct ConfigurationList DynamicConfigList[] = {
-	{ "",						tCOMMENT,	NULL },
-	{ " Prefix each entry name below with \"TNCx_\" (where x)",tCOMMENT,NULL },
-	{ " is a valid TNC port, ie. TNC2_DEVICE.",	tCOMMENT,	NULL },
-	{ "",						tCOMMENT,	NULL },
-	{ "CONTROL_PORT",		tINT,		(int*)&Tncd_Control_Port },
-	{ "CONTROL_BIND_ADDR",		tSTRING,	(int*)&Tncd_Control_Bind_Addr },
-	{ "MONITOR_PORT",		tINT,		(int*)&Tncd_Monitor_Port },
-	{ "MONITOR_BIND_ADDR",		tSTRING,	(int*)&Tncd_Monitor_Bind_Addr },
-	{ "DEVICE",			tSTRING,	(int*)&Tncd_Device },
-	{ "",				tCOMMENT,	NULL },
-	{ "  AX25 parameters",		tCOMMENT,	NULL },
-	{ "",				tCOMMENT,	NULL },
-	{ "T1INIT",			tTIME,		(int*)&Tncd_T1init },
-	{ "T2INIT",			tTIME,		(int*)&Tncd_T2init },
-	{ "T3INIT",			tTIME,		(int*)&Tncd_T3init },
-	{ "MAXFRAME",			tINT,		(int*)&Tncd_Maxframe },
-	{ "N2",				tINT,		(int*)&Tncd_N2 },
-	{ "PACLEN",			tINT,		(int*)&Tncd_Paclen },
-	{ "PTHRESH",			tINT,		(int*)&Tncd_Pthresh },
-	{ "FLAGS",			tINT,		(int*)&Tncd_SLIP_Flags },
-	{ "BEACON_INTERVAL",		tTIME,		(int*)&Tncd_Beacon_Interval },
-	{ "BEACON_CALL",		tSTRING,	(int*)&Tncd_Beacon_Call },
-	{ "BEACON_DEST",		tSTRING,	(int*)&Tncd_Beacon_Dest },
-	{ "BEACON_MESSAGE",		tSTRING,	(int*)&Tncd_Beacon_Message },
-	{ NULL, 0, NULL}};
+  { "",                                                       tCOMMENT, NULL },
+  { " Prefix each entry name below with \"TNCx_\" (where x)", tCOMMENT, NULL },
+  { " is a valid TNC port, ie. TNC2_DEVICE.",                 tCOMMENT, NULL },
+  { "",                                                       tCOMMENT, NULL },
+  { "CONTROL_PORT",               tINT,       (int*)&Tncd_Control_Port },
+  { "CONTROL_BIND_ADDR",          tSTRING,    (int*)&Tncd_Control_Bind_Addr },
+  { "MONITOR_PORT",               tINT,       (int*)&Tncd_Monitor_Port },
+  { "MONITOR_BIND_ADDR",          tSTRING,    (int*)&Tncd_Monitor_Bind_Addr },
+  { "DEVICE",                     tSTRING,    (int*)&Tncd_Device },
+  { "",                                                       tCOMMENT, NULL },
+  { "  AX25 parameters",                                      tCOMMENT, NULL },
+  { "",                                                       tCOMMENT, NULL },
+  { "T1INIT",                     tTIME,      (int*)&Tncd_T1init },
+  { "T2INIT",                     tTIME,      (int*)&Tncd_T2init },
+  { "T3INIT",                     tTIME,      (int*)&Tncd_T3init },
+  { "MAXFRAME",                   tINT,       (int*)&Tncd_Maxframe },
+  { "N2",                         tINT,       (int*)&Tncd_N2 },
+  { "PACLEN",                     tINT,       (int*)&Tncd_Paclen },
+  { "PTHRESH",                    tINT,       (int*)&Tncd_Pthresh },
+  { "FLAGS",                      tINT,       (int*)&Tncd_SLIP_Flags },
+  { "BEACON_INTERVAL",            tTIME,      (int*)&Tncd_Beacon_Interval },
+  { "BEACON_CALL",                tSTRING,    (int*)&Tncd_Beacon_Call },
+  { "BEACON_DEST",                tSTRING,    (int*)&Tncd_Beacon_Dest },
+  { "BEACON_MESSAGE",             tSTRING,    (int*)&Tncd_Beacon_Message },
+  { NULL,                         tEND,       NULL}
+};
 
 static void
 preload(char *name)
