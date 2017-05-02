@@ -69,10 +69,10 @@ struct ConfigurationList ConfigList[] = {
 	{ "BBS_CALL",				tSTRING,	(int*)&Bbs_Call },
 	{ "BIN_DIR",				tDIRECTORY,		(int*)&Bin_Dir },
 	{ "BBSD_PORT",				tINT,		(int*)&Bbsd_Port },
-	{ "TNC_BEACON_INTERVAL",		tSTRING,	(int*)&Default_Beacon_Interval },
-	{ "TNC_BEACON_MESSAGE",			tSTRING,	(int*)&Default_Beacon_Message },
-	{ "TNC_BEACON_CALL",			tSTRING,	(int*)&Default_Beacon_Call },
-	{ "TNC_BEACON_DEST",			tSTRING,	(int*)&Default_Beacon_Dest },
+	{ "AX25_BEACON_INTERVAL",		tSTRING,	(int*)&Default_Beacon_Interval },
+	{ "AX25_BEACON_MESSAGE",		tSTRING,	(int*)&Default_Beacon_Message },
+	{ "AX25_BEACON_CALL",			tSTRING,	(int*)&Default_Beacon_Call },
+	{ "AX25_BEACON_DEST",			tSTRING,	(int*)&Default_Beacon_Dest },
 	{ NULL, 0, NULL}};
 
 struct ConfigurationList DynamicConfigList[] = {
