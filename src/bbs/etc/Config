@@ -197,8 +197,16 @@ PORT	STATUS	SYSTEM	FALSE	FALSE	Status
 ; far more information to actually use them. For instance the tncs.
 
 ;###
-;#	TNC DEFINITIONS
+;#	TNC DEFINITIONS - CLASSIC METHOD
 ;###
+;
+; There are currently two ways to configure TNCs for use with the BBS: the
+; classic method, which is shown here, and the newer method, which is shown
+; later on. The classic method exists for backwards compatability but will
+; eventually be eliminated in favor of the new method.
+;
+; In the "classic" method each TNC is configured through a single variable
+; consisting of many, position-dependent fields:
 ;
 ; Name: Must match "name" variable in PORT definitions above.
 ;
@@ -269,6 +277,76 @@ TNC	TNC0	44450	44460	/dev/ttyr5 bbshost 10  4 300 7   220  5  0
 TNC	TNC1	44451	44461	/dev/ttyr6 bbshost 10  4 300 3   128  5  0
 TNC	TNC2	44452	44462	/dev/ttyr7 bbshost 10  4 300 7   220  5  0
 TNC	TNC3	44453	44463	/dev/ttyb  bbshost 10  4 300 7   220  5  0
+
+;###
+;#	TNC DEFINITIONS - The new method.
+;###
+;
+; Here is an alternative way to configure TNCs for use with the BBS. These
+; lines duplicate the configuration of the TNC named as TNC0 above.
+;
+; TNC0_CONTROL_BIND_ADDR  (not set, defaults to 127.0.0.1)
+; TNC0_CONTROL_PORT       44450
+; TNC0_MONITOR_BIND_ADDR  (not set, defaults to 127.0.0.1)
+; TNC0_MONITOR_PORT       44460
+; TNC0_DEVICE             /dev/ttyr5
+; TNC0_HOST               bbshost
+;
+;  AX.25 Parameters
+;
+; TNC0_T1INIT             10
+; TNC0_T2INIT             4
+; TNC0_T3INIT             300
+; TNC0_MAXFRAME           7
+; TNC0_N2                 5
+; TNC0_PACLEN             220
+; TNC0_PTHRESH            (not set, defaults to PACLEN / 2)
+; TNC0_FLAGS              0
+; TNC0_BEACON_INTERVAL    (not set, defaults to system AX25_BEACON_INTERVAL)
+; TNC0_BEACON_CALL        (not set, defaults to system AX25_BEACON_CALL)
+; TNC0_BEACON_DEST        (not set, defaults to system AX25_BEACON_DEST)
+; TNC0_BEACON_MESSAGE     (not set, defaults to system AX25_BEACON_MESSAGE)
+
+;###
+;#       AX.25 Beaconing
+;###
+;
+; You can have the BBS advertise itself by broadcasting a beacon packet
+; at regular intervals via the TNCs attached to the BBS. A beacon packet
+; is transmitted as an Unnumbered Information Frame (UI) and can contain
+; a short text message that everyone on the channel can read.
+;
+; Beaconing can be further customized on a per-TNC basis using the TNC
+; variables documented previously (xxx_BEACON_INTERVAL, xxx_BEACON_CALL,
+; xxx_BEACON_DEST, xxx_BEACON_MESSAGE).
+;
+; To enable beaconing on most TNCs save a few special ports, keep
+; AX25_BEACON_INTERVAL on and set a TNC-specific xxx_BEACON_INTERVAL to zero.
+;
+
+;
+; How often to transmit a beacon. Comment out or set to 0 to disable.
+; (Default: 0)
+;
+AX25_BEACON_INTERVAL	10 minutes
+
+;
+; If beaconing is enabled, what callsign to transmit the packet from.
+; (Defaults to BBS_MY_CALL).
+;
+; AX25_BEACON_CALL  BBS-5
+
+;
+; If beaconing is enabled, what callsign or identifier to beacon "to".
+; (Defaults to "ID").
+;
+; AX25_BEACON_DEST  ID
+
+;
+; If beaconing is enabled, what message to include in the packet.
+; (Defaults to blank).
+;
+AX25_BEACON_MESSAGE  N0ARY-1/D Full Service Packet BBS
 
 ;###
 ;#	PHONE DEFINITIONS
