@@ -29,6 +29,12 @@ char
 	*Bbs_Fwd_Call,
 	*Bbs_Dir,
 	*Bin_Dir,
+	*Default_Beacon_Call,
+	*Default_Beacon_Dest,
+	*Default_Beacon_Message,
+	*Tncd_Beacon_Call,
+	*Tncd_Beacon_Dest,
+	*Tncd_Beacon_Message,
 	*Tncd_Control_Bind_Addr = NULL,
 	*Tncd_Monitor_Bind_Addr = NULL,
 	*Tncd_Device;
@@ -39,7 +45,9 @@ int
 	Tncd_Maxframe,
 	Tncd_N2,
 	Tncd_Paclen,
-	Tncd_Pthresh;
+	Tncd_Pthresh,
+	Tncd_Beacon_Interval,
+	Default_Beacon_Interval;
 
 int
 	bbsd_sock,
@@ -61,28 +69,37 @@ struct ConfigurationList ConfigList[] = {
 	{ "BBS_CALL",				tSTRING,	(int*)&Bbs_Call },
 	{ "BIN_DIR",				tDIRECTORY,		(int*)&Bin_Dir },
 	{ "BBSD_PORT",				tINT,		(int*)&Bbsd_Port },
-#if 0
+	{ "TNC_BEACON_INTERVAL",		tSTRING,	(int*)&Default_Beacon_Interval },
+	{ "TNC_BEACON_MESSAGE",			tSTRING,	(int*)&Default_Beacon_Message },
+	{ "TNC_BEACON_CALL",			tSTRING,	(int*)&Default_Beacon_Call },
+	{ "TNC_BEACON_DEST",			tSTRING,	(int*)&Default_Beacon_Dest },
+	{ NULL, 0, NULL}};
+
+struct ConfigurationList DynamicConfigList[] = {
 	{ "",						tCOMMENT,	NULL },
-	{ " Replace the TNCxD below with a entry for each of the",tCOMMENT,NULL },
-	{ " valid TNC ports, ie. TNC2D_DEVICE.",	tCOMMENT,	NULL },
+	{ " Prefix each entry name below with \"TNCx_\" (where x)",tCOMMENT,NULL },
+	{ " is a valid TNC port, ie. TNC2_DEVICE.",	tCOMMENT,	NULL },
 	{ "",						tCOMMENT,	NULL },
-	{ "TNCxD_CONTROL_BIND_ADDR",	tSTRING,	(int*)&Tncd_Control_Bind_Addr },
-	{ "TNCxD_CONTROL_PORT",		tINT,		(int*)&Tncd_Control_Port },
-	{ "TNCxD_MONITOR_BIND_ADDR",	tSTRING,	(int*)&Tncd_Monitor_Bind_Addr },
-	{ "TNCxD_MONITOR_PORT",		tINT,		(int*)&Tncd_Monitor_Port },
-	{ "TNCxD_DEVICE",			tSTRING,	(int*)&Tncd_Device },
-	{ "",						tCOMMENT,	NULL },
+	{ "CONTROL_PORT",		tINT,		(int*)&Tncd_Control_Port },
+	{ "CONTROL_BIND_ADDR",		tSTRING,	(int*)&Tncd_Control_Bind_Addr },
+	{ "MONITOR_PORT",		tINT,		(int*)&Tncd_Monitor_Port },
+	{ "MONITOR_BIND_ADDR",		tSTRING,	(int*)&Tncd_Monitor_Bind_Addr },
+	{ "DEVICE",			tSTRING,	(int*)&Tncd_Device },
+	{ "",				tCOMMENT,	NULL },
 	{ "  AX25 parameters",		tCOMMENT,	NULL },
-	{ "",						tCOMMENT,	NULL },
-	{ "TNCxD_T1INIT",			tTIME,		(int*)&Tncd_T1init },
-	{ "TNCxD_T2INIT",			tTIME,		(int*)&Tncd_T2init },
-	{ "TNCxD_T3INIT",			tTIME,		(int*)&Tncd_T3init },
-	{ "TNCxD_MAXFRAME",			tINT,		(int*)&Tncd_Maxframe },
-	{ "TNCxD_N2",				tINT,		(int*)&Tncd_N2 },
-	{ "TNCxD_PACLEN",			tINT,		(int*)&Tncd_Paclen },
-	{ "TNCxD_PTHRESH",			tINT,		(int*)&Tncd_Pthresh },
-	{ "TNCxD_FLAGS",			tINT,		(int*)&Tncd_SLIP_Flags },
-#endif
+	{ "",				tCOMMENT,	NULL },
+	{ "T1INIT",			tTIME,		(int*)&Tncd_T1init },
+	{ "T2INIT",			tTIME,		(int*)&Tncd_T2init },
+	{ "T3INIT",			tTIME,		(int*)&Tncd_T3init },
+	{ "MAXFRAME",			tINT,		(int*)&Tncd_Maxframe },
+	{ "N2",				tINT,		(int*)&Tncd_N2 },
+	{ "PACLEN",			tINT,		(int*)&Tncd_Paclen },
+	{ "PTHRESH",			tINT,		(int*)&Tncd_Pthresh },
+	{ "FLAGS",			tINT,		(int*)&Tncd_SLIP_Flags },
+	{ "BEACON_INTERVAL",		tTIME,		(int*)&Tncd_Beacon_Interval },
+	{ "BEACON_CALL",		tSTRING,	(int*)&Tncd_Beacon_Call },
+	{ "BEACON_DEST",		tSTRING,	(int*)&Tncd_Beacon_Dest },
+	{ "BEACON_MESSAGE",		tSTRING,	(int*)&Tncd_Beacon_Message },
 	{ NULL, 0, NULL}};
 
 static void
@@ -90,6 +107,8 @@ preload(char *name)
 {
 	int i = 0;
 	struct ax25_params *tax = tnc_ax25(name);
+	struct ConfigurationList dynconfig[2], *cfg;
+	char varname[256];
 
 	Tncd_Control_Bind_Addr = tnc_control_bind_addr(name);
 	Tncd_Control_Port = tnc_port(name);
@@ -108,10 +127,44 @@ preload(char *name)
 	Tncd_Paclen = tax->paclen;
 	Tncd_SLIP_Flags = tax->flags;
 
-	for(i=0; ConfigList[i].token != NULL; i++) {
-		if(!strncmp(ConfigList[i].token, "TNCx", 4))
-			ConfigList[i].token[3] = name[3];
-	}		
+	dynconfig[1].token = NULL;
+	dynconfig[1].type = 0;
+	dynconfig[1].ptr = NULL;
+
+	for(i=0; DynamicConfigList[i].token != NULL; i++) {
+		cfg = &DynamicConfigList[i];
+		if (cfg->type == tCOMMENT)
+			continue;
+#ifdef SUNOS
+		sprintf(varname, "%s_%s", name, cfg->token);
+#else
+		snprintf(varname, sizeof(varname), "%s_%s", name, cfg->token);
+#endif
+		dynconfig[0].token = varname;
+		dynconfig[0].type = cfg->type;
+		dynconfig[0].ptr = cfg->ptr;
+
+		bbsd_get_configuration(dynconfig);
+	}
+
+	/* Have the beaconing defaults trickle through */
+
+	if (Default_Beacon_Call == NULL)
+		Default_Beacon_Call = Bbs_My_Call;
+	if (Default_Beacon_Dest == NULL)
+		Default_Beacon_Dest = "ID";
+	if (Default_Beacon_Message == NULL)
+		Default_Beacon_Message = "";
+
+	if (Tncd_Beacon_Interval == -1)
+		Tncd_Beacon_Interval = Default_Beacon_Interval;
+
+	if (Tncd_Beacon_Call == NULL)
+		Tncd_Beacon_Call = Default_Beacon_Call;
+	if (Tncd_Beacon_Dest == NULL)
+		Tncd_Beacon_Dest = Default_Beacon_Dest;
+	if (Tncd_Beacon_Message == NULL)
+		Tncd_Beacon_Message = Default_Beacon_Message;
 }
 
 void
@@ -140,22 +193,29 @@ main(int argc, char *argv[])
 	struct timeval now, nextexpire, waittime, *pwaittime;
 	alCallback cb;
 	beacon_task *beacon;
+	char *tnc_name;
 
 	parse_options(argc, argv, ConfigList,
 		"TNCD - Terminal Node Controller (KISS) Daemon");
 
-	if(bbsd_open(Bbs_Host, Bbsd_Port, argv[optind], "DAEMON") == ERROR)
+	tnc_name = argv[optind];
+
+	if(bbsd_open(Bbs_Host, Bbsd_Port, tnc_name, "DAEMON") == ERROR)
 		error_print_exit(0);
 
 	bbsd_sock = bbsd_socket();
 	srandomdev();
 
 	error_clear();
+
+	/* Make it possible to detect if beaconing has been set */
+	Tncd_Beacon_Interval = -1;
+
 	bbsd_get_configuration(ConfigList);
 	bbsd_msg("Startup");
 
-	build_version_strings(argv[optind]);
-	preload(argv[optind]);
+	build_version_strings(tnc_name);
+	preload(tnc_name);
 
 	if(dbug_level & dbgTESTHOST)
 		test_host(Tncd_Host);
@@ -186,22 +246,27 @@ main(int argc, char *argv[])
 	slip_init(0);
 	slip_start(0);
 
-	beacon = beacon_task_new("KE6JJJ-1", "ID",
-		"KE6JJJ-1/R KE6JJJ-1/B Full Service Packet BBS",
-		 10 * 60, 0);
-	if (beacon == NULL)
-		return 1;
-
-	if (beacon_task_start(beacon, random() % 30) != 0)
-		return 1;
+	if (Tncd_Beacon_Interval > 0) {
+		beacon = beacon_task_new(Tncd_Beacon_Call, Tncd_Beacon_Dest,
+			Tncd_Beacon_Message, Tncd_Beacon_Interval, 0);
+		if (beacon == NULL)
+			return 1;
+		if (beacon_task_start(beacon, random() % 30) != 0)
+			return 1;
+	} else {
+		beacon = NULL;
+	}
 
 	bbsd_msg("");
 
 	while (alEvent_pending())
 		alEvent_poll();
 
-	beacon_task_stop(beacon);
-	beacon_task_free(beacon);
+	if (beacon != NULL) {
+		beacon_task_stop(beacon);
+		beacon_task_free(beacon);
+		beacon = NULL;
+	}
 
 	slip_stop(0);
 
