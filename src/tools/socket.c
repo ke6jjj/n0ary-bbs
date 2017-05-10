@@ -126,7 +126,8 @@ socket_listen(const char *bind_addr, int *port)
 	server.sin_port = htons(*port);
 
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-		return error_log("socket_listen.socket: %s", sys_errlist[errno]);
+		return error_log("socket_listen.socket: %s",
+			sys_errlist[errno]);
 
 	opt = 1;
 	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
@@ -134,10 +135,12 @@ socket_listen(const char *bind_addr, int *port)
 			sys_errlist[errno]);
 
 	if(bind(sock, (struct sockaddr *)&server, length) < 0)
-		return  error_log("socket_listen.bind: %s", sys_errlist[errno]);
+		return  error_log("socket_listen.bind: %s",
+			sys_errlist[errno]);
 
 	if(getsockname(sock, (struct sockaddr *)&server, &length) < 0)
-		return error_log("socket_listen.getsockname: %s", sys_errlist[errno]);
+		return error_log("socket_listen.getsockname: %s",
+			sys_errlist[errno]);
 
 	listen(sock, 5);
 
@@ -152,7 +155,8 @@ socket_accept(int sock)
 	int linger = 0;
 
 	if((fd = accept(sock, 0, 0)) < 0)
-		return error_log("socket_accept.accept: %s", sys_errlist[errno]);
+		return error_log("socket_accept.accept: %s",
+			sys_errlist[errno]);
 
 	setsockopt(fd, SOL_SOCKET, SO_LINGER, (char*)&linger, sizeof(linger));
 	fcntl(fd, F_SETFL, O_NDELAY);
@@ -178,16 +182,20 @@ socket_open(char *host, int port)
 	} else {
 		if((hp = gethostbyname(host)) == NULL) {
 			error_log("socket_open.gethostbyname:");
-			return error_log("could not find \"%s\" in the hosts database\n", host);
+			return error_log(
+				"could not find \"%s\" in the hosts "
+				"database\n", host);
 		}
 
-		bcopy((char*)hp->h_addr, (char*)&server.sin_addr, hp->h_length);
+		bcopy((char*)hp->h_addr, (char*)&server.sin_addr,
+			hp->h_length);
 	}
 
 	server.sin_port = htons(port);
 
 	if(connect(sock, (struct sockaddr*)&server, sizeof server) < 0)
-		return error_log("socket_open.connect: %s", sys_errlist[errno]);
+		return error_log("socket_open.connect: %s",
+			sys_errlist[errno]);
 
 	fcntl(sock, F_SETFL, O_NDELAY);
 	link_fd(sock);
@@ -243,9 +251,9 @@ socket_read_raw_line(int fd, char *line, int len, int timeout)
 	if(fdl == NULL)
 		fdl = link_fd(fd);
 
-			/* begin by checking that we have no more in the save buf.
-			 * if we do then preload it into line.
-			 */
+	/* begin by checking that we have no more in the save buf.
+	 * if we do then preload it into line.
+	 */
 
 	if(fdl->save[0] != 0) {
 		strcpy(inbuf, fdl->save);
@@ -255,8 +263,8 @@ socket_read_raw_line(int fd, char *line, int len, int timeout)
 		while(cnt) {
 			if(len == 0) {
 				*q = 0;
-	if(socket_watch == fd)
-		socket_print('m', line);
+				if(socket_watch == fd)
+					socket_print('m', line);
 				if(*p) {
 					strcpy(fdl->save, p);
 				}
@@ -271,8 +279,8 @@ socket_read_raw_line(int fd, char *line, int len, int timeout)
 			if(*p == '\n') {
 				*q++ = *p++;
 				*q = 0;
-	if(socket_watch == fd)
-		socket_print('r', line);
+				if(socket_watch == fd)
+					socket_print('r', line);
 				if(*p) {
 					strcpy(fdl->save, p);
 				}
@@ -296,7 +304,8 @@ socket_read_raw_line(int fd, char *line, int len, int timeout)
 
 		switch(select(fdlimit, &ready, NULL, NULL, &t)) {
 		case ERROR:
-			error_log("socket_read_line: select(): %s", sys_errlist[errno]);
+			error_log("socket_read_line: select(): %s",
+				sys_errlist[errno]);
 			return sockERROR;
 		case 0:
 #if 0
@@ -305,9 +314,9 @@ socket_read_raw_line(int fd, char *line, int len, int timeout)
 			return sockTIMEOUT;
 
 		default:
-				/* attempt to read the maximum length allowed in the supplied
-				 * buffer and null terminate it.
-				 */
+			/* attempt to read the maximum length allowed in the
+			 * supplied buffer and null terminate it.
+			 */
 			cnt = read(fd, inbuf, 255);
 
 			if(cnt == 0 || cnt == ERROR)
@@ -318,8 +327,8 @@ socket_read_raw_line(int fd, char *line, int len, int timeout)
 			while(cnt) {
 				if(len == 0) {
 					*q = 0;
-	if(socket_watch == fd)
-		socket_print('M', line);
+					if(socket_watch == fd)
+						socket_print('M', line);
 					if(*p) {
 						strcpy(fdl->save, p);
 					}
@@ -336,8 +345,8 @@ socket_read_raw_line(int fd, char *line, int len, int timeout)
 					*q = 0;
 					if(*p)
 						strcpy(fdl->save, p);
-	if(socket_watch == fd)
-		socket_print('R', line);
+					if(socket_watch == fd)
+						socket_print('R', line);
 					return sockOK;
 				}
 
@@ -396,7 +405,8 @@ socket_raw_write_n(int fd, const char *buf, size_t len)
 			case EPIPE:
 				return ERROR;
 			default:
-				return error_log("socket_raw_write_n: %s", sys_errlist[errno]);
+				return error_log("socket_raw_write_n: %s",
+					sys_errlist[errno]);
 			}
 		}
 		nleft -= nwritten;
