@@ -73,9 +73,17 @@ define create_compile_rules
 
 $$(eval $$(call create_object_list,$1))
 
+# Auto-dependency logic.
+-include $$($1_C_OBJS:.o=.d)
+-include $$($1_S_OBJS:.o=.d)
+
 $$($1_OBJDIR)/%.o: $$($1_SRCDIR)/%.c
 	@ [ -d $$(@D) ] || mkdir -p $$(@D)
 	$$(CC) $$($1_CFLAGS) -c $$< -o $$@
+#	Build dependency fragment, for use during recompilations.
+	@$$(CC) $$($1_CFLAGS) -MM $$($1_SRCDIR)/$$*.c -o $$($1_OBJDIR)/$$*.dt
+	@sed -e 's|^.*:|$$($1_OBJDIR)/$$*.o:|' < $$($1_OBJDIR)/$$*.dt > \
+		 $$($1_OBJDIR)/$$*.d
   
 $$($1_OBJDIR)/%.o: $$($1_SRCDIR)/%.s
 	@ [ -d $$(@D) ] || mkdir -p $$(@D)
@@ -84,5 +92,9 @@ $$($1_OBJDIR)/%.o: $$($1_SRCDIR)/%.s
 $($1_OBJDIR)/%.o: $($1_SRCDIR)/%.S
 	@ [ -d $$(@D) ] || mkdir -p $$(@D)
 	$$(CC) $$($1_CAFLAGS) -c -o $$@ $$^
+#	Build dependency fragment, for use during recompilations.
+	@$$(CC) $$($1_CFLAGS) -MM $$($1_SRCDIR)/$$*.S -o $$($1_OBJDIR)/$$*.dt
+	@sed -e 's|^.*:|$$($1_OBJDIR)/$$*.o:|' < $$($1_OBJDIR)/$$*.dt > \
+		 $$($1_OBJDIR)/$$*.d
 
 endef
