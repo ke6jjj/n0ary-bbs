@@ -61,11 +61,15 @@ $1_SRCS_C = $$(filter %.c,$$($1_SRCS_ABS))
 $1_SRCS_s = $$(filter %.s,$$($1_SRCS_ABS))
 $1_SRCS_S = $$(filter %.S,$$($1_SRCS_ABS))
 
-$1_C_OBJS = $$(patsubst $$($1_SRCDIR)/%,$$($1_OBJDIR)/%,$$($1_SRCS_C:.c=.o))
-$1_S_OBJS = $$(patsubst $$($1_SRCDIR)/%,$$($1_OBJDIR)/%,$$($1_SRCS_S:.S=.o))
-$1_s_OBJS = $$(patsubst $$($1_SRCDIR)/%,$$($1_OBJDIR)/%,$$($1_SRCS_s:.s=.o))
+$1_C_DEPS = $$(patsubst $$($1_SRCDIR)/%,$$($1_OBJDIR)/%,$$($1_SRCS_C:.c=.c.d))
+$1_S_DEPS = $$(patsubst $$($1_SRCDIR)/%,$$($1_OBJDIR)/%,$$($1_SRCS_S:.S=.S.d))
+
+$1_C_OBJS = $$(patsubst $$($1_SRCDIR)/%,$$($1_OBJDIR)/%,$$($1_SRCS_C:.c=.c.o))
+$1_S_OBJS = $$(patsubst $$($1_SRCDIR)/%,$$($1_OBJDIR)/%,$$($1_SRCS_S:.S=.S.o))
+$1_s_OBJS = $$(patsubst $$($1_SRCDIR)/%,$$($1_OBJDIR)/%,$$($1_SRCS_s:.s=.s.o))
 
 $1_OBJS = $$($1_C_OBJS) $$($1_S_OBJS) $$($1_s_OBJS)
+$1_DEPS = $$($1_C_DEPS) $$($1_S_DEPS)
 
 endef
 
@@ -74,27 +78,22 @@ define create_compile_rules
 $$(eval $$(call create_object_list,$1))
 
 # Auto-dependency logic.
--include $$($1_C_OBJS:.o=.d)
--include $$($1_S_OBJS:.o=.d)
+-include $$($1_DEPS)
 
-$$($1_OBJDIR)/%.o: $$($1_SRCDIR)/%.c
+$$($1_OBJDIR)/%.c.o: $$($1_SRCDIR)/%.c
 	@ [ -d $$(@D) ] || mkdir -p $$(@D)
 	$$(CC) $$($1_CFLAGS) -c $$< -o $$@
 #	Build dependency fragment, for use during recompilations.
-	@$$(CC) $$($1_CFLAGS) -MM $$($1_SRCDIR)/$$*.c -o $$($1_OBJDIR)/$$*.dt
-	@sed -e 's|^.*:|$$($1_OBJDIR)/$$*.o:|' < $$($1_OBJDIR)/$$*.dt > \
-		 $$($1_OBJDIR)/$$*.d
+	$$(CC) $$($1_CFLAGS) -MM -MT $$@ $$< -o $$($1_OBJDIR)/$$*.c.d
   
-$$($1_OBJDIR)/%.o: $$($1_SRCDIR)/%.s
+$$($1_OBJDIR)/%.s.o: $$($1_SRCDIR)/%.s
 	@ [ -d $$(@D) ] || mkdir -p $$(@D)
 	$$(AS) $$($1_AFLAGS) $$< -o $$@
 
-$($1_OBJDIR)/%.o: $($1_SRCDIR)/%.S
+$($1_OBJDIR)/%.S.o: $($1_SRCDIR)/%.S
 	@ [ -d $$(@D) ] || mkdir -p $$(@D)
 	$$(CC) $$($1_CAFLAGS) -c -o $$@ $$^
 #	Build dependency fragment, for use during recompilations.
-	@$$(CC) $$($1_CFLAGS) -MM $$($1_SRCDIR)/$$*.S -o $$($1_OBJDIR)/$$*.dt
-	@sed -e 's|^.*:|$$($1_OBJDIR)/$$*.o:|' < $$($1_OBJDIR)/$$*.dt > \
-		 $$($1_OBJDIR)/$$*.d
+	@$$(CC) $$($1_CFLAGS) -MM -MT $$@ $$< -o $$($1_OBJDIR)/$$*.S.d
 
 endef
