@@ -91,6 +91,7 @@ else
   # Honeypot trap
   echo -n "Password: "
   while read line; do
+    echo $( date '+%Y-%m-%dT%H:%M:%S' ) $remote "${line}" >> /var/log/honeypot
     printf "\r\n> "
   done
 fi
