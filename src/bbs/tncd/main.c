@@ -26,7 +26,8 @@ char
     versionc[80],
     *Bbs_Call,
     *Bbs_My_Call,
-    *Bbs_Fwd_Call,
+    *Bbs_Unlock_Call,
+
     *Bbs_Dir,
     *Bin_Dir,
     *Default_Beacon_Call,
@@ -62,7 +63,7 @@ alEventHandle bbsd_ev;
 
 struct ConfigurationList ConfigList[] = {
   { "BBS_MYCALL",                 tSTRING,    (int*)&Bbs_My_Call },
-  { "BBS_FWDCALL",                tSTRING,    (int*)&Bbs_Fwd_Call },
+  { "BBS_UNLOCKCALL",             tSTRING,    (int*)&Bbs_Unlock_Call },
   { "BBS_HOST",                   tSTRING,    (int*)&Bbs_Host },
   { "BBS_DIR",                    tSTRING,    (int*)&Bbs_Dir },
   { "BBS_CALL",                   tSTRING,    (int*)&Bbs_Call },

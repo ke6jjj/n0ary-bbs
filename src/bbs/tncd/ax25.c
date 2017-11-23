@@ -11,21 +11,26 @@
 #include "kiss.h"
 #include "ax25.h"
 #include "tnc.h"
+/*
+ * Including bsd.h just so we can quickly cobble together the transmit
+ * unlock feature in the variable Tncd_TX_Enable.
+ */
+#include "bsd.h"
 
 extern char
 	*Bbs_My_Call,
-	*Bbs_Fwd_Call;
+	*Bbs_Unlock_Call;
 
-struct ax25_addr mycall, bbscall, fwdcall;
+struct ax25_addr bbscall, unlockcall;
 int digipeat = 1;	/* Controls digipeating */
+int unlockable = 0;
 
 void
 build_bbscall(void)
 {
 	setcall(&bbscall, Bbs_My_Call);
-#if 0
-	setcall(&forward, Bbs_Fwd_Call);
-#endif
+	if (setcall(&unlockcall, Bbs_Unlock_Call) == 0)
+		unlockable = 1;
 }
 
 /* Initialize AX.25 entry in arp device table */
@@ -82,6 +87,11 @@ ax_recv(int dev, struct mbuf *bp)
 		free_p(bp);
 		return;
 	}
+
+	/* Emergency TX inhibit unlock feature */
+	if (Tncd_TX_Enabled == 0 && unlockable == 1 &&
+	    addreq(&hdr.dest, &unlockcall))
+		Tncd_TX_Enabled = 1;
 
 	/* Scan, looking for our call in the repeater fields, if any.
 	 * Repeat appropriate packets.
