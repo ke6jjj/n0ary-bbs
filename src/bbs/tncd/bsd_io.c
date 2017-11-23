@@ -29,6 +29,7 @@
 
 extern int bbsd_sock;
 struct Tnc tnc[MAX_TNC];
+int Tncd_TX_Enabled;
 extern char versionc[80];
 extern char *Bbs_Call;
 
@@ -209,6 +210,9 @@ asy_output(int dev, char *buf, int cnt)
 	if(tnc[dev].inuse == FALSE)
 		return ERROR;
 
+	if (Tncd_TX_Enabled != 1)
+		return OK;
+
 	if(write(tnc[dev].fd, buf, cnt) < cnt) {
 		if(dbug_level & dbgVERBOSE)
 			perror("asy_output");
@@ -236,7 +240,7 @@ asy_recv(int dev, char *buf, int cnt)
 	}
 
 	if(result == 0) {
-		logd_stamp("tncd", "asy_: bad write, wrong count");
+		logd_stamp("tncd", "asy_: End-of-file");
 		bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__,
 				   "asy_recv", versionc,
 				   "End-of-file reading TNC, exiting");

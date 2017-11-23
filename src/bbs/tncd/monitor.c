@@ -5,6 +5,7 @@
 #include <stdarg.h>
 
 #include "c_cmmn.h"
+#include "bsd.h"
 #include "monitor.h"
 #include "socket.h"
 #include "timer.h"
@@ -50,6 +51,7 @@ char *helpmsg[] = {
 	"   PTHRESH 110\n",
 	"   N2 10\n",
 	"   FLAGS 1\n",
+	"   TX [0|1]\n",
 	NULL };
 
 static void monitor_control_accept(void *obj, void *arg0, int arg1);
@@ -285,6 +287,10 @@ monitor_command(struct Monitor_Session *mp, char *buf)
 				Tncd_SLIP_Flags = value;
 				break;
 			}
+			if (!strcmp(q, "TX")) {
+				Tncd_TX_Enabled = value ? 1 : 0;
+				break;
+			}
 		} else {
 			monitor_dump(mp);
 		}
@@ -318,6 +324,9 @@ monitor_dump(struct Monitor_Session *mp)
 		"maxframe = %d\npaclen = %d\npthresh = %d\2 = %d\nflags = %d\n",
 		Tncd_Maxframe, Tncd_Paclen, Tncd_Pthresh, Tncd_N2,
 		Tncd_SLIP_Flags);
+	monitor_printf(&mpp,
+		"transmit_enabled = %d\n",
+		Tncd_TX_Enabled);
 
 	if (mpp == NULL)
 		return;
