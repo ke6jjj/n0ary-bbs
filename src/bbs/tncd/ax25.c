@@ -22,46 +22,9 @@ int digipeat = 1;	/* Controls digipeating */
 void
 build_bbscall(void)
 {
-	char *s = Bbs_My_Call;
-	int i = 0;
-
-	while(isalnum(*s)) {
-		bbscall.call[i] = *s++;
-		ToUpper(bbscall.call[i]);
-		bbscall.call[i++] <<= 1;
-	}
-
-	for(;i<ALEN; i++)
-		bbscall.call[i] = ' ' << 1;
-
-	if(*s == '-')
-		s++;
-
-	if(*s == 0)
-		bbscall.ssid = ('0' << 1) | E;
-	else
-		bbscall.ssid = (*s << 1) | E;
-
+	setcall(&bbscall, Bbs_My_Call);
 #if 0
-	s = Bbs_Fwd_Call;
-	i = 0;
-
-	while(isalnum(*s)) {
-		fwdcall.call[i] = *s++;
-		ToUpper(fwdcall.call[i]);
-		fwdcall.call[i++] <<= 1;
-	}
-
-	for(;i<ALEN; i++)
-		fwdcall.call[i] = ' ' << 1;
-
-	if(*s == '-')
-		s++;
-
-	if(*s == 0)
-		fwdcall.ssid = ('0' << 1) | E;
-	else
-		fwdcall.ssid = (*s << 1) | E;
+	setcall(&forward, Bbs_Fwd_Call);
 #endif
 }
 
