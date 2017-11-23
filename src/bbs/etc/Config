@@ -91,6 +91,14 @@ BBS_DOMAIN		bbs.arasmith.com
 BBS_MYCALL		N0ARY-1
 BBS_FWDCALL		N0ARY-2
 
+; TNCs can be temporarily locked out to prevent transmission for
+; whatever reasons. If you want the ability to remotely unlock a TNC
+; that has been previously locked out, define BBS_UNLOCKCALL to a
+; callsign and SSID. When the TNC receives any packet destined for this
+; address, it will unlock itself.
+; 
+; BBS_UNLOCKCALL  	N0ARY-15
+
 ; Call sign of the primary sysop and the sysop password
 
 BBS_SYSOP		N0AAA
