@@ -12,7 +12,7 @@ fi
   
 SAVEDIR=${BBS_DIR}/doors/data/zork
 USER_SAVE_DIR=${SAVEDIR}/${BBS_USER}
-USER_SAVE=${USER_SAVE_DIR}/gsave.dat
+USER_SAVE=${USER_SAVE_DIR}/dsave.dat
 
 #
 # Turn off tty echo. Most users will be running in half duplex on a packet
