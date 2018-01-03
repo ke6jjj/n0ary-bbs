@@ -433,6 +433,7 @@ struct possible_tokens HelpOperands[] = {
 	{ pA,	"ADD",			2, 3, ADD,		941,NULL,NULL },
 	{ pA,	"ADVENTURE",	3, 9, ADVENTURE,	1005,NULL,NULL },
 	{ pA,	"ALL",			2, 3, ALL,		942,NULL,NULL },
+	{ pA,   "AXRELAY",	3, 7, AXRELAY,		1004,NULL,NULL },
 	{ pA,	"A",			1, 0, ACMD,		901,NULL,NULL },
 
 	{ pA,	"BAROMETER",	2, 9, BAROMETER,943,NULL,NULL },
@@ -473,6 +474,7 @@ struct possible_tokens HelpOperands[] = {
 	{ pA,	"F",			1, 0, FCMD,		906,NULL,NULL },
 
 	{ pA,	"GRAPH",		2, 5, GRAPH,	943,NULL,NULL },
+	{ pA,	"GAMES",	4, 5, GAMES,		1006,NULL,NULL },
 	{ pA,	"G",			1, 0, GCMD,		907,NULL,NULL },
 
 	{ pA,	"HEADER",		3, 6, HEADER,	957,NULL,NULL },

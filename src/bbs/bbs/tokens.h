@@ -103,8 +103,9 @@ extern char
 #define	ATBBS		(AT+1)
 #define	ATDIST		(ATBBS+1)
 #define	ATNTS		(ATDIST+1)
+#define AXRELAY         (ATNTS+1)
 
-#define	BACKSLASH	(ATNTS+1)
+#define	BACKSLASH	(AXRELAY+1)
 #define	BASE	(BACKSLASH+1)
 #define	BAROMETER	(BASE+1)
 #define	BBS		(BAROMETER+1)
@@ -162,7 +163,8 @@ extern char
 #define	FROM		(FRIDAY+1)
 #define	FULL		(FROM+1)
 
-#define	GENERATE	(FULL+1)
+#define GAMES           (FULL+1)
+#define	GENERATE	(GAMES+1)
 #define	GRAPH		(GENERATE+1)
 #define	GROUP		(GRAPH+1)
 
