@@ -48,16 +48,16 @@ static void fd_write_translate_nl(int fd, const char *buf, size_t len);
 static int fd_tncd_safe_write(int fd, const char *buf, size_t len);
 
 /* Read a line from the default input source */
-void
+char *
 user_gets(char *p, int cnt)
 {
 	int fd = (sock == ERROR) ? STDIN_FILENO : sock;
 
-	fd_gets(fd, p, cnt);
+	return fd_gets(fd, p, cnt);
 }
 
 /* Read a line from a specific file descriptor */
-void
+char *
 fd_gets(int fd, char *p, int cnt)
 {
 	char *str = p;
@@ -68,7 +68,7 @@ fd_gets(int fd, char *p, int cnt)
 	if(socket_read_pending(fd) == TRUE) {
 		if(socket_read_line(fd, str, cnt, 30) == sockERROR) {
 			error_log("fd_gets.read(): %s", sys_errlist[errno]);
-			exit_bbs();
+			return NULL;
 		}
 
 		if(monitor_fd != ERROR)
@@ -76,10 +76,10 @@ fd_gets(int fd, char *p, int cnt)
 
 		if(ImLogging)
 			log_user(p);
-		return;
+		return p;
 	}
 
-		/* first check for input off of the bbsd port */
+	/* first check for input off of the bbsd port */
 
 	while(!done) {
 		struct timeval t;
@@ -117,7 +117,7 @@ fd_gets(int fd, char *p, int cnt)
 			if(idletime > inactivity_time) {
 				PRINTF("Timeout occured, link was idle for %d minutes.\n",
 					inactivity_time / 60);
-				exit_bbs();
+				return NULL;
 			}
 #if 0
 			bbsd_ping();
@@ -152,7 +152,7 @@ fd_gets(int fd, char *p, int cnt)
 			char *c = bbsd_read();
 			if(c == NULL) {
 	PRINT("Lost connection with bbsd, please reconnect in a few minutes.\n");
-				exit_bbs();
+				return NULL;
 			}
 			switch(*c++) {
 			case 'P':
@@ -167,7 +167,7 @@ fd_gets(int fd, char *p, int cnt)
 		if(FD_ISSET(fd, &ready)) {
 			if(socket_read_line(fd, str, cnt, 30) == sockERROR) {
 				error_log("fd_gets.read(): %s", sys_errlist[errno]);
-				exit_bbs();
+				return NULL;
 			}
 			done = TRUE;
 		}
@@ -178,6 +178,8 @@ fd_gets(int fd, char *p, int cnt)
 
 	if(ImLogging)
 		log_user(p);
+
+	return p;
 }
 
 /* Print a formatted string to the default output */

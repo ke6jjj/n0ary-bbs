@@ -13,14 +13,14 @@ int monitor_service(void);
 
 /* io.c */
 /* These functions: translate newlines, uppercase, and log */
-void user_gets(char *str, int cnt);
+char *user_gets(char *str, int cnt);
 void user_printf(char *fmt, ...);
 void user_puts(char *str);
 /* This function does no translation, nor logging. */
 void user_write(const char *, size_t);
 
 /* These functions: translate newlines, uppercase, and log */
-void fd_gets(int fd, char *str, int cnt);
+char *fd_gets(int fd, char *str, int cnt);
 void fd_printf(int fd, const char *fmt, ...);
 void fd_vprintf(int fd, const char *fmt, va_list va);
 void fd_puts(int fd, char *str);
