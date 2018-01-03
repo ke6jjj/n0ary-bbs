@@ -26,8 +26,6 @@ stty -echo
 #
 stty rows ${BBS_USER_LINES}
 
-echo "Your user lines are" $BBS_USER_LINES
-
 check_resume() {
 	#
 	# See if this user has an existing save file.
@@ -59,7 +57,7 @@ get_prompt() {
 display_menu() {
 	check_resume
 	echo ""
-	echo "Adventure Main Menu"
+	echo "Zork Main Menu"
 	echo "1. See current scores"
 	if [ $resume_possible -eq 1 ]; then
 		echo "2. Resume your game"
@@ -84,7 +82,7 @@ display_scores() {
 }
 
 play() {
-	(mkdir -p ${USER_SAVE_DIR} cd ${USER_SAVE_DIR} && ${ZORK_PROG})
+	(mkdir -p ${USER_SAVE_DIR} && cd ${USER_SAVE_DIR} && ${ZORK_PROG})
 }
 	
 #
