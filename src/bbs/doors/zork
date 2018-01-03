@@ -1,0 +1,107 @@
+#!/bin/sh
+ZORK_PROG=/usr/local/bin/zork
+
+if [ "$BBS_DIR" == "" -o "$BBS_USER" == "" ]; then
+  echo "Missing BBS envionment variables"
+  exit 1
+fi
+
+if [ "$BBS_USER_LINES" == "" ]; then
+  BBS_USER_LINES=25
+fi
+  
+SAVEDIR=${BBS_DIR}/doors/data/zork
+USER_SAVE_DIR=${SAVEDIR}/${BBS_USER}
+USER_SAVE=${USER_SAVE_DIR}/gsave.dat
+
+#
+# Turn off tty echo. Most users will be running in half duplex on a packet
+# BBS.
+#
+stty -echo
+
+#
+# Zork will use curses to determine the screen size. Communicate it by setting
+# the ptty rows to the user's line count preference in the BBS.
+#
+stty rows ${BBS_USER_LINES}
+
+echo "Your user lines are" $BBS_USER_LINES
+
+check_resume() {
+	#
+	# See if this user has an existing save file.
+	#
+	if [ -f ${USER_SAVE} ]; then
+		resume_possible=1
+	else
+		resume_possible=0
+	fi
+}
+	
+get_prompt() {
+	prpt=$1
+	default=$2
+	if [ "$default" != "" ]; then
+		echo -n "$prpt [$default]? "
+	else
+		echo -n "$prpt? "
+	fi
+		
+	if ! read result; then
+		return 1
+	fi
+	if [ "$result" == "" ]; then
+		result=$default
+	fi
+}
+
+display_menu() {
+	check_resume
+	echo ""
+	echo "Adventure Main Menu"
+	echo "1. See current scores"
+	if [ $resume_possible -eq 1 ]; then
+		echo "2. Resume your game"
+	else
+		echo "2. Start a game"
+	fi
+	echo "Q. Return to BBS"
+}
+
+display_scores() {
+	set -- ${SAVEDIR}/*
+	if [ "$1" == "${SAVEDIR}/*" ]; then
+		echo "No one is currently playing the game!"
+		return
+	fi
+	printf "   %-12s  Score  Turns  Location\n" 'Player'
+	printf "   %-12s  -----  -----  --------\n" '------------'
+	for save_dir in ${SAVEDIR}/*; do
+		player=$(basename $save_dir)
+		printf "   %-12s  %5s  %5s  %.40s\n" "$player" "?" "?" "?"
+	done
+}
+
+play() {
+	(mkdir -p ${USER_SAVE_DIR} cd ${USER_SAVE_DIR} && ${ZORK_PROG})
+}
+	
+#
+# Display main menu.
+#
+display_menu
+while get_prompt "Choice"; do
+	case $result in
+	1)
+		display_scores
+		;;
+	2)
+		play
+		;;
+	q*|Q*|b*)
+		break
+		;;
+	esac
+	display_menu
+done

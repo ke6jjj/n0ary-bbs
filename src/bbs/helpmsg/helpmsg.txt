@@ -2371,7 +2371,7 @@
 1110 ADVenture command =======================================================
 1110   ADVenture
 1110
-1110 Play the text-based classic game, "ADVENTURE", in which you explore
+1110 Play the classic text-based game, "ADVENTURE", in which you explore
 1110 the mythical Colossal Cave, hunting for treasure and glory.
 1110
 1110 To quit the game temporarily (your progress is always saved) simply
@@ -2380,6 +2380,15 @@
 !1006
 1110 Games ===================================================================
 1110   ADVenture
+1110   ZOrk
 1110
-1110 This system has one game at the moment, "ADVENTURE", which is a text-
-1110 based classic from the 1970s. See ADVENTURE for more information.
+1110 This system has two games at the moment, both of which are text-based
+1110 interactive fiction classics from the 1980s, "ADVENTURE", and "ZORK".
+1110 See ADVENTURE or ZORK for more information.
+
+!1007
+1110 ZOrk command ============================================================
+1110   ZOrk
+1110
+1110 Play the text-based classic game, "ZORK".
+

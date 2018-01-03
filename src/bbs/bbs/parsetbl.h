@@ -619,6 +619,7 @@ struct possible_tokens HelpOperands[] = {
 	{ pA,	"Y",			1, 0, YCMD,		925,NULL,NULL },
 
 	{ pA,	"ZIP",			2, 3, ZIP,		955,NULL,NULL },
+	{ pA,	"ZORK",		2, 4, ZORK,	1007,NULL,NULL },
 	{ pA,	"Z",			1, 0, ZCMD,		926,NULL,NULL },
 
 	{ pA,	"<",			1, 1, FROM,		927,NULL,NULL },
@@ -769,6 +770,7 @@ struct possible_tokens Opcodes[] = {
 	{ pUS,	"WRITE",		2, 5, WRITE, 0,		filesys,	WriteOperands },
 	{ pA,	"WX",			2, 2, WX, 0,			wx,			WxOperands },
 	{ pUSB,	"ZIP",			1, 3, ZIP, 0,		usr,		DummyOperands },
+	{ pA,   "ZORK",		2, 4,  ZORK, 0,		zork,	DummyOperands },
 	{ pUSB,	"0",			1, 1, MACRO, 0,		cmd,		DummyOperands },
 	{ pUSB,	"1",			1, 1, MACRO, 0,		cmd,		DummyOperands },
 	{ pUSB,	"2",			1, 1, MACRO, 0,		cmd,		DummyOperands },

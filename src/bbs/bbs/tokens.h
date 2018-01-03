@@ -310,8 +310,9 @@ extern char
 #define	YESTERDAY	(YEARS+1)
 
 #define	ZIP		(YESTERDAY+1)
+#define	ZORK		(ZIP+1)
 
-#define ACMD		(ZIP+1)
+#define ACMD		(ZORK+1)
 #define BCMD		(ACMD+1)
 #define CCMD		(ACMD+2)
 #define DCMD		(ACMD+3)
