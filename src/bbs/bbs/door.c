@@ -15,25 +15,26 @@ extern int sock;
  * from the pseudo-terminal to the BBS user. During this time all monitoring
  * activity and BBSD servicing will be put on hold.
  */
-int
-adventure(void)
+static int
+door(const char *name, const char *path)
 {
 	int res, fd_in, fd_out;
 	ExtSession ls;
-	char **argv;
+	const char *argv[1], *envk[3], *envv[3];
+	char lines[10];
 
-	argv = malloc(sizeof(char *) * 3);
-	if (argv == NULL) {
-		PRINT("Out of memory.");
-		return ERROR;
-	}
+	snprintf(lines, sizeof(lines), "%ld", Lines);
 
-	argv[0] = "adventure";
-	argv[1] = Bbs_Dir;
-	argv[2] = usercall;
+	argv[0] = name;
+
+	envk[0] = "BBS_DIR";                 envv[0] = Bbs_Dir;
+	envk[1] = "BBS_USER";                envv[1] = usercall;
+	envk[2] = "BBS_USER_LINES";          envv[2] = lines;
+
 	res = ExtSession_init(&ls, DoCRLFEndings,
-		"/usr/home/bbs/doors/bin/adventure", 3, argv);
-	free(argv);
+		path,
+		1, argv,
+		3, envk, envv);
 
 	if (res != EXTSESS_OK) {
 		PRINTF("Error: %s\n", ExtSession_error(res));
@@ -56,4 +57,16 @@ adventure(void)
 		PRINTF("Error: %s\n", ExtSession_error(res));
 
 	return OK;
+}
+
+int
+adventure(void)
+{
+	return door("adventure", "/usr/home/bbs/doors/bin/adventure");
+}
+
+int
+zork(void)
+{
+	return door("zork", "/usr/home/bbs/doors/bin/zork");
 }

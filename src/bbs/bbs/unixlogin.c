@@ -30,7 +30,7 @@ unixlogin(void)
 	int res, fd_in, fd_out;
 	ExtSession ls;
         struct TOKEN *t = TokenList;
-	char **argv;
+	const char **argv;
 
         NEXT(t);
 
@@ -48,7 +48,8 @@ unixlogin(void)
 	argv[0] = "login";
 	argv[1] = t->lexem;
 
-	res = ExtSession_init(&ls, DoCRLFEndings, "/usr/bin/login", 2, argv);
+	res = ExtSession_init(&ls, DoCRLFEndings, "/usr/bin/login", 2, argv,
+		0, NULL, NULL);
 	free(argv);
 
 	if (res != EXTSESS_OK) {

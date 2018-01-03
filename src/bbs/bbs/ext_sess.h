@@ -39,7 +39,10 @@ struct ExtSession {
 	char buf[1024];
 	char *prog;
 	char **argv;
+	char **env_vars;
+	char **env_values;
 	int argc;
+	int envc;
 	int master_fd;
 	int stdin_fd;
 	int stdout_fd;
@@ -57,7 +60,8 @@ struct ExtSession {
 typedef struct ExtSession ExtSession;
 
 int ExtSession_init(ExtSession *ls, int translate_crlf, const char *prog,
-	int argc, char * const *argv);
+	int argc, const char **argv, int envc,
+	const char **env_vars, const char **env_values);
 int ExtSession_run(ExtSession *ls, int fd_in, int fd_out);
 void ExtSession_deinit(ExtSession *ls);
 const char *ExtSession_error(ExtSession_Error);

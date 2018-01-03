@@ -38,13 +38,17 @@ static void ExtSession_childWaitTimeout(void *, void *, int);
 static void ExtSession_execChild(ExtSession *ls);
 static void ExtSession_stop(ExtSession *ls);
 
+static int strvec_copy(size_t count, const char **svec, char **dvec);
+static void strvec_free(size_t count, char **dvec);
+
 int
 ExtSession_init(ExtSession *ls, int translate_crlf, const char *prog, int argc,
-	char * const *argv)
+	const char **argv, int envc, const char **env_vars,
+	const char **env_values)
 {
 	size_t i, j;
 	int master_fd, res;
-	char *prog_copy, **argv_copy, *arg;
+	char *prog_copy, **argv_copy, *arg, **env_k_copy, **env_v_copy;
 	char *slave, *slave_copy;
 
 	prog_copy = strdup(prog);
@@ -52,18 +56,30 @@ ExtSession_init(ExtSession *ls, int translate_crlf, const char *prog, int argc,
 
 	argv_copy = malloc((argc + 1) * sizeof(char *));
 	err_if(argv_copy == NULL, EXTSESS_MEMORY, res, ArgvMallocFailed);
+	argv_copy[argc] = NULL;
 
-	for (i = 0; i < (argc + 1); i++) {
-		argv_copy[i] = NULL;
-	}
+	res = strvec_copy(argc, argv, argv_copy);
+	err_if(res != 0, EXTSESS_MEMORY, res, ArgvArgCopyFailed);
 
-	for (i = 0; i < argc; i++) {
-		arg = strdup(argv[i]);
-		if (arg == NULL) {
-			res = EXTSESS_MEMORY;
-			goto ArgvArgCopyFailed;
-		}
-		argv_copy[i] = arg;
+	if (envc > 0) {
+		env_k_copy = malloc((envc + 1) * sizeof(char *));
+		err_if(env_k_copy == NULL, EXTSESS_MEMORY, res,
+			EnvKMallocFailed);
+		env_k_copy[argc] = NULL;
+
+		res = strvec_copy(envc, env_vars, env_k_copy);
+		err_if(res != 0, EXTSESS_MEMORY, res, EnvKCopyFailed);
+
+		env_v_copy = malloc((envc + 1) * sizeof(char *));
+		err_if(env_v_copy == NULL, EXTSESS_MEMORY, res,
+			EnvVMallocFailed);
+		env_v_copy[argc] = NULL;
+
+		res = strvec_copy(envc, env_values, env_v_copy);
+		err_if(res != 0, EXTSESS_MEMORY, res, EnvVCopyFailed);
+	} else {
+		env_k_copy = NULL;
+		env_v_copy = NULL;
 	}
 
 	master_fd = posix_openpt(O_RDWR|O_NOCTTY|O_CLOEXEC);
@@ -81,6 +97,9 @@ ExtSession_init(ExtSession *ls, int translate_crlf, const char *prog, int argc,
 	ls->prog = prog_copy;
 	ls->argc = argc;
 	ls->argv = argv_copy;
+	ls->envc = envc;
+	ls->env_vars = env_k_copy;
+	ls->env_values = env_v_copy;
 	ls->master_fd = master_fd;
 	ls->slave_path = slave_copy;
 	ls->childWaitTimer = -1;
@@ -93,13 +112,14 @@ PtySlaveGetNameFailed:
 PtyNonblockFailed:
 	close(master_fd);
 PtyMasterOpenFailed:
+EnvVCopyFailed:
+	strvec_free(envc, env_v_copy);
+EnvVMallocFailed:
+EnvKCopyFailed:
+	strvec_free(envc, env_k_copy);
+EnvKMallocFailed:
 ArgvArgCopyFailed:
-	for (j = 0; j < argc; j++) {
-		if (argv_copy[i] != NULL) {
-			free(argv_copy[i]);
-		}
-	}
-	free(argv_copy);
+	strvec_free(argc, argv_copy);
 ArgvMallocFailed:
 	free(prog_copy);
 ProgMallocFailed:	
@@ -175,6 +195,8 @@ AlEventInitFailed:
 static void
 ExtSession_execChild(ExtSession *ls)
 {
+	size_t i;
+
 	close(ls->master_fd);
 
 	int my_stdout = open(ls->slave_path, O_WRONLY);
@@ -201,6 +223,10 @@ ExtSession_execChild(ExtSession *ls)
 	if (res < 0)
 		exit(EXTSESS_CHILD_CTTY);
 		
+	for (i = 0; i < ls->envc; i++) {
+		setenv(ls->env_vars[i], ls->env_values[i], 1);
+	}
+
 	execv(ls->prog, ls->argv);
 
 	/* exec failure */
@@ -210,12 +236,10 @@ ExtSession_execChild(ExtSession *ls)
 void
 ExtSession_deinit(ExtSession *ls)
 {
-	size_t i;
-
 	free(ls->slave_path);
-	for (i = 0; i < ls->argc; i++)
-		free(ls->argv[i]);
-	free(ls->argv);
+	strvec_free(ls->envc, ls->env_vars);
+	strvec_free(ls->envc, ls->env_values);
+	strvec_free(ls->argc, ls->argv);
 }
 
 /* Stop running due to I/O error or EOF */
@@ -402,4 +426,43 @@ ExtSession_error(ExtSession_Error err)
 	default:
 		return "?";
 	}
+}
+
+static int
+strvec_copy(size_t count, const char **svec, char **dvec)
+{
+	char *arg;
+	size_t i;
+	int failed;
+
+	for (i = 0, failed = 0; i < count; i++) {
+		if (!failed) {
+			arg = strdup(svec[i]);
+			if (arg == NULL) {
+				failed = -1;
+			}
+		} else {
+			arg = NULL;
+		}
+		dvec[i] = arg;
+	}
+
+	return failed;
+}
+
+static void
+strvec_free(size_t count, char **vec)
+{
+	size_t i;
+
+	if (vec == NULL)
+		return;
+
+	for (i = 0; i < count; i++) {
+		if (vec[i] != NULL) {
+			free(vec[i]);
+		}
+	}
+
+	free(vec);
 }

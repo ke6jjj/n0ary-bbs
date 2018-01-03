@@ -1,9 +1,11 @@
 #!/bin/sh
 ADVENTURE_PROG=/usr/local/bin/adventure
 
-BBS_DIR=$1
-BBS_USER=$2
-
+if [ "$BBS_DIR" == "" -o "$BBS_USER" == "" ];
+  echo "Missing BBS envionment variables"
+  exit 1
+fi
+  
 SAVEDIR=${BBS_DIR}/doors/data/adventure
 USER_SAVE=${SAVEDIR}/${BBS_USER}
 
