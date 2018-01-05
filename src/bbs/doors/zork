@@ -1,5 +1,6 @@
 #!/bin/sh
 ZORK_PROG=/usr/local/bin/zork
+ZORK_DTEXT=/usr/local/lib/dtextc.dat
 
 if [ "$BBS_DIR" == "" -o "$BBS_USER" == "" ]; then
   echo "Missing BBS envionment variables"
@@ -68,17 +69,24 @@ display_menu() {
 }
 
 display_scores() {
-	set -- ${SAVEDIR}/*
-	if [ "$1" == "${SAVEDIR}/*" ]; then
+	SAVE_FILES=${SAVEDIR}/*/dsave.dat
+	set -- ${SAVE_FILES}
+	if [ "$1" == "${SAVEDIR}/*/dsave.dat" ]; then
 		echo "No one is currently playing the game!"
 		return
 	fi
+
 	printf "   %-12s  Score  Turns  Location\n" 'Player'
 	printf "   %-12s  -----  -----  --------\n" '------------'
-	for save_dir in ${SAVEDIR}/*; do
-		player=$(basename $save_dir)
-		printf "   %-12s  %5s  %5s  %.40s\n" "$player" "?" "?" "?"
-	done
+
+	env python -m zork.dtext -k score -k moves -k here_short \
+		${ZORK_DTEXT} ${SAVE_FILES} |
+	(IFS='	';
+	while read line; do
+		set -- ${line};
+		player=$(basename $(dirname $1));
+		printf "   %-12s  %5s  %5s  %.40s\n" "$player" "$2" "$3" "$4"
+	done)
 }
 
 play() {
