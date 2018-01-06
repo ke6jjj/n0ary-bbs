@@ -47,7 +47,8 @@ static void
 	print_rule(int low, int step, int high),
 	print_graph_line(int type, int base, int step, int high, struct wx_data *wd),
 	disp_wx_file(char *fname),
-	disp_wx_graph(int type, int samples);
+	disp_wx_graph(int type, int samples),
+        auto_scale(int low, int high, int *floor, int *r_step, int *ceiling);
 
 static int get_next_record(FILE *fp, struct weather_data *wd);
 
@@ -297,16 +298,17 @@ disp_wx_graph(int type, int samples)
 				graph.data[graph.cnt].current = wd.uv[WxCURRENT];
 				break;
 			case WxRAIN:
-				graph.data[graph.cnt].high = 0;
+				graph.data[graph.cnt].high = wd.rain;
+				graph.data[graph.cnt].low = wd.rain;
 				graph.data[graph.cnt].current = wd.rain;
 				break;
 			}
 			graph.data[graph.cnt].good = TRUE;
 
-			if(graph.data[graph.cnt].low < graph.low)
-				graph.low = graph.data[graph.cnt].low;
-			if(graph.data[graph.cnt].high > graph.high)
-				graph.high = graph.data[graph.cnt].high;
+			if(graph.data[graph.cnt].current < graph.low)
+				graph.low = graph.data[graph.cnt].current;
+			if(graph.data[graph.cnt].current > graph.high)
+				graph.high = graph.data[graph.cnt].current;
 		}
 		graph.cnt++;
 	}
@@ -316,7 +318,7 @@ disp_wx_graph(int type, int samples)
 	switch(graph.type) {
 	case WxTEMP:
 		PRINT("\nTEMPERATURE (degF)\n");
-		floor = 0; step = 2; ceiling = 110;
+		auto_scale(graph.low, graph.high, &floor, &step, &ceiling);
 		break;
 	case WxHUMID:
 		PRINT("\nHUMIDITY (%)\n");
@@ -324,7 +326,7 @@ disp_wx_graph(int type, int samples)
 		break;
 	case WxWIND:
 		PRINT("\nWIND (mph)\n");
-		floor = 0; step = 2; ceiling = 110;
+		auto_scale(graph.low, graph.high, &floor, &step, &ceiling);
 		break;
 	case WxBARO:
 		PRINT("\nBAROMETRIC PRESSURE (0.01 in)\n");
@@ -332,11 +334,11 @@ disp_wx_graph(int type, int samples)
 		break;
 	case WxRAIN:
 		PRINT("\nRAIN (0.1 inches)\n");
-		floor = 0; step = 1; ceiling = 50;
+		auto_scale(graph.low, graph.high, &floor, &step, &ceiling);
 		break;
 	case WxSOLAR:
 		PRINT("\nSOLAR RADIATION (watts / m^2)\n");
-		floor = 0; step = 25; ceiling = 1200;
+		auto_scale(graph.low, graph.high, &floor, &step, &ceiling);
 		break;
 	case WxUV:
 		PRINT("\nUV RADIATION (UV index)\n");
@@ -528,7 +530,7 @@ disp_wx_raw(int samples)
 		if(wd.barometer[WxCURRENT] == 0)
 			PRINT("------------------------ Missed Sample ---------------------\n");
 		else
-			PRINTF( "%3d %3d %3d  %3d %3d %3d  %4d %4d %4d    %3d  %3d    %4d\n",
+			PRINTF( "%3d %3d %3d  %3d %3d %3d  %4d %4d %4d    %3d  %3d    %4d %3d\n",
 				wd.temp[WxLOW], wd.temp[WxCURRENT], wd.temp[WxHIGH],
 				wd.humidity[WxLOW], wd.humidity[WxCURRENT], wd.humidity[WxHIGH],
 				wd.barometer[WxLOW], wd.barometer[WxCURRENT], wd.barometer[WxHIGH],
@@ -570,4 +572,40 @@ get_next_record(FILE *fp, struct weather_data *wd)
 	wd->when = (time_t) when;
 
 	return fcount == 23;
+}
+
+static void
+auto_scale(int low, int high, int *floor, int *r_step, int *ceiling)
+{
+	const int kDesiredColumns = 75;
+	float best_step;
+	int step;
+
+	best_step = (float)(high - low) / kDesiredColumns;
+
+	if (best_step < 1) {
+		step = 1;
+	} else if (best_step < 2) {
+		step = 2;
+	} else if (best_step < 5) {
+		step = 5;
+	} else if (best_step < 10) {
+		step = 10;
+	} else if (best_step < 20) {
+		step = 20;
+	} else if (best_step < 50) {
+		step = 50;
+	} else if (best_step < 100) {
+		step = 100;
+	} else if (best_step < 200) {
+		step = 200;
+	} else if (best_step < 500) {
+		step = 500;
+	} else {
+		step = best_step - 1;
+	}
+
+	*floor = (low / step) * step;
+	*ceiling = ((high / step) + 1) * step;
+	*r_step = step;
 }
