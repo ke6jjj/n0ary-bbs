@@ -3,7 +3,7 @@
 #define WxHIGH		2
 
 struct weather_data {
-	long when;
+	time_t when;
 	int temp[3];
 	int humidity[3];
 	int barometer[3];

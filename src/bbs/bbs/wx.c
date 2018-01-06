@@ -47,6 +47,7 @@ static void
 	disp_wx_file(char *fname),
 	disp_wx_graph(int type, int samples);
 
+static int get_next_record(FILE *fp, struct weather_data *wd);
 
 int
 wx(void)
@@ -55,7 +56,7 @@ wx(void)
 	int file = 0;
 	int param = 0;
 	int func = 0;
-	int samples = 16;
+	int samples = 24;
 
 	while(t->token != END) {
 		switch(t->token) {
@@ -180,12 +181,8 @@ disp_wx_graph(int type, int samples)
 	struct wx_graph graph;
 	struct tm *dt;
 	FILE *fp;
-	int i, floor, step, ceiling;
-	long rainbase;
+	int i, floor, step, ceiling, avail, skip;
 
-#if 1
-	PRINT("WX graphing needs porting; too reliant on binary formats. -KE6JJJ\n");
-#else
 	if(samples <= 0)
 		return;
 
@@ -194,16 +191,28 @@ disp_wx_graph(int type, int samples)
 		return;
 	}
 
-	fseek(fp, 0, 2);
-	if(samples > (ftell(fp) / sizeof(wd)))
-		rewind(fp);
+	if (fscanf(fp, "%d\n", &avail) != 1) {
+		PRINT("Couldn't read raw weather file sample count\n");
+		fclose(fp);
+		return;
+	}
+
+	if (avail < 0) {
+		PRINT("Nonsense raw weather file sample count\n");
+		fclose(fp);
+		return;
+	}
+
+	if(samples > avail)
+		skip = 0;
 	else
-		fseek(fp, sizeof(wd) * samples * (-1), 2);
+		skip = avail - samples;
 
 	bzero(&graph, sizeof(graph));
 	graph.data = (struct wx_data *)calloc(samples, sizeof(struct wx_data));
 	if(graph.data == NULL) {
 		PRINT("disp_wx_graph: Memory allocation failure");
+		fclose(fp);
 		return;
 	}
 
@@ -211,7 +220,17 @@ disp_wx_graph(int type, int samples)
 	graph.high = 0;
 	graph.low = 9999;
 
-	while(fread(&wd, sizeof(wd), 1, fp)) {
+	for (;skip > 0; skip--) {
+		if (!get_next_record(fp, &wd)) {
+			fclose(fp);
+			free(graph.data);
+			PRINT("Bad skip record.\n");
+			return;
+		}
+		
+	}
+
+	while(get_next_record(fp, &wd)) {
 		dt = localtime(&wd.when);
 
 		graph.data[graph.cnt].mo = dt->tm_mon+1;
@@ -257,11 +276,7 @@ disp_wx_graph(int type, int samples)
 				break;
 			case WxRAIN:
 				graph.data[graph.cnt].high = 0;
-				if(graph.cnt == 0) {
-					rainbase = wd.rain;
-					graph.data[graph.cnt].current = 0;
-				} else
-					graph.data[graph.cnt].current = (wd.rain - rainbase) / 10;
+				graph.data[graph.cnt].current = wd.rain;
 				break;
 			}
 			graph.data[graph.cnt].good = TRUE;
@@ -290,11 +305,11 @@ disp_wx_graph(int type, int samples)
 		floor = 0; step = 2; ceiling = 110;
 		break;
 	case WxBARO:
-		PRINT("\nBAROMETRIC PRESSURE (in)\n");
+		PRINT("\nBAROMETRIC PRESSURE (0.01 in)\n");
 		floor = 2940; step = 2; ceiling = 3030;
 		break;
 	case WxRAIN:
-		PRINT("\nRAIN (inches)\n");
+		PRINT("\nRAIN (0.1 inches)\n");
 		floor = 0; step = 1; ceiling = 50;
 		break;
 	}
@@ -309,7 +324,7 @@ disp_wx_graph(int type, int samples)
 
 	PRINT("\n");
 	free(graph.data);
-#endif
+
 	return;
 }
 
@@ -420,31 +435,49 @@ disp_wx_raw(int samples)
 {
 	struct weather_data wd;
 	struct tm *dt;
+	int avail, skip;
 	FILE *fp;
 
 	if(samples <= 0)
 		return;
 
-#if 1
-	PRINT("WX needs porting; Too binary specific. -KE6JJJ\n");
-#else
 	if((fp = fopen(Bbs_WxData_File, "r")) == NULL) {
 		PRINT("Couldn't open raw weather file\n");
 		return;
 	}
 
-	fseek(fp, 0, 2);
-	if(samples > (ftell(fp) / sizeof(wd)))
-		rewind(fp);
+	if (fscanf(fp, "%d\n", &avail) != 1) {
+		PRINT("Couldn't read raw weather file sample count\n");
+		fclose(fp);
+		return;
+	}
+
+	if (avail < 0) {
+		PRINT("Nonsense raw weather file sample count\n");
+		fclose(fp);
+		return;
+	}
+
+	if(samples > avail)
+		skip = 0;
 	else
-		fseek(fp, sizeof(wd) * samples * (-1), 2);
+		skip = avail - samples;
+
+	for (;skip > 0; skip--) {
+		if (!get_next_record(fp, &wd)) {
+			fclose(fp);
+			PRINT("Bad skip record.\n");
+			return;
+		}
+		
+	}
 
 	PRINT(
 "            -- Temp ---  -- Humid --  -- Barometer --  -- Wind ---\n");
 	PRINT(
 "            Min Cur Max  Min Cur Max   Min  Cur  Max    Avg  Gust   Rain\n");
 
-	while(fread(&wd, sizeof(wd), 1, fp)) {
+	while(get_next_record(fp, &wd)) {
 		dt = localtime(&wd.when);
 
 		PRINTF("%2d/%02d %02d:%02d ",
@@ -461,5 +494,33 @@ disp_wx_raw(int samples)
 				wd.rain);
 	}
 	fclose(fp);
-#endif
+}
+
+static int
+get_next_record(FILE *fp, struct weather_data *wd)
+{
+	int fcount;
+	double when;
+
+	fcount = fscanf(fp,
+		"%lf "      /* when */
+		"%d %d %d " /* temp (min, avg, max) */
+		"%d %d %d " /* hum (min, avg, max) */
+		"%d %d %d " /* barometer (min, avg, max) */
+		"%d %d "    /* min wind speed, direction */
+		"%d %d "    /* avg wind speed, direction */
+		"%d %d "    /* gust wind speed, direction */
+		"%d\n",     /* rain rate (in/hr?) */
+		&when,
+		&wd->temp[0], &wd->temp[1], &wd->temp[2],
+		&wd->humidity[0], &wd->humidity[1], &wd->humidity[2],
+		&wd->barometer[0], &wd->barometer[1], &wd->barometer[2],
+		&wd->wind[0].speed, &wd->wind[0].direction,
+		&wd->wind[1].speed, &wd->wind[1].direction,
+		&wd->wind[2].speed, &wd->wind[2].direction,
+		&wd->rain);
+
+	wd->when = (time_t) when;
+
+	return fcount == 17;
 }
