@@ -4,6 +4,7 @@ import urllib
 import json
 import time
 import math
+import collections
 
 data_base = 'http://meso-wx/data.php'
 entity_id = 'weewx_raw'
@@ -72,25 +73,29 @@ def do_current():
   url = data_base + '?entity_id=' + entity_id + '&data=' + ','.join(item_strs) \
     + '&order=desc&limit=1'
 
-  print url
-
   r = urllib2.urlopen(url)
   t = r.read()
   data = json.loads(t)
   assert(len(data) == 1)
-  data = data[0]
+  # Unpack single row
+  data = collections.namedtuple('Weather',
+    ['when','temperature','humidity','pressure','windSpeed','windDir',
+     'rainTotal','rainRate'])(*data[0])
 
-  now = data[0]
-  print "Weather Data as of {}".format(time.ctime(now))
+  print "Weather Data as of {}".format(time.ctime(data.when))
   print "Bernal Heights, San Francisco El 87'"
-  print "                   Current  Rate"
-  print "Temperature (degF)  %3d" % data[1]
-  print "Humidity (%%)        %3d" % data[2]
-  print "Barometer (in)       %5.2f" % data[3]
-  print "Rain (in)            %5.2f %5.2f" % (data[6], data[7])
-
   print ""
-  print "Wind (mph)          %03d deg (%s) @ %3d" % (data[5], winddir(data[5]), data[4])
+  print "Temperature       %3d F" % data.temperature
+  print "Humidity          %3d%%" % data.humidity
+  print "Barometer          %5.2f inHg" % data.pressure
+  print "Rain (total/rate) %5.2f in / %5.2f in/h" % (data.rainTotal,
+    data.rainRate)
+
+  if data.windSpeed is None or data.windSpeed == 0:
+    print "Wind               calm"
+  else:
+    print "Wind               %03d deg (%s) @ %d mph" % \
+      (data.windDir, winddir(data.windDir), data.windSpeed)
 
 def main(args):
   if len(args) < 2:
