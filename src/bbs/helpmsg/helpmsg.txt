@@ -2390,5 +2390,18 @@
 1110 ZOrk command ============================================================
 1110   ZOrk
 1110
-1110 Play the text-based classic game, "ZORK".
+1110 Zork is a game of adventure, danger, and low cunning.  In it
+1110 you will explore some of the most amazing territory ever seen by mortal
+1110 man.  Hardened adventurers have run screaming from the terrors contained
+1110 within.
+1110
+1110 In Zork, the intrepid explorer delves into the forgotten secrets
+1110 of a lost labyrinth deep in the bowels of the earth, searching for
+1110 vast treasures long hidden from prying eyes, treasures guarded by
+1110 fearsome monsters and diabolical traps!
+1110
+1110 On-line information may be obtained with the commands HELP and INFO once
+1110 you have started the game.
 
+!1008
+1110 end
