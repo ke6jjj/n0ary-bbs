@@ -16,6 +16,8 @@
 #define WxWIND		4
 #define WxBARO		8
 #define WxRAIN		0x10
+#define WxSOLAR		0x20
+#define WxUV		0x40
 
 #define WxGRAPH		1
 #define WxDATA		2
@@ -84,6 +86,16 @@ wx(void)
 			if(param)
 				return bad_cmd(800, t->location);
 			param = WxWIND;
+			break;
+		case SOLAR:
+			if(param)
+				return bad_cmd(800, t->location);
+			param = WxSOLAR;
+			break;
+		case UV:
+			if(param)
+				return bad_cmd(800, t->location);
+			param = WxUV;
 			break;
 
 		case YESTERDAY:
@@ -274,6 +286,16 @@ disp_wx_graph(int type, int samples)
 				graph.data[graph.cnt].high = wd.barometer[WxHIGH];
 				graph.data[graph.cnt].current = wd.barometer[WxCURRENT];
 				break;
+			case WxSOLAR:
+				graph.data[graph.cnt].low = wd.solar[WxLOW];
+				graph.data[graph.cnt].high = wd.solar[WxHIGH];
+				graph.data[graph.cnt].current = wd.solar[WxCURRENT];
+				break;
+			case WxUV:
+				graph.data[graph.cnt].low = wd.uv[WxLOW];
+				graph.data[graph.cnt].high = wd.uv[WxHIGH];
+				graph.data[graph.cnt].current = wd.uv[WxCURRENT];
+				break;
 			case WxRAIN:
 				graph.data[graph.cnt].high = 0;
 				graph.data[graph.cnt].current = wd.rain;
@@ -311,6 +333,14 @@ disp_wx_graph(int type, int samples)
 	case WxRAIN:
 		PRINT("\nRAIN (0.1 inches)\n");
 		floor = 0; step = 1; ceiling = 50;
+		break;
+	case WxSOLAR:
+		PRINT("\nSOLAR RADIATION (watts / m^2)\n");
+		floor = 0; step = 25; ceiling = 1200;
+		break;
+	case WxUV:
+		PRINT("\nUV RADIATION (UV index)\n");
+		floor = 0; step = 1; ceiling = 12;
 		break;
 	}
 
@@ -395,39 +425,51 @@ print_baro_rule(void)
 static void
 print_rule(int low, int step, int high)
 {
-	char buf[4][120];
+	char buf[5][120];
+        int thousand = FALSE;
 	int hundred = FALSE;
 	int ten = FALSE;
+        int k,c,d;
+	int lk, lc, ld;
 	int i, j;
 
 	for(i=0; i<75; i++)
 		buf[0][i] = buf[1][i] = buf[2][i] = buf[3][i] = ' ';
-	buf[0][i] = buf[1][i] = buf[2][i] = buf[3][i] = 0;
+	buf[0][i] = buf[1][i] = buf[2][i] = buf[3][i] = buf[4][i] = 0;
 
+	lk = lc = ld = 0;
 	for(i=13,j=low; j<=high; i++, j+=step) {
-		if(j%10 == 0) {
-			int num = j/10;
-			if(num >= 10) {
-				buf[0][i] = (num/10) + '0';
-				hundred = TRUE;
-				num -= 10;
-			}
-			if(j!=0) {
-				buf[1][i] = num + '0';
-				ten = TRUE;
-			}
+		k = (j / 1000) % 10;
+		c = (j / 100) % 10;
+		d = (j / 10) % 10;
+		if (k != lk) {
+			thousand = TRUE;
+			buf[0][i] = k + '0';
+			lk = k;
 		}
-		buf[2][i] = (j%10) + '0';
-		buf[3][i] = '-';
+		if (c != lc) {
+			hundred = TRUE;
+			buf[1][i] = c + '0';
+			lc = c;
+		}
+		if (d != ld) {
+			ten = TRUE;
+			buf[2][i] = d + '0';
+			ld = d;
+		}
+		buf[3][i] = (j%10) + '0';
+		buf[4][i] = '-';
 	}
-	buf[3][13] = '+';
+	buf[4][13] = '+';
 
-	if(hundred)
+	if(thousand)
 		PRINTF("%s\n", buf[0]);
-	if(ten)
+	if(hundred)
 		PRINTF("%s\n", buf[1]);
-	PRINTF("%s\n", buf[2]);
+	if(ten)
+		PRINTF("%s\n", buf[2]);
 	PRINTF("%s\n", buf[3]);
+	PRINTF("%s\n", buf[4]);
 }
 
 static void
@@ -473,9 +515,9 @@ disp_wx_raw(int samples)
 	}
 
 	PRINT(
-"            -- Temp ---  -- Humid --  -- Barometer --  -- Wind ---\n");
+"            -- Temp ---  -- Humid --  -- Barometer --  -- Wind ---  Sol \n");
 	PRINT(
-"            Min Cur Max  Min Cur Max   Min  Cur  Max    Avg  Gust   Rain\n");
+"            Min Avg Max  Min Avg Max   Min  Avg  Max    Avg  Gust   Avg  Rain\n");
 
 	while(get_next_record(fp, &wd)) {
 		dt = localtime(&wd.when);
@@ -491,6 +533,7 @@ disp_wx_raw(int samples)
 				wd.humidity[WxLOW], wd.humidity[WxCURRENT], wd.humidity[WxHIGH],
 				wd.barometer[WxLOW], wd.barometer[WxCURRENT], wd.barometer[WxHIGH],
 				wd.wind[WxCURRENT].speed, wd.wind[WxHIGH].speed,
+				wd.solar[WxCURRENT],
 				wd.rain);
 	}
 	fclose(fp);
@@ -510,6 +553,8 @@ get_next_record(FILE *fp, struct weather_data *wd)
 		"%d %d "    /* min wind speed, direction */
 		"%d %d "    /* avg wind speed, direction */
 		"%d %d "    /* gust wind speed, direction */
+		"%d %d %d " /* solar radiation (min, avg, max) */
+		"%d %d %d " /* uv (min, avg, max) */
 		"%d\n",     /* rain rate (in/hr?) */
 		&when,
 		&wd->temp[0], &wd->temp[1], &wd->temp[2],
@@ -518,9 +563,11 @@ get_next_record(FILE *fp, struct weather_data *wd)
 		&wd->wind[0].speed, &wd->wind[0].direction,
 		&wd->wind[1].speed, &wd->wind[1].direction,
 		&wd->wind[2].speed, &wd->wind[2].direction,
+		&wd->solar[0], &wd->solar[1], &wd->solar[2],
+		&wd->uv[0], &wd->uv[1], &wd->uv[2],
 		&wd->rain);
 
 	wd->when = (time_t) when;
 
-	return fcount == 17;
+	return fcount == 23;
 }

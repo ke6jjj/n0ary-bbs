@@ -436,6 +436,9 @@ display_tokens(void)
 		case SOFTWARE:
 			PRINTF("  SOFTWARE\t[%s]\n", t->lexem);
 			break;
+		case SOLAR:
+			PRINTF("  SOLAR\t[%s]\n", t->lexem);
+			break;
 		case SPAWN:
 			PRINTF("  SPAWN\t[%s]\n", t->lexem);
 			break;
@@ -516,6 +519,9 @@ display_tokens(void)
 			break;
 		case UUSTAT:
 			PRINTF("  UUSTAT\t[%s]\n", t->lexem);
+			break;
+		case UV:
+			PRINTF("  UV\t[%s]\n", t->lexem);
 			break;
 		case VACATION:
 			PRINTF("  VACATION\t[%s]\n", t->lexem);

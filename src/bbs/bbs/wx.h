@@ -11,6 +11,8 @@ struct weather_data {
 		int speed;
 		int direction;
 	} wind[3];
+	int solar[3];
+	int uv[3];
 	int rain;
 };
 

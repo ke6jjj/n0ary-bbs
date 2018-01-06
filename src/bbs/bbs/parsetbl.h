@@ -290,6 +290,8 @@ struct possible_tokens WxOperands[] = {
 	{ pA,	"GRAPH",		1, 5, GRAPH, 0,			NULL, NULL },
 	{ pA,	"DATA",			1, 4, DATA, 0,			NULL, NULL },
 	{ pA,	"TEMPERATURE",	1, 11,TEMPERATURE, 0,	NULL, NULL },
+	{ pA,	"SOLAR",	1, 5, SOLAR, 0,	NULL, NULL },
+	{ pA,	"UV",		1, 2, UV, 0,	NULL, NULL },
 	{ pA,	"YESTERDAY",	1, 9, YESTERDAY, 0,		NULL, NULL },
 	{ pA,	"WIND",			1, 4, WIND, 0,			NULL, NULL },
 	{ pA,	"SET",			1, 4, SET, 0,			NULL, NULL },

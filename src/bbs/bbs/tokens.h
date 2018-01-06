@@ -260,7 +260,8 @@ extern char
 #define	SLASH		(SIZE+1)
 #define	SLOW		(SLASH+1)
 #define	SOFTWARE	(SLOW+1)
-#define	SPAWN		(SOFTWARE+1)
+#define	SOLAR		(SOFTWARE+1)
+#define	SPAWN		(SOLAR+1)
 #define	SSID		(SPAWN+1)
 #define	SUBJECT		(SSID+1)
 #define	SUNDAY		(SUBJECT+1)
@@ -289,8 +290,9 @@ extern char
 #define	UPPERCASE		(UNREAD+1)
 #define	USER		(UPPERCASE+1)
 #define	UUSTAT		(USER+1)
+#define	UV		(UUSTAT+1)
 
-#define	VACATION	(UUSTAT+1)
+#define	VACATION	(UV+1)
 #define	VERSION		(VACATION+1)
 #define	VOICE		(VERSION+1)
 
