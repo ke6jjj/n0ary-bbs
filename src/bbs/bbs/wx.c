@@ -333,7 +333,7 @@ disp_wx_graph(int type, int samples)
 		floor = 2940; step = 2; ceiling = 3030;
 		break;
 	case WxRAIN:
-		PRINT("\nRAIN (0.1 inches)\n");
+		PRINT("\nRAIN (0.01 inches)\n");
 		auto_scale(graph.low, graph.high, &floor, &step, &ceiling);
 		break;
 	case WxSOLAR:
