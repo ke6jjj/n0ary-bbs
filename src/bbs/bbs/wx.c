@@ -436,7 +436,7 @@ print_rule(int low, int step, int high)
 	int i, j;
 
 	for(i=0; i<75; i++)
-		buf[0][i] = buf[1][i] = buf[2][i] = buf[3][i] = ' ';
+		buf[0][i] = buf[1][i] = buf[2][i] = buf[3][i] = buf[4][i] = ' ';
 	buf[0][i] = buf[1][i] = buf[2][i] = buf[3][i] = buf[4][i] = 0;
 
 	lk = lc = ld = 0;
@@ -577,7 +577,7 @@ get_next_record(FILE *fp, struct weather_data *wd)
 static void
 auto_scale(int low, int high, int *floor, int *r_step, int *ceiling)
 {
-	const int kDesiredColumns = 75;
+	const int kDesiredColumns = 75 - 14;
 	float best_step;
 	int step;
 
