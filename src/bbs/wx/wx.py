@@ -33,12 +33,6 @@ def bounded_item_name(item_desc):
 def current_item_str(item_desc):
   return [ '{}::{}:{}'.format(item_desc[0], item_desc[1], item_desc[2] ) ]
 
-def none_to_zero(v):
-  if v is None:
-    return 0
-  else:
-    return v
-
 def do_summary():
   item_strs = []
   names = ['when']
@@ -74,13 +68,9 @@ def do_summary():
       barometer_max=int(data.barometer_max * 100),
       # Adjust rain to integer
       dayRain=int(data.dayRain * 100),
-      # Dead calm wind direction needs to map to something, we'll use zero
-      windDir_min=none_to_zero(data.windDir_min),
-      windDir_avg=none_to_zero(data.windDir_avg),
-      windDir_max=none_to_zero(data.windDir_max)
     )
     print ' '.join(
-      map(lambda x: str(x), [
+      map(lambda x: str(x) if x is not None else '0', [
         data.when,
         data.outTemp_min,
         data.outTemp_avg,
