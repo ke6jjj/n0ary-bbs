@@ -182,7 +182,8 @@ edit_line(int num)
 		return;
 
 	PRINT(line->buf);
-	GETS(buf, 255);
+	if (GETS(buf, sizeof(buf)-2) == NULL)
+		return;
 
 	if(buf[0]) {
 		kill_line(lnum);
@@ -373,7 +374,9 @@ get_body(struct text_line **tl, int type, char *orig_bbs,
 	while(TRUE) {
 		int mltype;
 
-		GETS(buf, 4095);
+		if (GETS(buf, sizeof(buf)-2) == NULL)
+			return mABORT;
+
 		mltype = msg_line_type(buf, type);
 
 			/* see if the line contains a command. Commands that are
@@ -421,7 +424,10 @@ get_body(struct text_line **tl, int type, char *orig_bbs,
 				NextChar(p);
 				i = get_number(&p);
 
-				GETS(buf, 4095);
+				if (GETS(buf, sizeof(buf)-2) == NULL) {
+					free_body();
+					return mABORT;
+				}
 				strcat(buf, "\n");
 				insert_line(i, buf);
 			}
@@ -504,13 +510,16 @@ get_body(struct text_line **tl, int type, char *orig_bbs,
 
 				while(TRUE) {
 					char name[80];
-					GETS(name, 79);
+					if (GETS(name, sizeof(name)-1) == NULL) {
+						free_body();
+						return mABORT;
+					}
 					if(name[0] == 0)
 						continue;
 					uppercase(name);
 					if(!strncmp(name, "/EX", 3))
 						break;
-					sprintf(buf, "#! %s\n", name);
+					snprintf(buf, sizeof(buf), "#! %s\n", name);
 					link_line(buf);
 				}
 				break;
