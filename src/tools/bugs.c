@@ -20,10 +20,7 @@ bug_create_msg(char *bbs, char *ver, char *file, int line, char *func, char *cmd
 	struct smtp_message *msg = malloc_struct(smtp_message);
 
 	if(msg) {
-		smtp_add_recipient(msg, "bob@arasmith.com", SMTP_REAL);
-#if 0
 		smtp_add_recipient(msg, "root", SMTP_REAL);
-#endif
 		smtp_add_sender(msg, "BBS_BUG");
 
 		sprintf(buf, "Bug report from %s", bbs);
@@ -79,7 +76,6 @@ prob_create_msg(char *bbs, char *ver, char *cmd)
 	struct smtp_message *msg = malloc_struct(smtp_message);
 
 	if(msg) {
-		smtp_add_recipient(msg, "bob@arasmith.com", SMTP_REAL);
 		smtp_add_recipient(msg, "root", SMTP_REAL);
 		smtp_add_sender(msg, "BBS_PROB");
 
