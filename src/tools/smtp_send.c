@@ -191,10 +191,9 @@ smtp_send_message(struct smtp_message *msg)
 	smtp_data(fd, buffer);
 
 	tl = msg->to;
-	while(tl != NULL) {
+	if (tl != NULL) {
 		sprintf(buffer, "To: %s", tl->s);
 		smtp_data(fd, buffer);
-		NEXT(tl);
 	}
 
 	sprintf(buffer, "Subject: %s", msg->sub);
