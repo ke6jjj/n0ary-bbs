@@ -199,10 +199,12 @@ welcome_new_user(void)
 	system_msg(50);
 	system_msg(53);
 	system_msg(54);
-	GETnSTR(buf, LenFNAME, CapFirst);
+	if (GETnSTR(buf, LenFNAME, CapFirst) == NULL)
+		return;
 	wp_set_field(usercall, wFNAME, wUSER, buf);
 	system_msg(55);
-	GETnSTR(buf, LenLNAME, CapFirst);
+	if (GETnSTR(buf, LenLNAME, CapFirst) == NULL)
+		return;
 	user_set_field(uLNAME, buf);
 	PRINT("\n");
 	system_msg(57);

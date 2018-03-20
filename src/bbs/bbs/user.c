@@ -622,7 +622,8 @@ PRINT("  INFO HOMEBBS\n\n");
 
 	while(TRUE) {
 		PRINTF("Please choose a homebbs [%s]:\n", Bbs_Call);
-		GETnSTRdef(str, LenHOME, AllUpperCase, Bbs_Call);
+		if (GETnSTRdef(str, LenHOME, AllUpperCase, Bbs_Call) == NULL)
+			return FALSE;
 
 		if((p = (char*)index(str, '-')) != NULL) {
 			PRINTF(
@@ -667,7 +668,8 @@ check_name(void)
 
 		if(bad || cnt == 0) {
 			PRINT("Please enter your first name: \n");
-			GETnSTR(name, LenFNAME, CapAsIs);
+			if (GETnSTR(name, LenFNAME, CapAsIs) == NULL)
+				return FALSE;
 			wp_set_field(usercall, wFNAME, wUSER, name);
 			altered = TRUE;
 			continue;
@@ -686,7 +688,8 @@ check_name(void)
 
 		if(bad || cnt == 0) {
 			PRINT("Please enter your last name: \n");
-			GETnSTR(name, LenLNAME, CapAsIs);
+			if (GETnSTR(name, LenLNAME, CapAsIs) == NULL)
+				return FALSE;
 			user_set_field(uLNAME, name);
 			altered = TRUE;
 			continue;
@@ -717,25 +720,29 @@ PRINT("someone else has problems.\n\n");
 
 	if(rig[0] == 0) {
 		PRINT("What type of radio do you use for packet [None]:\n");
-		GETnSTRdef(rig, LenEQUIP-1, CapAsIs, "None");
+		if (GETnSTRdef(rig, LenEQUIP-1, CapAsIs, "None") == NULL)
+			return FALSE;
 		rig[LenEQUIP-1] = 0;
 		user_set_field(uRIG, rig);
 	}
 	if(soft[0] == 0) {
 		PRINT("What software do you use for packet [None]:\n");
-		GETnSTRdef(soft, LenEQUIP-1, CapAsIs, "None");
+		if (GETnSTRdef(soft, LenEQUIP-1, CapAsIs, "None") == NULL)
+			return FALSE;
 		soft[LenEQUIP-1] = 0;
 		user_set_field(uSOFTWARE, soft);
 	}
 	if(tnc[0] == 0) {
 		PRINT("What is the make and model of your tnc [None]:\n");
-		GETnSTRdef(tnc, LenEQUIP-1, CapAsIs, "None");
+		if (GETnSTRdef(tnc, LenEQUIP-1, CapAsIs, "None") == NULL)
+			return FALSE;
 		tnc[LenEQUIP-1] = 0;
 		user_set_field(uTNC, tnc);
 	}
 	if(comp[0] == 0) {
 		PRINT("What type of computer do you use for packet [None]:\n");
-		GETnSTRdef(comp, LenEQUIP-1, CapAsIs, "None");
+		if (GETnSTRdef(comp, LenEQUIP-1, CapAsIs, "None") == NULL)
+			return FALSE;
 		comp[LenEQUIP-1] = 0;
 		user_set_field(uCOMPUTER, comp);
 	}
@@ -756,7 +763,8 @@ PRINT("number is not silent would you please input it into the system. If it\n")
 PRINT("is unlisted just type UNLISTED.\n\n");
 
 	PRINT("Please enter your phone number [Unlisted]:\n");
-	GETnSTRdef(phone, LenPHONE, CapAsIs, "Unlisted");
+	if (GETnSTRdef(phone, LenPHONE, CapAsIs, "Unlisted") == NULL)
+		return FALSE;
 	user_set_field(uPHONE, phone);
 	return TRUE;
 }
@@ -777,7 +785,8 @@ PRINT("For example, here is my entry:\n");
 PRINT("  443.775+/224.28-/145.62s all 100hz PL (LERA's Linked System)\n\n");
 
 	PRINT("Please enter frequencies you normally monitor [None]:\n");
-	GETnSTRdef(freq, LenFREQ, CapAsIs, "None");
+	if (GETnSTRdef(freq, LenFREQ, CapAsIs, "None") == NULL)
+		return FALSE;
 	user_set_field(uFREQ, freq);
 	return TRUE;
 }

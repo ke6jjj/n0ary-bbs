@@ -563,7 +563,8 @@ main(int argc, char **argv)
 		user_refresh();
 
 		do {
-			GETS(buf, 4095);
+			if (GETS(buf, 4095) == NULL)
+				return 1;
 		} while(monitor_connected);
 
 		if(buf[0] == '\n' || buf[0] == 0)
@@ -594,7 +595,8 @@ run_reverse_fwd(int fd)
 
 	while(TRUE) {
 		PRINTF("F>\n");
-		GETS(buf, 4095);
+		if (GETS(buf, 4095) == NULL)
+			break;
 
 		if(reverse_fwd_mode == ERROR)
 			break;

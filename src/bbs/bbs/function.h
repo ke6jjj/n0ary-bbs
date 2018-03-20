@@ -34,6 +34,8 @@ extern int
 	isState(char *p);
 
 extern char
+	*GETnSTR(char *str, int cnt, int caps),
+	*GETnSTRdef(char *str, int cnt, int caps, char *def),
 	*get_country_by_state(char *s),
 	*get_continent_by_state(char *s);
 
@@ -43,8 +45,6 @@ extern void
 extern void
 	trim_comment(char *s),
 	convert_dash2underscore(char *s),
-	GETnSTR(char *str, int cnt, int caps),
-	GETnSTRdef(char *str, int cnt, int caps, char *def),
 	case_string(char *p, int caps),
 	case_strcpy(char *to, char *from, int caps);
 

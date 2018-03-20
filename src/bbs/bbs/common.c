@@ -104,7 +104,8 @@ match_sysop_password(void)
 		PRINT("Please enter sysop password: ");
 		if(NeedsNewline)
 			PRINT("\n");
-		GETS(buf, 79);
+		if (GETS(buf, 79) == NULL)
+			return ERROR;
 		if(strcmp(buf, Bbs_Sysop_Passwd))
 			return ERROR;
 	}
@@ -127,35 +128,32 @@ find_pattern_match(char **str, char *pattern)
 	return ERROR;
 }
 
-void
+char *
 GETnSTR(char *str, int cnt, int caps)
 {
 	char buf[4096];
-	GETS(buf, 4095);
+	if (GETS(buf, 4095) == NULL)
+		return NULL;
 	buf[cnt-1] = 0;
 	case_string(buf, caps);
 	strcpy(str, buf);
+	return str;
 }
 
-void
+char *
 GETnSTRdef(char *str, int cnt, int caps, char *def)
 {
 	char defstr[256];
 	strcpy(defstr, def);
 
-	GETnSTR(str, cnt, caps);
+	if (GETnSTR(str, cnt, caps) == NULL)
+		return NULL;
 	if(str[0] == ' ')
 		*str = 0;
 	else
 		if(str[0] == 0)
 			strcpy(str, defstr);
-}
-
-void
-prompt_for_string(char *outstr, char *str, int cnt, int caps, char *defstr)
-{
-	PRINTF(outstr, defstr);
-	GETnSTRdef(str, cnt, caps, defstr);
+	return str;
 }
 
 void

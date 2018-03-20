@@ -51,15 +51,15 @@ static int
 	lookup_area(int num, char *prefix, char *suffix),
 	callbk_mode,
 	terse,
-	match_on;
+	match_on,
+	ask_for(int mask, char *str, char *result, int cnt);
 
 static void
 	parse_for_lookup(struct msg_dir_entry *m),
 	parse_for_search(struct msg_dir_entry *m),
 	display_qth(char *prefix, char *area, char *suffix),
 	display_single_line_terse(FILE *fptmp),
-	merge_strings(char *to, char *from),
-	ask_for(int mask, char *str, char *result, int cnt);
+	merge_strings(char *to, char *from);
 
 static struct callbook_entry
 	entry, match;
@@ -191,7 +191,7 @@ lookup_call_callbk(char *call, struct callbook_entry *cb)
 	return ERROR;
 }
 
-static void
+static int
 ask_for(int mask, char *str, char *result, int cnt)
 {
 	char buf[80];
@@ -199,7 +199,8 @@ ask_for(int mask, char *str, char *result, int cnt)
 	PRINT(str);
 	if(NeedsNewline)
 		PRINT("\n");
-	GETS(buf, 80);	
+	if (GETS(buf, 80) == NULL)
+		return -1;
 
 	buf[cnt] = 0;
 	strcpy(result, buf);
@@ -208,6 +209,8 @@ ask_for(int mask, char *str, char *result, int cnt)
 		case_string(result, AllUpperCase);
 		match_on |= mask;
 	}
+
+	return 0;
 }
 
 static int
@@ -391,13 +394,18 @@ static int
 prompt_for_patterns(void)
 {
 	match_on = 0;
-	ask_for(cbLNAME, " Last name: ", match.lname, 24);
+	if (ask_for(cbLNAME, " Last name: ", match.lname, 24))
+		return ERROR;
 	if(!(match_on & cbLNAME) && !ImSysop)
 		return error(10);
-	ask_for(cbFNAME, "First name: ", match.fname, 11);
-	ask_for(cbCITY, "      City: ", match.city, 20);
-	ask_for(cbSTATE, "     State: ", match.state, 2);
-	ask_for(cbZIP, "       Zip: ", match.zip, 5);
+	if (ask_for(cbFNAME, "First name: ", match.fname, 11))
+		return ERROR;
+	if (ask_for(cbCITY, "      City: ", match.city, 20))
+		return ERROR;
+	if (ask_for(cbSTATE, "     State: ", match.state, 2))
+		return ERROR;
+	if (ask_for(cbZIP, "       Zip: ", match.zip, 5))
+		return ERROR;
 	return OK;
 }
 

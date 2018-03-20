@@ -252,7 +252,8 @@ determine_homebbs(struct msg_dir_entry *msg)
 			PRINTF("Please enter a homebbs [%s]? ", Bbs_Call);
 			if(NeedsNewline)
 				PRINT("\n");
-			GETnSTRdef(msg->to.at.str, 80, AllUpperCase, Bbs_Call);
+			if (GETnSTRdef(msg->to.at.str, 80, AllUpperCase, Bbs_Call) == NULL)
+	return ERROR;
 			msg->flags |= MsgAtBbs;
 		}
 		return determine_hloc_for_bbs(msg);
