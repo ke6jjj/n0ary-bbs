@@ -329,7 +329,7 @@ hash_gen_update(FILE *gfp, int *gcnt, FILE *lfp, int *lcnt)
 		while(wp) {
 			int update = FALSE;
 
-			if(wp->level < WP_Init) {
+			if(wp->level < WP_Init && strcmp(wp->home, Bbs_Call) == 0) {
 				if(wp->changed > wp->last_update_sent) {
 					if(dbug_level & dbgVERBOSE)
 						printf("%s changed since update %"PRTMd" > %"PRTMd"\n",
