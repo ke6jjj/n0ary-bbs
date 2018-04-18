@@ -83,8 +83,7 @@ char *
 msgd_read(void)
 {
 	static char buf[256];
-#if 1
-	switch(socket_read_line(msgd_sock, buf, 255, 60)) {
+	switch(socket_read_line(msgd_sock, buf, sizeof(buf)-1, 60)) {
 	case sockOK:
 		break;
 	case sockMAXLEN:
@@ -95,19 +94,6 @@ msgd_read(void)
 		error_log("msgd_read: error reading from socket");
 		return NULL;
 	}
-#else
-	char *c = buf;
-
-	while(TRUE) {
-		if(read(msgd_sock, c, 1) <= 0)
-			return NULL;
-		if(*c == '\n') {
-			*c = 0;
-			break;
-		}
-		c++;
-	}
-#endif
 
 	if(msgd_debug_level)
 		printf("R: %s\n", buf);
@@ -255,8 +241,13 @@ msgd_fetch_textline(char *cmd, struct text_line **tl)
 			first_time = FALSE;
 		}
 
-		if(c[0] == '.' && c[1] == 0)
-			break;
+		if(c[0] == '.') {
+			if (c[1] == 0)
+				break;
+			else if (c[1] == '.')
+				/* Quoted dot, eat it. */
+				c++;
+		}
 
 		textline_append(tl, c);
 	}

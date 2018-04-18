@@ -73,20 +73,25 @@ build_msgdir(void)
 }
 
 void
-read_messages(int key, struct active_processes *ap, struct msg_dir_entry *msg,
+read_message(int key, struct active_processes *ap, struct msg_dir_entry *msg,
 	char *by)
 {
 	FILE *fp = open_message(msg->number);
 	int in_header = TRUE;
+	int nl, next_nl;
 	char buf[128];
+	size_t len;
 
-	while(fgets(buf, sizeof(buf), fp)) {
-		if(!strcmp(buf, "/EX\n"))
+	for (nl = TRUE,next_nl=0; fgets(buf, sizeof(buf), fp); nl = next_nl) {
+		len = strlen(buf);
+		/* Remember if this line overflowed. */
+		next_nl = buf[len-1] == '\n';
+
+		if(nl && !strcmp(buf, "/EX\n"))
 			break;
 
-		buf[127] = 0;
 		if(in_header) {
-			if(buf[0] != 'R' || buf[1] != ':') {
+			if(nl && (buf[0] != 'R' || buf[1] != ':')) {
 				in_header = FALSE;
 				if(buf[0] == '\n' && key == mREAD)
 					continue;
@@ -94,11 +99,17 @@ read_messages(int key, struct active_processes *ap, struct msg_dir_entry *msg,
 		}
 
 		if(!in_header || key == mREADH) {
-			if(buf[0] == '.')
-				socket_raw_write(ap->fd, ">");
+			if(nl && buf[0] == '.')
+				socket_raw_write(ap->fd, ".");
 			socket_raw_write(ap->fd, buf);
 		}
 	}
+
+	if (!next_nl) {
+		/* File ended without a newline! */
+		socket_raw_write(ap->fd, "\n");
+	}
+
 	close_message(fp);
 	if(by) {
 		uppercase(by);
@@ -109,19 +120,26 @@ read_messages(int key, struct active_processes *ap, struct msg_dir_entry *msg,
 }
 
 void
-read_messages_rfc(struct active_processes *ap, struct msg_dir_entry *msg)
+read_message_rfc(struct active_processes *ap, struct msg_dir_entry *msg)
 {
 	FILE *fp = open_message(msg->number);
 	char buf[128];
+	int had_nl;
+	size_t len;
 
-	while(fgets(buf, sizeof(buf), fp))
-		if(!strcmp(buf, "/EX\n"))
-			break;
+	rfc822_skip_to(fp);
 
-	while(fgets(buf, sizeof(buf), fp)) {
-		buf[127] = 0;
+	for (had_nl = 0; fgets(buf, sizeof(buf), fp);) {
 		socket_raw_write(ap->fd, buf);
+		len = strlen(buf);
+		had_nl = buf[len-1] == '\n';
 	}
+
+	if (!had_nl) {
+		/* File ended without a newline! */
+		socket_raw_write(ap->fd, "\n");
+	}
+
 	close_message(fp);
 }
 

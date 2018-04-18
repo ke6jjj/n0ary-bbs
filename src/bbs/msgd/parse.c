@@ -211,19 +211,19 @@ parse(struct active_processes *ap, char *s)
 	if(!strcmp(buf, "READ")) {
 		if((msg = get_message(get_number(&s))) == NULL)
 			return Error("Message not found");
-		read_messages(mREAD, ap, msg, get_string(&s));
+		read_message(mREAD, ap, msg, get_string(&s));
 		return ".\n";
 	}
 	if(!strcmp(buf, "READH")) {
 		if((msg = get_message(get_number(&s))) == NULL)
 			return Error("Message not found");
-		read_messages(mREADH, ap, msg, get_string(&s));
+		read_message(mREADH, ap, msg, get_string(&s));
 		return ".\n";
 	}
 	if(!strcmp(buf, "READRFC")) {
 		if((msg = get_message(get_number(&s))) == NULL)
 			return Error("Message not found");
-		read_messages_rfc(ap, msg);
+		read_message_rfc(ap, msg);
 		return ".\n";
 	}
 

@@ -72,24 +72,48 @@ rfc822_display_held(struct active_processes *ap, int num)
 {
 	FILE *fp = open_message(num);
 	char buf[1024];
-	int heldby = strlen(rfc822_xlate(rHELDBY));
-	int heldwhy = strlen(rfc822_xlate(rHELDWHY));
+	const char *heldby_s = rfc822_xlate(rHELDBY);
+	const char *heldwhy_s = rfc822_xlate(rHELDWHY);
+	size_t heldby = strlen(heldby_s);
+	size_t heldwhy = strlen(heldwhy_s);
+	int nl, next_nl, out;
+	size_t len;
 
 	if(fp == NULL)
 		return ERROR;
 
 	rfc822_skip_to(fp);
-	while(fgets(buf, sizeof(buf), fp)) {
-		if(!strncmp(buf, rfc822_xlate(rHELDBY), heldby)) {
-			snprintf(output, sizeof(output), "By: %s",
-				&buf[strlen(rfc822_xlate(rHELDBY))+1]);
-			socket_raw_write(ap->fd, output);
+
+	for (nl = TRUE, out = 0; fgets(buf, sizeof(buf), fp); nl = next_nl) {
+		len = strlen(buf);
+		next_nl = buf[len-1] == '\n';
+
+		if (out) {
+			/* We're outputing a long line */
+			socket_raw_write(ap->fd, buf);
+			/* Keep writing until newline is found */
+			out = !next_nl;
 			continue;
 		}
-		if(!strncmp(buf, rfc822_xlate(rHELDWHY), heldwhy)) {
-			snprintf(output, sizeof(output), "%s",
-				&buf[strlen(rfc822_xlate(rHELDWHY))+1]);
+			
+		if(nl && !strncmp(buf, heldby_s, heldby)) {
+			snprintf(output, sizeof(output), "By: %s",
+				&buf[heldby+1]);
 			socket_raw_write(ap->fd, output);
+			if (!next_nl) {
+				/* Super long line, keep printing */
+				out = TRUE;
+			}
+			continue;
+		}
+		if(nl && !strncmp(buf, heldwhy_s, heldwhy)) {
+			snprintf(output, sizeof(output), "%s",
+				&buf[heldwhy+1]);
+			socket_raw_write(ap->fd, output);
+			if (!next_nl) {
+				/* Super long line, keep printing */
+				out = TRUE;
+			}
 			continue;
 		}
 	}
@@ -103,7 +127,10 @@ rfc822_get_field(int num, int token)
 	FILE *fp = open_message(num);
 	char buf[1024];
 	static char output[1024];
-	int len = strlen(rfc822_xlate(token));
+	const char *token_s = rfc822_xlate(token);
+	size_t toklen = strlen(token_s);
+	size_t len;
+	int nl, next_nl;
 
 	if(fp == NULL)
 		return NULL;
@@ -112,9 +139,14 @@ rfc822_get_field(int num, int token)
 	output[0] = '\0';
 
 	rfc822_skip_to(fp);
-	while(fgets(buf, sizeof(buf), fp))
-		if(!strncmp(buf, rfc822_xlate(token), len))
-			strlcpy(output, &buf[strlen(rfc822_xlate(token))+1], sizeof(output));
+
+	for (nl = TRUE; fgets(buf, sizeof(buf), fp); nl = next_nl) {
+		len = strlen(buf);
+		next_nl = buf[len-1] == '\n';
+
+		if(nl && !strncmp(buf, token_s, toklen))
+			strlcpy(output, &buf[toklen+1], sizeof(output));
+	}
 
 	close_message(fp);
 
@@ -125,10 +157,16 @@ int
 rfc822_skip_to(FILE *fp)
 {
 	char buf[1024];
+	size_t len;
+	int nl, next_nl;
 
-	while(fgets(buf, sizeof(buf), fp))
-		if(!strcmp(buf, "/EX\n"))
+	for (nl = TRUE; fgets(buf, sizeof(buf), fp); nl = next_nl) {
+		len = strlen(buf);
+		next_nl = buf[len-1] == '\n';
+
+		if(nl && !strcmp(buf, "/EX\n"))
 			return OK;
+	}
 	return ERROR;
 }
 
@@ -138,18 +176,22 @@ rfc822_decode_fields(struct msg_dir_entry *m)
 	FILE *fp = open_message(m->number);
 	char buf[1024];
 	int nothing = TRUE;
+	size_t len;
+	int nl, next_nl;
 
 	if(fp == NULL)
 		return ERROR;
 
 	rfc822_skip_to(fp);
 	m->size = ftell(fp);
-	while(fgets(buf, sizeof(buf), fp)) {
-		if (buf[0] != '\0')
-			buf[strlen(buf)-1] = 0;
+
+	for (nl = TRUE; fgets(buf, sizeof(buf), fp); nl = next_nl) {
+		len = strlen(buf);
+		next_nl = buf[len-1] == '\n';
 
 		nothing = FALSE;
-		rfc822_parse(m, buf);
+		if (nl)
+			rfc822_parse(m, buf);
 	}
 	close_message(fp);
 
@@ -159,6 +201,5 @@ rfc822_decode_fields(struct msg_dir_entry *m)
 	if(nothing)
 		return ERROR;
 	return OK;
-	
 }
 
