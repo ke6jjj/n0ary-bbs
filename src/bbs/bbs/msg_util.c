@@ -696,14 +696,14 @@ build_partial_list(struct list_criteria *lc)
 	struct msg_dir_entry *ml =  build_full_message_list();
 
 	while(ml) {
-		ml->visable = FALSE;
+		ml->visible = FALSE;
 		NEXT(ml);
 	}
 	ml = MsgDirList;
 
 	while(ml) {
 		if(matches_criteria(ml, lc)) {
-			ml->visable = TRUE;
+			ml->visible = TRUE;
 			cnt++;
 			if(lc->range_type == FIRST && cnt == lc->range[0])
 				break;

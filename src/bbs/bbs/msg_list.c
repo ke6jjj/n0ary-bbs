@@ -125,7 +125,7 @@ display_listing(struct list_criteria *lc, int to_pipe)
 
 			cnt--;
 			while(cnt && m->last) {
-				if(m->visable)
+				if(m->visible)
 					cnt--;
 				PREV(m);
 			}
@@ -133,7 +133,7 @@ display_listing(struct list_criteria *lc, int to_pipe)
 	} else {
 		if(lc->range_type == FIRST) {
 			while(m->next && cnt) {
-				if(m->visable)
+				if(m->visible)
 					cnt--;
 				NEXT(m);
 			}
@@ -147,7 +147,7 @@ display_listing(struct list_criteria *lc, int to_pipe)
 	cnt = lc->range[0];
 
 	while(m) {
-		if(m->visable) {
+		if(m->visible) {
 			if(to_pipe)
 				pipe_msg_num(m->number);
 			else {
@@ -575,7 +575,7 @@ msg_list_t(struct TOKEN *t)
 		if(lc.must_include_mask & MsgNew) {
 			struct msg_dir_entry *m = MsgDirList;
 			while(m) {
-				if(m->visable)
+				if(m->visible)
 					LastMsgListedCdate = m->cdate;
 				NEXT(m);
 			}
@@ -604,7 +604,7 @@ msg_catchup(void)
 
 		m = MsgDirList;
 		while(m->next) {
-			if(m->visable)
+			if(m->visible)
 				LastMsgListedCdate = m->cdate;
 			NEXT(m);
 		}

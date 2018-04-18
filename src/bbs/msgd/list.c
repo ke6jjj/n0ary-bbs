@@ -424,7 +424,7 @@ age_messages(void)
 }
 
 int
-visable_by(struct active_processes *ap, struct msg_dir_entry *msg)
+visible_by(struct active_processes *ap, struct msg_dir_entry *msg)
 {
 	if(ap->grp) {
 		struct message_list *ml = ap->grp->list;
@@ -647,7 +647,7 @@ list_messages(struct active_processes *ap)
 			} else
 				while(msg) {
 					if(msg->update_t > ap->list_sent)
-						if(visable_by(ap, msg) == OK)
+						if(visible_by(ap, msg) == OK)
 							show_message(ap, msg);
 					NEXT(msg);
 				}

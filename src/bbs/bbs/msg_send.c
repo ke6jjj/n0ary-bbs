@@ -420,7 +420,7 @@ msg_copy(int num, struct msg_dir_entry *msg)
 		return error_number(132, num);
 
 		/* Use the msg_list function set_listing_flags() to determine if the
-		 * requested message is visable to us. Otherwise a user could simply
+		 * requested message is visible to us. Otherwise a user could simply
 		 * copy another persons message to himself then have access to it.
 		 *
 		 * The one exception is a bbs. BBS's send messages under someone elses

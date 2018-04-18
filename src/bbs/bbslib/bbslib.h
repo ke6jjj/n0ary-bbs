@@ -311,7 +311,7 @@ struct msg_dir_entry {
 	long	number;
 	long	size;
 	long	flags;
-	long	visable;
+	long	visible;
 
 	char	list_text[256];
 	char	bid[LenBID];

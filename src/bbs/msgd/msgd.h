@@ -151,7 +151,7 @@ extern int
     fwddir_touch(int type, int number, char *alias),
     set_forwarding(struct active_processes *ap, struct msg_dir_entry *m, int check),
     set_groups(struct msg_dir_entry *m),
-    visable_by(struct active_processes *ap, struct msg_dir_entry *msg),
+    visible_by(struct active_processes *ap, struct msg_dir_entry *msg),
     read_by_rcpt(struct msg_dir_entry *msg),
     read_by_me(struct msg_dir_entry *msg, char *call),
     send_message(struct active_processes *ap),

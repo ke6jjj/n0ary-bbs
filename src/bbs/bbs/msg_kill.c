@@ -106,7 +106,7 @@ kill_mine(void)
 
 	m = MsgDirList;
 	while(m) {
-		if(m->visable)
+		if(m->visible)
 			kill_message_number(m);
 		NEXT(m);
 	}
@@ -126,7 +126,7 @@ kill_range(int start, int finish)
 	for(num=start; num<=finish; num++) {
 		m = MsgDirList;
 		while(m) {
-			if(m->number == num && m->visable) {
+			if(m->number == num && m->visible) {
 				if(IsMsgActive(m)) {
 					kill_message_number(m);
 					active_message = num;
@@ -156,7 +156,7 @@ kill_messages(struct TOKEN *t)
 		if(t->token == NUMBER) {
 			m = MsgDirList;
 			while(m) {
-				if(m->number == t->value && m->visable) {
+				if(m->number == t->value && m->visible) {
 					kill_message_number(m);
 					active_message = t->value;
 					break;

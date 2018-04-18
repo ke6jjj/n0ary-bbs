@@ -136,7 +136,7 @@ read_mine(void)
 
 	m = MsgDirList;
 	while(m) {
-		if(m->visable == FALSE) {
+		if(m->visible == FALSE) {
 			NEXT(m);
 			continue;
 		}

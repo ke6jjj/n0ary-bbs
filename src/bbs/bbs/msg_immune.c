@@ -75,7 +75,7 @@ immune_range(int mode, int start, int finish)
 	for(num=start; num<=finish; num++) {
 		m = MsgDirList;
 		while(m) {
-			if(m->number == num && m->visable) {
+			if(m->number == num && m->visible) {
 				if(mode == IMMUNE)
 					msgd_cmd_num(msgd_xlate(mIMMUNE), num);
 				else
@@ -103,7 +103,7 @@ immune_messages(int mode, struct TOKEN *t)
 		if(t->token == NUMBER) {
 			m = MsgDirList;
 			while(m) {
-				if(m->number == t->value && m->visable) {
+				if(m->number == t->value && m->visible) {
 					if(mode == IMMUNE)
 						msgd_cmd_num(msgd_xlate(mIMMUNE), t->value);
 					else

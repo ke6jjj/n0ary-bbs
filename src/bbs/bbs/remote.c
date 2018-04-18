@@ -245,7 +245,7 @@ user_unread(int what, int msgnum)
 	if(what == READMSG) {
 		struct msg_dir_entry *m = MsgDirList;
 		while(m) {
-			if(m->visable) {
+			if(m->visible) {
 				if(--msgnum == 0)
 					break;
 			}
@@ -296,7 +296,7 @@ user_unread(int what, int msgnum)
 	if((what == LISTCALLS) && (cnt != 0)) {
 		struct msg_dir_entry *m = MsgDirList;
 		while(m) {
-			if(m->visable) {
+			if(m->visible) {
 				if(m->flags & MsgSecure)
 					sprintf(play_str, "%s, secure", play_str);
 
