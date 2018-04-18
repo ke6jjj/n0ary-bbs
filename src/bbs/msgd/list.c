@@ -698,8 +698,6 @@ send_message(struct active_processes *ap)
 
 		if(!strcmp(buf, ".\n"))
 			break;
-		if(!strcmp(buf, "/EX\n"))
-			in_rfc = TRUE;
 
 		if(in_rfc) {
 			char rfc[256];
@@ -724,7 +722,8 @@ send_message(struct active_processes *ap)
 				snprintf(buf, sizeof(buf), "%s\n", rfc);
 				break;
 			}
-		}
+		} else if(!strcmp(buf, "/EX\n"))
+			in_rfc = TRUE;
 
 		fputs(buf, fp);
 	}
