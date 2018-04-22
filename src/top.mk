@@ -2,7 +2,12 @@
 # Get the directory in which this Makefile fragment resides.
 #
 TOP_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
-TOP_OBJDIR := $(TOP_SRCDIR)/obj
+
+ifdef BBS_DEBUG
+    TOP_OBJDIR := $(TOP_SRCDIR)/obj-debug
+else
+    TOP_OBJDIR := $(TOP_SRCDIR)/obj
+endif
 
 #
 # Get the build settings.
