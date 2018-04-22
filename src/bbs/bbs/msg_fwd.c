@@ -306,7 +306,7 @@ msg_fwd_term(void)
 {
 	char result[80];
 
-	fd_putln(tnc_fd, "");
+	fd_putln(tnc_fd, "\x1a");
 	
 	while(TRUE) {
 		if(tnc_getline(tnc_fd, result, 80, 600))

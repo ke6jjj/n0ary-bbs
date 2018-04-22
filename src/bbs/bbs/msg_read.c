@@ -308,7 +308,7 @@ read_message_number(int num)
 			PRINTF("%s\n", tl->s);
 			NEXT(tl);
 		}
-		PRINT("\n");
+		PRINT("\x1a\n");
 
 	} else {
 		char *field = NULL;
@@ -663,7 +663,7 @@ msg_revfwd_term(void)
 {
 	char result[80];
 
-	PRINT("\n");
+	PRINT("\x1a\n");
 	do {
 		GETS(result, 79);
 		case_string(result, AllUpperCase);
@@ -676,7 +676,7 @@ msg_revfwd_dumb_term(void)
 {
 	char result[80];
 
-	PRINT("\n");
+	PRINT("\x1a\n");
 	do {
 		GETS(result, 79);
 		case_string(result, AllUpperCase);

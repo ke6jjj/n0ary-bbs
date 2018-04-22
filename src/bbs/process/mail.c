@@ -162,7 +162,7 @@ msg_generate(FILE *fp)
 		if(buf[0] == '.' && buf[1] == 0)
 			break;
 
-		if(buf[0] == '/' || buf[0] == '.' || buf[0] == '')
+		if(buf[0] == '/' || buf[0] == '.' || buf[0] == '\x1a')
 			write(to_bbs[1], ">", 1);
 		write(to_bbs[1], buf, strlen(buf));
 	}

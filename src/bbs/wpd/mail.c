@@ -135,7 +135,7 @@ msg_generate(struct smtp_message *msg, int type)
 				*(++p) = 's';
 			}
 
-			if(line->s[0] == '/' || line->s[0] == '.' || line->s[0] == '')
+			if(line->s[0] == '/' || line->s[0] == '.' || line->s[0] == '\x1a')
 				sprintf(buf, ">%s\n", line->s);
 			else
 				sprintf(buf, "%s\n", line->s);
@@ -208,7 +208,7 @@ disp_update(struct active_processes *ap, struct smtp_message *msg, int type)
 				*(++p) = 's';
 			}
 
-			if(line->s[0] == '/' || line->s[0] == '.' || line->s[0] == '')
+			if(line->s[0] == '/' || line->s[0] == '.' || line->s[0] == '\x1a')
 				sprintf(buf, ">%s\n", line->s);
 			else
 				sprintf(buf, "%s\n", line->s);

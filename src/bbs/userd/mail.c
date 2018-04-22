@@ -78,7 +78,7 @@ msg_generate(struct smtp_message *msg)
 			*(++p) = 's';
 		}
 
-		if(line->s[0] == '/' || line->s[0] == '.' || line->s[0] == '')
+		if(line->s[0] == '/' || line->s[0] == '.' || line->s[0] == '\x1a')
 			sprintf(buf, ">%s\n", line->s);
 		else
 			sprintf(buf, "%s\n", line->s);

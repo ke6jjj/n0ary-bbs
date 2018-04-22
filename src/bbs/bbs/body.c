@@ -246,11 +246,11 @@ msg_line_type(char *str, int type)
 				return mROUTING;
 			break;
 	
-		case '':
+		case '\x1a':
 			return mTERM;
 		}
 
-		if((str = (char*)index(str, ''))!= NULL) {
+		if((str = (char*)index(str, '\x1a'))!= NULL) {
 			if(*(str+1) == 0 || *(str+1) == '\n') {
 				*str = 0;
 				return mTERMwrite;
@@ -334,7 +334,7 @@ msg_line_type(char *str, int type)
 			 */
 		if(*str)
 			return OK;
-	case '':
+	case '\x1a':
 		return mTERM;
 	}
 	
@@ -346,7 +346,7 @@ msg_line_type(char *str, int type)
 		 * QUESTION: Should we be checking that the ^Z was the last character
 		 * on the line? Currently we truncate from there to the end.
 		 */
-	if((str = (char*)index(str, ''))!= NULL) {
+	if((str = (char*)index(str, '\x1a'))!= NULL) {
 		if(*(str+1) == 0) {
 			*str = 0;
 			return mTERMwrite;
