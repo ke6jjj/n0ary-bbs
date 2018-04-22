@@ -533,13 +533,6 @@ extern struct UserdCommands UserdCmds[];
 
 extern char *rfc_text[];
 
-struct RfcFields {
-	int token;
-	char *text;
-	void (*encode)(struct RfcFields *, struct msg_dir_entry *, char *);
-	void (*decode)(struct msg_dir_entry *, char *);
-};
-
 struct active_bbss {
 	struct active_bbss *next;
 	int proc_num;

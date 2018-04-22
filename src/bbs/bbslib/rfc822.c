@@ -9,6 +9,13 @@
 #include "bbslib.h"
 #include "rfc822.h"
 
+struct RfcFields {
+	int token;
+	char *text;
+	void (*encode)(struct RfcFields *, struct msg_dir_entry *, char *);
+	void (*decode)(struct msg_dir_entry *, char *);
+};
+
 static void
 	rfc822_gen_bid(struct RfcFields *rf, struct msg_dir_entry *m, char *buf),
 	rfc822_gen_create(struct RfcFields *rf, struct msg_dir_entry *m, char *buf),
