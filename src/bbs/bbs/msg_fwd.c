@@ -169,7 +169,7 @@ tcp_getline(int fd, char *buf, int len, int to)
 		PRINTF("\nR: ");
 
 	while(TRUE) {
-		if(select(64, (void*)&ready, 0, 0, &timeout) == 0) {
+		if(select(fd+1, (void*)&ready, 0, 0, &timeout) == 0) {
 			if(cnt != 0)
 				break;
 			logd("***Timeout reading from remote bbs");
