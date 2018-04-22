@@ -675,6 +675,7 @@ send_message(struct active_processes *ap)
 	struct msg_dir_entry *msg = append_msg_list();
 	int in_rfc = FALSE;
 	int dup = FALSE;
+	int nl, next_nl;
 	char buf[4096];
 	
 	msg->number = 1;
@@ -684,10 +685,13 @@ send_message(struct active_processes *ap)
 	if((fp = open_message_write(msg->number)) == NULL)
 		return ERROR;
 	
-	while(TRUE) {
+	for (nl = 1; TRUE; nl = next_nl) {
 		switch(socket_read_raw_line(ap->fd, buf, 4096, 10)) {
 		case sockOK:
+			next_nl = 1;
+			break;
 		case sockMAXLEN:
+			next_nl = 0;
 			break;
 		case sockERROR:
 		case sockTIMEOUT:
@@ -696,11 +700,16 @@ send_message(struct active_processes *ap)
 
 		log_f("msgd", "r:", buf);
 
-		if(!strcmp(buf, ".\n"))
+		if(nl && !strcmp(buf, ".\n"))
 			break;
 
-		if(in_rfc) {
+		if(nl && !strcmp(buf, "..\n"))
+			strcpy(buf, ".\n");
+
+		if(nl && in_rfc) {
 			char rfc[256];
+			int has_nl;
+
 			strlcpy(rfc, buf, sizeof(rfc));
 
 			switch(rfc822_parse(msg, rfc)) {
@@ -719,10 +728,11 @@ send_message(struct active_processes *ap)
 				break;
 			case rCREATE:
 			case rKILL:
-				snprintf(buf, sizeof(buf), "%s\n", rfc);
+				has_nl = rfc[strlen(rfc)-1] == '\n';
+				snprintf(buf, sizeof(buf), "%s%s", rfc, has_nl ? "" : "\n");
 				break;
 			}
-		} else if(!strcmp(buf, "/EX\n"))
+		} else if(nl && !strcmp(buf, "/EX\n"))
 			in_rfc = TRUE;
 
 		fputs(buf, fp);
