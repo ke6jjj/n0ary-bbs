@@ -189,6 +189,10 @@ rfc822_decode_fields(struct msg_dir_entry *m)
 		len = strlen(buf);
 		next_nl = buf[len-1] == '\n';
 
+		if (next_nl)
+			/* Remove newline from end */
+			buf[len-1] = '\0';
+
 		nothing = FALSE;
 		if (nl)
 			rfc822_parse(m, buf);
