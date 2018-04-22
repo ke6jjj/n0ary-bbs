@@ -164,9 +164,10 @@ msgd_cmd_textline(char *cmd, struct text_line *tl)
 	socket_raw_write(msgd_sock, buf);
 
 	while(tl) {
-		if(strlen(tl->s) > 1024)
-			tl->s[1023] = 0;
-		sprintf(buf, "%s\n", tl->s);
+		if (!strcmp(tl->s, "."))
+			sprintf(buf, "..\n");
+		else
+			sprintf(buf, "%.1022s\n", tl->s);
 		if(msgd_debug_level)
 			printf("W: %s", buf);
 
@@ -207,8 +208,13 @@ msgd_fetch_multi(char *cmd, void (*callback)(char *s))
 			first_time = FALSE;
 		}
 
-		if(c[0] == '.' && c[1] == 0)
-			break;
+		if(c[0] == '.') {
+			if (c[1] == 0)
+				break;
+			else if (c[1] == '.')
+				/* Quoted dot, eat it. */
+				c++;
+		}
 
 		callback(c);
 	}
