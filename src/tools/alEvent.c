@@ -249,16 +249,16 @@ alEvent_queueCallback(alCallback cb, int flags, void *arg0, int arg1)
 /*
  * alEvent_killCallback
  *
- * Kill all queued callbacks which are scheduled for a matching arg0.
+ * Kill all queued callbacks which are scheduled for a matching object.
  */
 int
-alEvent_killCallbacks(void *arg0)
+alEvent_killCallbacks(void *obj)
 {
   alQueuedCallbackEntry *cbEntry;
 
   SLIST_FOREACH(cbEntry, &alQueuedCallbacks, listEntry) {
-    if (cbEntry->arg0 == arg0)
-        cbEntry->active = 0;
+    if (cbEntry->cb.obj == obj)
+      cbEntry->active = 0;
   }
 
   return 0;

@@ -115,9 +115,12 @@ int alEvent_queueCallback(alCallback cb, int flags, void *arg0, int arg1);
 /*
  * alEvent_killCallback
  *
- * Kill all queued callbacks which are scheduled for a matching arg0.
+ * Kill all _queued_ callbacks which are scheduled for a matching object.
+ *
+ * Note: Does not deregister any callbacks associated with event handles.
+ *       Those must be removed with alEvent_deregister().
  */
-int alEvent_killCallbacks(void *arg0);
+int alEvent_killCallbacks(void *obj);
 
 /*
  * alEvent_registerFd
