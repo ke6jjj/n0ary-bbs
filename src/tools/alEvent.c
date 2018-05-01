@@ -117,6 +117,7 @@ typedef struct alQueuedCallbackEntry {
   alCallback cb;
   void *arg0;
   int arg1;
+  int active;
   SLIST_ENTRY(alQueuedCallbackEntry) listEntry;
 } alQueuedCallbackEntry;
   
@@ -238,8 +239,27 @@ alEvent_queueCallback(alCallback cb, int flags, void *arg0, int arg1)
   cbEntry->cb = cb;
   cbEntry->arg0 = arg0;
   cbEntry->arg1 = arg1;
+  cbEntry->active = 1;
 
   SLIST_INSERT_HEAD(&alQueuedCallbacks, cbEntry, listEntry);
+
+  return 0;
+}
+
+/*
+ * alEvent_killCallback
+ *
+ * Kill all queued callbacks which are scheduled for a matching arg0.
+ */
+int
+alEvent_killCallbacks(void *arg0)
+{
+  alQueuedCallbackEntry *cbEntry;
+
+  SLIST_FOREACH(cbEntry, &alQueuedCallbacks, listEntry) {
+    if (cbEntry->arg0 == arg0)
+        cbEntry->active = 0;
+  }
 
   return 0;
 }
@@ -503,7 +523,8 @@ alEvent_poll(void)
   while (!SLIST_EMPTY(&alQueuedCallbacks)) {
     cbEntry = SLIST_FIRST(&alQueuedCallbacks);
     SLIST_REMOVE_HEAD(&alQueuedCallbacks, listEntry);
-    alEvent_doCallback(cbEntry->cb, cbEntry->arg0, cbEntry->arg1);
+    if (cbEntry->active)
+      alEvent_doCallback(cbEntry->cb, cbEntry->arg0, cbEntry->arg1);
     free(cbEntry);
   }
   

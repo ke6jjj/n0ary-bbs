@@ -113,6 +113,13 @@ int alEvent_shutdown(void);
 int alEvent_queueCallback(alCallback cb, int flags, void *arg0, int arg1);
 
 /*
+ * alEvent_killCallback
+ *
+ * Kill all queued callbacks which are scheduled for a matching arg0.
+ */
+int alEvent_killCallbacks(void *arg0);
+
+/*
  * alEvent_registerFd
  *
  * Registers a file descriptor with the event system and a callback to call
