@@ -201,7 +201,7 @@ asy_init_common(void)
 		asy->recv_arg = NULL;
 		asy->notify = default_notify;
 		asy->notify_arg = NULL;
-		asy->tx_enabled = FALSE;
+		asy->tx_enabled = TRUE;
 	}
 
 	return asy;
