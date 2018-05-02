@@ -83,7 +83,7 @@ asy_init(char *devspec)
 }
 
 struct asy *
-asy_from_fd(int fd)
+asy_init_from_fd(int fd)
 {
 	struct asy *asy = asy_init_common();
 	if (asy == NULL)
