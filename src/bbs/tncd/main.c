@@ -18,6 +18,7 @@
 #include "slip.h"
 #include "bsd.h"
 #include "beacon.h"
+#include "kiss_mux.h"
 
 #include "ax_mbx.h"
 
@@ -38,11 +39,14 @@ char
     *Tncd_Beacon_Message,
     *Tncd_Control_Bind_Addr = NULL,
     *Tncd_Monitor_Bind_Addr = NULL,
+    *Tncd_KISS_Mux_Bind_Addr = NULL,
     *Tncd_Device;
 
 int
     Tncd_Control_Port,
     Tncd_Monitor_Port,
+    Tncd_KISS_Mux_Port,
+    Tncd_KISS_Mux_See_Others = 1,
     Tncd_Maxframe,
     Tncd_N2,
     Tncd_Paclen,
@@ -87,6 +91,8 @@ struct ConfigurationList DynamicConfigList[] = {
   { "CONTROL_BIND_ADDR",          tSTRING,    (int*)&Tncd_Control_Bind_Addr },
   { "MONITOR_PORT",               tINT,       (int*)&Tncd_Monitor_Port },
   { "MONITOR_BIND_ADDR",          tSTRING,    (int*)&Tncd_Monitor_Bind_Addr },
+  { "KISS_MUX_BIND_ADDR",         tSTRING,    (int*)&Tncd_KISS_Mux_Bind_Addr },
+  { "KISS_MUX_PORT",              tINT,       (int*)&Tncd_KISS_Mux_Port },
   { "DEVICE",                     tSTRING,    (int*)&Tncd_Device },
   { "",                                                       tCOMMENT, NULL },
   { "  AX25 parameters",                                      tCOMMENT, NULL },
@@ -103,6 +109,7 @@ struct ConfigurationList DynamicConfigList[] = {
   { "BEACON_CALL",                tSTRING,    (int*)&Tncd_Beacon_Call },
   { "BEACON_DEST",                tSTRING,    (int*)&Tncd_Beacon_Dest },
   { "BEACON_MESSAGE",             tSTRING,    (int*)&Tncd_Beacon_Message },
+  { "KISS_MUX_SEE_OTHERS",        tINT,       (int*)&Tncd_KISS_Mux_See_Others },
   { NULL,                         tEND,       NULL}
 };
 
@@ -223,6 +230,8 @@ main(int argc, char *argv[])
 
 	/* Make it possible to detect if beaconing has been set */
 	Tncd_Beacon_Interval = -1;
+	/* KISS Mux is disabled by default */
+	Tncd_KISS_Mux_Port = 0;
 
 	bbsd_get_configuration(ConfigList);
 	bbsd_msg("Startup");
@@ -263,12 +272,16 @@ main(int argc, char *argv[])
 	if(monitor_init(Tncd_Monitor_Bind_Addr, Tncd_Monitor_Port) == ERROR)
 		return 1;
 
+	if(kiss_mux_init(master_kiss, master_slip, Tncd_KISS_Mux_See_Others,
+		Tncd_KISS_Mux_Bind_Addr, Tncd_KISS_Mux_Port) == ERROR)
+		return 1;
+
 	/* Set upcall chain from TNC into ax25 stack */
 	asy_set_recv(Master_ASY, slip_input, master_slip);
-	slip_set_recv(master_slip, kiss_recv, master_kiss);
+	slip_set_recv(master_slip, kiss_nexus_recv, master_kiss);
 
 	/* Set downcall chain from ax25 stack into TNC */
-	kiss_set_send(master_kiss, slip_output, master_slip);
+	kiss_set_send(master_kiss, kiss_nexus_send, master_slip);
 	slip_set_send(master_slip, asy_send, Master_ASY);
 
 	asy_enable(Master_ASY, 1);

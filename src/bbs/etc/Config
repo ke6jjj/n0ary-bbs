@@ -210,8 +210,14 @@ PORT	STATUS	SYSTEM	FALSE	FALSE	Status
 ;
 ; There are currently two ways to configure TNCs for use with the BBS: the
 ; classic method, which is shown here, and the newer method, which is shown
-; later on. The classic method exists for backwards compatability but will
+; later on. The classic method exists for backwards compatability, but it
+; lacks the ability to configure some newer TNC features and it will
 ; eventually be eliminated in favor of the new method.
+;
+; You may choose to use both methods at the same time, configuring some
+; options using the classic method and others via the new method, but be aware
+; that options set with the newer method will take precedence over those set
+; via the classic method whenever the two conflict.
 ;
 ; In the "classic" method each TNC is configured through a single variable
 ; consisting of many, position-dependent fields:
@@ -310,10 +316,33 @@ TNC	TNC3	44453	44463	/dev/ttyb  bbshost 10  4 300 7   220  5  0
 ; TNC0_PACLEN             220
 ; TNC0_PTHRESH            (not set, defaults to PACLEN / 2)
 ; TNC0_FLAGS              0
+;
+; Here are new features that can only be set via the "new" method:
+;
+;     AX25 beaconing. (see "AX.25 Beaconing" further on)
+;
 ; TNC0_BEACON_INTERVAL    (not set, defaults to system AX25_BEACON_INTERVAL)
 ; TNC0_BEACON_CALL        (not set, defaults to system AX25_BEACON_CALL)
 ; TNC0_BEACON_DEST        (not set, defaults to system AX25_BEACON_DEST)
 ; TNC0_BEACON_MESSAGE     (not set, defaults to system AX25_BEACON_MESSAGE)
+;
+;     KISS sharing
+;
+;  If KISS sharing is enabled for a TNC, then the TNC daemon for that TNC
+;  will expose a TCP/IP port which will operate as a KISS pass-through
+;  connection to the underlying TNC, allowing other programs to share the TNC
+;  transparently with the BBS.
+;
+;  When KISS sharing is enabled, an additional option is availible for
+;  controlling how the BBS and the sharing programs interact. This option,
+;  "TNCx_KISS_MUX_SEE_OTHERS", is enabled default and makes it such that each
+;  program sharing the TNC will see packets sent by the others. To turn this
+;  echoing feature off, set "TNCx_KISS_MUX_SEE_OTHERS" to 0.
+;
+; TNC0_KISS_MUX_BIND_ADDR     (not set, defaults to 127.0.0.1)
+; TNC0_KISS_MUX_PORT          (not set, defaults to 0, disabling feature)
+; TNC0_KISS_MUX_SEE_OTHERS    (not set, defaults to 1)
+
 
 ;###
 ;#       AX.25 Beaconing
