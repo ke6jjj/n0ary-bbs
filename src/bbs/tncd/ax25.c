@@ -10,7 +10,6 @@
 #include "mbuf.h"
 #include "kiss.h"
 #include "ax25.h"
-#include "tnc.h"
 /*
  * Including bsd.h just so we can quickly cobble together the transmit
  * unlock feature in the variable Tncd_TX_Enable.
@@ -44,7 +43,7 @@ sendframe(
 {
 	struct mbuf *hbp,*cbp;
 
-	if(axp == NULLAX25 || tnc[axp->dev].inuse == FALSE) {
+	if(axp == NULLAX25 || axp->dev == NULL) {
 		free_p(data);
 		return ERROR;
 	}
@@ -73,7 +72,7 @@ sendframe(
  * us and is LAPB, kick it upstairs.
  */
 void
-ax_recv(int dev, struct mbuf *bp)
+ax_recv(kiss *dev, struct mbuf *bp)
 {
 	struct ax25_addr *ap;
 	struct mbuf *hbp;
@@ -89,9 +88,8 @@ ax_recv(int dev, struct mbuf *bp)
 	}
 
 	/* Emergency TX inhibit unlock feature */
-	if (Tncd_TX_Enabled == 0 && unlockable == 1 &&
-	    addreq(&hdr.dest, &unlockcall))
-		Tncd_TX_Enabled = 1;
+	if (unlockable == 1 && addreq(&hdr.dest, &unlockcall))
+		Tncd_TX_Enable(1);
 
 	/* Scan, looking for our call in the repeater fields, if any.
 	 * Repeat appropriate packets.
@@ -160,8 +158,6 @@ ax_recv(int dev, struct mbuf *bp)
 			free_p(bp);
 			return;
 		}
-
-		axp->dev = dev;
 
 		/* Swap source and destination, reverse digi string */
 		memcpy(&axp->addr.dest, &hdr.source, sizeof(struct ax25_addr));

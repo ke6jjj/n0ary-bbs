@@ -66,6 +66,7 @@ int control = 0;
 char *Tncd_Host;
 char *Tncd_Name;
 char *Tncd_Device;
+kiss *Master_Interface;
 
 extern struct ax25_addr bbscall, fwdcall;
 
@@ -78,7 +79,7 @@ static alEventHandle al_cntrl_handle;
  */
 
 int
-ax_control_init(char *c_bindaddr, int c_port)
+ax_control_init(kiss *interface, char *c_bindaddr, int c_port)
 {
 	alCallback cb;
 
@@ -98,6 +99,9 @@ ax_control_init(char *c_bindaddr, int c_port)
 		fprintf(stderr, "problem registering control socket\n");
 		return ERROR;
 	}
+
+	/* Prime the AX.25 stack to attach to the provided interface */
+	Master_Interface = interface;
 
 	return OK;
 }
@@ -293,7 +297,7 @@ command(struct mboxsess *mbp)
 
 			mbp->axbbscb =
 				open_ax25(&addr,axwindow,mbx_rx,mbx_tx,
-					mbx_state,0,mbp);
+					mbx_state,Master_Interface,mbp);
 		}
 	}
 	mbp->cmd_cnt = 0;

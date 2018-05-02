@@ -24,7 +24,7 @@ static void beacon_now(void *obj, void *arg0, int arg1);
 
 beacon_task *
 beacon_task_new(const char *from_callsign, const char *to_callsign,
-	const char *text, int repeat_time_s, int dev)
+	const char *text, int repeat_time_s, kiss *dev)
 {
 	beacon_task *task = alMalloc(beacon_task, 1);
 	if (task == NULL)

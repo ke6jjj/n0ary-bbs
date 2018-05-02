@@ -1,8 +1,14 @@
-/* KISS TNC control */
-#define	KISS_DATA	0
+#ifndef _TNCD_KISS_H
+#define _TNCD_KISS_H
 
-extern int
-	kiss_raw(int dev, struct mbuf *data);
+#include "calls.h"
 
-extern void
-	kiss_recv(int dev, struct mbuf *bp);
+typedef struct kiss kiss;
+
+kiss *kiss_init(void);
+int kiss_raw(kiss *dev, struct mbuf *data);
+int kiss_recv(void *dev, struct mbuf *bp);
+int kiss_set_send(kiss *dev, mbuf_recv_fn send_fn, void *send_arg);
+void kiss_deinit(kiss *dev);
+
+#endif

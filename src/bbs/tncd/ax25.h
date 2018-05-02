@@ -1,5 +1,6 @@
 #include "timer.h"
 #include "mbuf.h"
+#include "kiss.h"
 
 /* AX.25 datagram (address) sub-layer definitions */
 
@@ -100,7 +101,14 @@ struct ax25_cb {
 
 	struct ax25 addr;		/* Address header */
 
-	int dev;
+	/*
+	 * This ought to be an interface pointer, and it was at one point,
+	 * early in the original version of this code from KA9Q. It was
+	 * reduced to an integer in N0ARY, and is now slowly working its
+	 * way back up to a proper object. For now it will be assumed to
+	 * be a KISS interface.
+	 */
+	kiss *dev;
 
 	char rejsent;			/* REJ frame has been sent */
 	char remotebusy;		/* Remote sent RNR */
@@ -173,7 +181,7 @@ extern void
 	lapbstate(struct ax25_cb *axp, int s),
 	est_link(struct ax25_cb *axp);
 extern void
-	ax_recv(int dev, struct mbuf *bp),
+	ax_recv(kiss *recving_dev, struct mbuf *bp),
 	ax25_dump(struct mbuf *bp),
 	disc_ax25(struct ax25_cb *axp),
 	pax25(char *e, struct ax25_addr *addr),
@@ -194,8 +202,8 @@ extern int
 extern struct ax25_cb
 	*open_ax25(struct ax25 *addr, int window,
 		void (*r_upcall)(), void (*t_upcall)(), void (*s_upcall)(),
-		int dev, void *user),
-	*cr_ax25(int dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr),
+		kiss *dev, void *user),
+	*cr_ax25(kiss *dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr),
 	*find_ax25(struct ax25_addr *my_addr, struct ax25_addr *their_addr);
 
 extern char

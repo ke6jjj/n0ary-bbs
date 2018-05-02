@@ -16,7 +16,7 @@ open_ax25(
 	void (*r_upcall)(),		/* Receiver upcall handler */
 	void (*t_upcall)(),		/* Transmitter upcall handler */
 	void (*s_upcall)(),		/* State-change upcall handler */
-	int dev,
+	kiss *dev,
 	void *user)			/* User linkage area */
 {
 	struct ax25_cb *axp;
@@ -34,7 +34,6 @@ open_ax25(
 	axp->r_upcall = r_upcall;
 	axp->t_upcall = t_upcall;
 	axp->s_upcall = s_upcall;
-	axp->dev = dev;
 	axp->user = user;
 
 	switch(axp->state){

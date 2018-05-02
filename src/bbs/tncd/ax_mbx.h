@@ -1,5 +1,6 @@
 #include <sys/queue.h>
 #include "alib.h"
+#include "kiss.h"
 
 /* see comment at the head of ax_mbx.c - Bdale */
 /* Defines for the ax.25 mailbox facility */
@@ -39,5 +40,5 @@ LIST_HEAD(mboxlist, mboxsess);
 
 extern struct mboxlist base;
 
-int ax_control_init(char *c_bindaddr, int c_port);
+int ax_control_init(kiss *interface, char *c_bindaddr, int c_port);
 void mbx_state(struct ax25_cb *axp, int old, int new);

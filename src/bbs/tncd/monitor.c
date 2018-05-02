@@ -50,7 +50,6 @@ char *helpmsg[] = {
 	"   PACLEN 220\n",
 	"   PTHRESH 110\n",
 	"   N2 10\n",
-	"   FLAGS 1\n",
 	"   TX [0|1]\n",
 	NULL };
 
@@ -283,12 +282,8 @@ monitor_command(struct Monitor_Session *mp, char *buf)
 				Tncd_N2 = value;
 				break;
 			}
-			if (!strcmp(q, "FLAGS")) {
-				Tncd_SLIP_Flags = value;
-				break;
-			}
 			if (!strcmp(q, "TX")) {
-				Tncd_TX_Enabled = value ? 1 : 0;
+				Tncd_TX_Enable(value ? 1 : 0);
 				break;
 			}
 		} else {
@@ -326,7 +321,7 @@ monitor_dump(struct Monitor_Session *mp)
 		Tncd_SLIP_Flags);
 	monitor_printf(&mpp,
 		"transmit_enabled = %d\n",
-		Tncd_TX_Enabled);
+		Is_Tncd_TX_Enabled());
 
 	if (mpp == NULL)
 		return;

@@ -88,7 +88,7 @@ del_ax25(struct ax25_cb *axp)
  * is still responsible for filling in the reply address
  */
 struct ax25_cb *
-cr_ax25(int dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr)
+cr_ax25(kiss *dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr)
 {
 	register struct ax25_cb *axp;
 	int hashval;

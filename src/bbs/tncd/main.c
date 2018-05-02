@@ -48,6 +48,7 @@ int
     Tncd_Paclen,
     Tncd_Pthresh,
     Tncd_Beacon_Interval,
+    Tncd_SLIP_Flags,
     Default_Beacon_Interval;
 
 int
@@ -59,7 +60,8 @@ int
 int background = 0;
 int shutdown = FALSE;
 
-alEventHandle bbsd_ev;
+static alEventHandle bbsd_ev;
+static asy *Master_ASY;
 
 struct ConfigurationList ConfigList[] = {
   { "BBS_MYCALL",                 tSTRING,    (int*)&Bbs_My_Call },
@@ -112,6 +114,9 @@ preload(char *name)
 	struct ConfigurationList dynconfig[2], *cfg;
 	char varname[256];
 
+	/*
+	 * First, load options through the classic configuration method.
+	 */
 	Tncd_Control_Bind_Addr = tnc_control_bind_addr(name);
 	Tncd_Control_Port = tnc_port(name);
 	Tncd_Monitor_Bind_Addr = tnc_monitor_bind_addr(name);
@@ -129,6 +134,10 @@ preload(char *name)
 	Tncd_Paclen = tax->paclen;
 	Tncd_SLIP_Flags = tax->flags;
 
+	/*
+	 * Next, load options via the new configuration method, allowing them
+	 * to override options set via the classic method.
+	 */
 	dynconfig[1].token = NULL;
 	dynconfig[1].type = 0;
 	dynconfig[1].ptr = NULL;
@@ -196,6 +205,8 @@ main(int argc, char *argv[])
 	alCallback cb;
 	beacon_task *beacon;
 	char *tnc_name;
+	slip *master_slip;
+	kiss *master_kiss;
 
 	parse_options(argc, argv, ConfigList,
 		"TNCD - Terminal Node Controller (KISS) Daemon");
@@ -236,22 +247,36 @@ main(int argc, char *argv[])
 	if (res != 0)
 		error_print_exit(0);
 
-	if(ax_control_init(Tncd_Control_Bind_Addr, Tncd_Control_Port) == ERROR)
+	if ((Master_ASY = asy_init(Tncd_Device)) == NULL)
+		return 1;
+
+	if ((master_slip = slip_init(Tncd_SLIP_Flags)) == NULL)
+		return 1;
+
+	if ((master_kiss = kiss_init()) == NULL)
+		return 1;
+
+	if(ax_control_init(master_kiss, Tncd_Control_Bind_Addr,
+		Tncd_Control_Port) == ERROR)
 		return 1;
 
 	if(monitor_init(Tncd_Monitor_Bind_Addr, Tncd_Monitor_Port) == ERROR)
 		return 1;
 
-	tnc[0].inuse = FALSE;
+	/* Set upcall chain from TNC into ax25 stack */
+	asy_set_recv(Master_ASY, slip_input, master_slip);
+	slip_set_recv(master_slip, kiss_recv, master_kiss);
 
-	asy_init(0, Tncd_Device);
-	Tncd_TX_Enabled = 1;
-	slip_init(0);
-	slip_start(0);
+	/* Set downcall chain from ax25 stack into TNC */
+	kiss_set_send(master_kiss, slip_output, master_slip);
+	slip_set_send(master_slip, asy_send, Master_ASY);
+
+	asy_enable(Master_ASY, 1);
+	asy_start(Master_ASY);
 
 	if (Tncd_Beacon_Interval > 0) {
 		beacon = beacon_task_new(Tncd_Beacon_Call, Tncd_Beacon_Dest,
-			Tncd_Beacon_Message, Tncd_Beacon_Interval, 0);
+			Tncd_Beacon_Message, Tncd_Beacon_Interval, master_kiss);
 		if (beacon == NULL)
 			return 1;
 		if (beacon_task_start(beacon, random() % 30) != 0)
@@ -271,9 +296,26 @@ main(int argc, char *argv[])
 		beacon = NULL;
 	}
 
-	slip_stop(0);
+	asy_stop(Master_ASY);
+
+	kiss_deinit(master_kiss);
+	slip_deinit(master_slip);
+	asy_deinit(Master_ASY);
 
 	alEvent_shutdown();
 
 	return 0;
+}
+
+/* Callback from AX.25 stack for unlock feature */
+void
+Tncd_TX_Enable(int enable)
+{
+	asy_enable(Master_ASY, enable);
+}
+
+int
+Is_Tncd_TX_Enabled(void)
+{
+	return asy_enabled(Master_ASY);
 }
