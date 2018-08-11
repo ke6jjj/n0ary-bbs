@@ -46,7 +46,7 @@ struct ConfigurationList ConfigList[] = {
 	{ "BBSD_PORT",			tINT,		(int*)&Bbsd_Port },
 	{ "",					tCOMMENT,	NULL },
 	{ "USERD_PORT",			tINT,		(int*)&Userd_Port },
-	{ "USERD_BIND",			tSTRING,	(int*)&Userd_Bind_Addr },
+	{ "USERD_BIND_ADDR",		tSTRING,	(int*)&Userd_Bind_Addr },
 	{ "USERD_ACC_PATH",		tDIRECTORY,	(int*)&Userd_Acc_Path },
 	{ "USERD_AGE_INTERVAL",	tTIME,		(int*)&Userd_Age_Interval },
 	{ "USERD_AGE_SUSPECT",	tTIME,		(int*)&Userd_Age_Suspect },
