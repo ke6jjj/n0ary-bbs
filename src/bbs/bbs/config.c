@@ -11,7 +11,6 @@ char
 	*Bbs_Call,
 	*Bbs_MyCall,
 	*Bbs_FwdCall,
-	*Bbs_Host,
 	*Bbs_Sysop,
 	*Bbs_Dir,
 	*Bbs_Hloc,
@@ -52,8 +51,7 @@ int
 	Smtp_Port = 0,
 #endif
 	Bbs_Import_Size,
-	Bbs_Msg_Loop,
-	Bbsd_Port;
+	Bbs_Msg_Loop;
 
 long
 	Bbs_Timer_Tnc,
