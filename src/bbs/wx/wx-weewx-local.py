@@ -1,64 +1,40 @@
 #!/usr/bin/env python
-import urllib2
-import urllib
-import json
 import time
 import math
 import collections
+import sqlite3
 
-data_base = 'http://meso-wx/data.php'
-entity_id = 'weewx_raw'
-
-bounded_items = [
-  ('outTemp', 'f', 0),
-  ('outHumidity', 'perc', 0),
-  ('barometer', 'inHg', 2),
-  ('windSpeed', 'mph', 0),
-  ('windDir', 'deg', 0),
-  ('radiation', 'wsqm', 0),
-  ('uv', 'uvi', 0),
-]
-
-items = [
-  'dayRain:max:in:2'
-]
-
-def bounded_item_str(item_desc):
-  return [ '{}:{}:{}:{}'.format(item_desc[0], agg, item_desc[1], item_desc[2])
-           for agg in ('min', 'avg', 'max') ]
-
-def bounded_item_name(item_desc):
-  return [ '{}_{}'.format(item_desc[0], agg) for agg in ('min', 'avg', 'max') ]
-
-def current_item_str(item_desc):
-  return [ '{}::{}:{}'.format(item_desc[0], item_desc[1], item_desc[2] ) ]
-
-def do_summary():
-  item_strs = []
-  names = ['when']
-  for item in bounded_items:
-    item_strs += bounded_item_str(item)
-    names += bounded_item_name(item)
-  item_strs += items
-  names.append('dayRain')
+def do_summary(db):
+  dbh = sqlite3.connect(db)
+  curs = dbh.cursor()
 
   now = int(time.time())
   now_sub_hour = now % 3600
   next_hour = now + 3600 - now_sub_hour
   day_ago = next_hour - 86400
 
-  wx_row = collections.namedtuple('wx_row', names)
+  def the_triple_query(field):
+    return 'min({f}), avg({f}), max({f})'.format(f=field)
 
-  url = data_base + '?entity_id=' + entity_id + '&data=' + ','.join(item_strs) \
-    + '&start={}:datetime&end={}:datetime'.format(day_ago, next_hour) \
-    + '&group=3600:seconds'
+  def the_triple_name(field):
+    return '{f}_min {f}_avg {f}_max'.format(f=field)
 
-  r = urllib2.urlopen(url)
-  t = r.read()
-  data = json.loads(t)
+  fields = [ 'barometer', 'outTemp', 'outHumidity', 'windSpeed', 'windDir',
+    'radiation', 'UV', 'rain' ]
 
-  print len(data)
-  for row in data:
+  curs.execute('SELECT min(dateTime), ' + ','.join(
+    [the_triple_query(x) for x in fields]) +
+    ' FROM archive WHERE dateTime <= ? AND dateTime >= ? '
+    'GROUP BY dateTime / 3600', (now, day_ago)
+  )
+    
+  wx_row = collections.namedtuple('wx_row', 'when ' +
+    ' '.join([ the_triple_name(x) for x in fields ]))
+
+  rows = curs.fetchall()
+
+  print len(rows)
+  for row in rows:
     data = wx_row(*row)
     # Adjust some items
     data = data._replace(
@@ -67,7 +43,7 @@ def do_summary():
       barometer_avg=int(data.barometer_avg * 100),
       barometer_max=int(data.barometer_max * 100),
       # Adjust rain to integer
-      dayRain=int(data.dayRain * 100),
+      rain_max=int(data.rain_max * 100),
     )
     print ' '.join(
       map(lambda x: str(x) if x is not None else '0', [
@@ -90,10 +66,10 @@ def do_summary():
         data.radiation_min,
         data.radiation_avg,
         data.radiation_max,
-        data.uv_min,
-        data.uv_avg,
-        data.uv_max,
-        data.dayRain
+        data.UV_min,
+        data.UV_avg,
+        data.UV_max,
+        data.rain_max
         ]
       )
     )
@@ -103,24 +79,17 @@ def winddir(deg):
   quad = quad % 8
   return ('N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW' )[quad]
 
-def do_current():
-  item_strs = [ 'dateTime::s' ]
-  for item in bounded_items:
-    item_strs += current_item_str(item)
-  item_strs += items
-  item_strs.append('rainRate::inHr')
+def do_current(db):
+  dbh = sqlite3.connect(db)
+  curs = dbh.cursor()
+  curs.execute('SELECT dateTime, outTemp, outHumidity, barometer, windSpeed, '
+    'windDir, radiation, UV, rain, rainRate FROM archive ORDER BY dateTime '
+    'DESC LIMIT 1')
+  row = curs.fetchone()
 
-  url = data_base + '?entity_id=' + entity_id + '&data=' + ','.join(item_strs) \
-    + '&order=desc&limit=1'
-
-  r = urllib2.urlopen(url)
-  t = r.read()
-  data = json.loads(t)
-  assert(len(data) == 1)
-  # Unpack single row
   data = collections.namedtuple('Weather',
     ['when','temperature','humidity','pressure','windSpeed','windDir',
-     'solarRad', 'uv', 'rainTotal','rainRate'])(*data[0])
+     'solarRad', 'uv', 'rainTotal','rainRate'])(*row)
 
   print "Weather Data as of {}".format(time.ctime(data.when))
   print "Bernal Heights, San Francisco El 87'"
@@ -140,14 +109,16 @@ def do_current():
       (data.windDir, winddir(data.windDir), data.windSpeed)
 
 def main(args):
-  if len(args) < 2:
-    print >>sys.stderr, "usage: wx current|summary"
+  if len(args) < 3:
+    print >>sys.stderr, "usage: wx <sqlite-db> current|summary"
     return 1
 
-  if args[1] == 'current':
-    do_current()
-  elif args[1] == 'summary':
-    do_summary()
+  db = args[1]
+
+  if args[2] == 'current':
+    do_current(db)
+  elif args[2] == 'summary':
+    do_summary(db)
   else:
     print >>sys.stderr, "unknown verb"
     return 1
