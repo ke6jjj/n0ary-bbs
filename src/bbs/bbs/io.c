@@ -92,12 +92,13 @@ fd_gets(int fd, char *p, int cnt)
 			FD_SET(monitor_fd, &ready);
 			if(monitor_fd > fdlimit)
 				fdlimit = monitor_fd;
-		} else
+		} else {
 			if(monitor_sock != ERROR) {
 				FD_SET(monitor_sock, &ready);
-				if(monitor_fd > fdlimit)
-					fdlimit = monitor_fd;
+				if(monitor_sock > fdlimit)
+					fdlimit = monitor_sock;
 			}
+		}
 		FD_SET(bbsd_sock, &ready);
 		if(bbsd_sock > fdlimit)
 			fdlimit = bbsd_sock;
