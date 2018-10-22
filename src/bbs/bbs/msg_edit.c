@@ -312,7 +312,8 @@ msg_edit_prompt(struct msg_dir_entry *m)
 		PRINTF("To [%s @ %s]? ", m->to.name.str, m->to.at.str);
 		if(NeedsNewline)
 			PRINT("\n");
-		GETS(buf, 79);
+		if (GETS(buf, 79) == NULL)
+			return FALSE;
 	}
 
 	if(buf[0]) {
@@ -361,7 +362,8 @@ msg_edit_prompt(struct msg_dir_entry *m)
 		PRINTF("Hloc [%s]? ", m->to.address);
 		if(NeedsNewline)
 			PRINT("\n");
-		GETS(buf, 79);
+		if (GETS(buf, 79) == NULL)
+			return FALSE;
 	}
 
 	if(buf[0]) {
@@ -405,7 +407,8 @@ msg_edit_prompt(struct msg_dir_entry *m)
 		PRINTF("Type [%c]? ", c);
 		if(NeedsNewline)
 			PRINT("\n");
-		GETS(buf, 79);
+		if (GETS(buf, 79) == NULL)
+			return FALSE;
 	}
 
 	if(buf[0]) {
@@ -439,7 +442,8 @@ msg_edit_prompt(struct msg_dir_entry *m)
 			PRINTF("Password? ");
 			if(NeedsNewline)
 				PRINT("\n");
-			GETS(buf, 79);
+			if (GETS(buf, 79) == NULL)
+				return FALSE;
 			if(buf[0])
 				SetMsgPassword(m, buf);
 			sprintf(cmd, "%s S", rfc822_xlate(rTYPE));
@@ -455,7 +459,8 @@ msg_edit_prompt(struct msg_dir_entry *m)
 		PRINTF("Sub [%s]? ", m->sub);
 		if(NeedsNewline)
 			PRINT("\n");
-		GETS(buf, 79);
+		if (GETS(buf, 79) == NULL)
+			return FALSE;
 	}
 
 	if(buf[0]) {
@@ -470,7 +475,8 @@ msg_edit_prompt(struct msg_dir_entry *m)
 		PRINTF("Bid [%s]? ", (bid[0] == '$')?"generated":bid);
 		if(NeedsNewline)
 			PRINT("\n");
-		GETS(buf, 79);
+		if (GETS(buf, 79) == NULL)
+			return FALSE;
 	}
 
 	if(buf[0]) {
@@ -497,8 +503,14 @@ msg_edit_prompt(struct msg_dir_entry *m)
 			changed = TRUE;
 		else {
 			PRINTF("Activate [Y/n]: ");
-			if(get_yes_no(YES) == YES)
+			switch (get_yes_no(YES)) {
+			case YES:
 				changed = TRUE;
+				break;
+			case NO:
+			case ERROR:
+				changed = FALSE;
+			}
 		}
 	}
 

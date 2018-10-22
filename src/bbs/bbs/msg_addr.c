@@ -114,6 +114,7 @@ prompt_user_for_hloc(struct msg_dir_entry *msg)
 			case NO:
 				break;
 
+			case ERROR:
 			case QUIT:
 				fclose(fp);
 				return ERROR;
@@ -211,6 +212,7 @@ determine_hloc_for_bbs(struct msg_dir_entry *msg)
 			case NO:
 				strncpy(msg->to.address, hloc, LenHLOC);
 				break;
+			case ERROR:
 			case QUIT:
 				return ERROR;
 			}
@@ -294,6 +296,7 @@ determine_homebbs(struct msg_dir_entry *msg)
 				return determine_hloc_for_bbs(msg);
 			case YES:	/* Use HOME supplied by user, ignore WP */
 				return determine_hloc_for_bbs(msg);
+			case ERROR:
 			case QUIT:
 				return ERROR;
 			}
@@ -343,6 +346,7 @@ check_personal(struct msg_dir_entry *msg, int history)
 					msg->flags &= ~MsgTypeMask;
 					msg->flags |= MsgBulletin;
 					return validate_message(msg, history);
+				case ERROR:
 				case QUIT:
 					return ERROR;
 				}
@@ -368,6 +372,7 @@ check_personal(struct msg_dir_entry *msg, int history)
 					msg->to.at.str[0] = 0;
 					msg->flags &= ~MsgAtMask;
 					return check_personal(msg, history);
+				case ERROR:
 				case QUIT:
 					return ERROR;
 				}
@@ -421,6 +426,7 @@ check_bulletin(struct msg_dir_entry *msg, int history)
 					msg->flags &= ~MsgTypeMask;
 					msg->flags |= MsgPersonal;
 					return validate_message(msg, history);
+				case ERROR:
 				case QUIT:
 					return ERROR;
 				}
@@ -444,6 +450,7 @@ check_bulletin(struct msg_dir_entry *msg, int history)
 					msg->flags &= ~MsgTypeMask;
 					msg->flags |= MsgPersonal;
 					return validate_message(msg, history);
+				case ERROR:
 				case QUIT:
 					return ERROR;
 				}
@@ -460,8 +467,11 @@ check_bulletin(struct msg_dir_entry *msg, int history)
 				PRINTF("** to be sent to other bbss. Type INFO BULLETIN at the main prompt\n");
 				PRINTF("** for more information.\n");
 				PRINTF("Do you wish to abort the message (y/N)? ");
-				if(get_yes_no(NO) == YES)
+				switch (get_yes_no(NO)) {
+				case YES:
+				case ERROR:
 					return ERROR;
+				}
 			}
 		}
 		return OK;
@@ -510,6 +520,7 @@ check_nts(struct msg_dir_entry *msg, int history)
 					msg->flags &= ~MsgTypeMask;
 					msg->flags |= MsgPersonal;
 					return validate_message(msg, history);
+				case ERROR:
 				case QUIT:
 					return ERROR;
 				}
@@ -532,6 +543,7 @@ check_nts(struct msg_dir_entry *msg, int history)
 					msg->flags &= ~MsgTypeMask;
 					msg->flags |= MsgBulletin;
 					return validate_message(msg, history);
+				case ERROR:
 				case QUIT:
 					return ERROR;
 				}
@@ -599,6 +611,7 @@ validate_message(struct msg_dir_entry *msg, int history)
 					msg->flags &= ~MsgTypeMask;
 					msg->flags |= MsgNTS;
 					return validate_message(msg, history);
+				case ERROR:
 				case QUIT:
 					return ERROR;
 				}

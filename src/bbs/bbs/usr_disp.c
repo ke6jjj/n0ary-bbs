@@ -217,8 +217,10 @@ user_disp_account(char *call)
 
 	if(!batch_mode) {
 		PRINT("Next Page (q to quit)? ");
-		if(get_yes_no_quit(YES) == QUIT) {
+		switch (get_yes_no_quit(YES)) {
+		case QUIT:
 			user_focus(usercall);
+		case ERROR:
 			return;
 		}
 	}
@@ -236,8 +238,10 @@ user_disp_account(char *call)
 
 	if(!batch_mode) {
 		PRINT("Next Page (q to quit)? ");
-		if(get_yes_no_quit(YES) == QUIT) {
+		switch (get_yes_no_quit(YES)) {
+		case QUIT:
 			user_focus(usercall);
+		case ERROR:
 			return;
 		}
 	}
@@ -277,8 +281,10 @@ user_disp_account(char *call)
 
 	if(!batch_mode) {
 		PRINT("Next Page (q to quit)? ");
-		if(get_yes_no_quit(YES) == QUIT) {
+		switch (get_yes_no_quit(YES)) {
+		case QUIT:
 			user_focus(usercall);
+		case ERROR:
 			return;
 		}
 	}

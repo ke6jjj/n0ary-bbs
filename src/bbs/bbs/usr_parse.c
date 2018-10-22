@@ -199,6 +199,7 @@ u_del_list(int token)
 		case NO:
 			break;
 		case QUIT:
+		case ERROR:
 			return;
 		}
 		last = list;

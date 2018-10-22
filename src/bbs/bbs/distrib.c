@@ -119,11 +119,11 @@ distrib_kill(char *fn)
 	FILE *fp;
 	char filename[80];
 	char *p, buf[4096];
+	int ret;
 
 	sprintf(filename, "%s/%s", Bbs_Distrib_Path, fn);
 
 	if((fp = fopen(filename, "r")) == NULL) {
-		fclose(fp);
 		PRINTF("The distribution list %s doesn't currently exist.\n", fn);
 		PRINTF("The following lists are currently available\n\n");
 		distrib_list();
@@ -136,26 +136,34 @@ distrib_kill(char *fn)
 	if(*p != '#') {
 		PRINTF("Distribution format is invalid, notify a sysop.\n");
 		PRINTF("KILL DISTRIBUTION command aborted\n");
-		return ERROR;
+		ret = ERROR;
+		goto done;
 	}
 
 	p++;
 	PRINTF("%s: %s\n", fn, p);
 	PRINTF("This this the list you wish to kill (y/N)?");
 
-	if(get_yes_no(NO) == YES) {
-		if(!ImSysop)
+	switch (get_yes_no(NO)) {
+	case YES:
+		if(!ImSysop) {
 			if(distrib_approve(fn, fp) == ERROR) {
-				fclose(fp);
-				return ERROR;
+				ret = ERROR;
+				goto done;
 			}
-		fclose(fp);
+		}
 		unlink(filename);
-		return OK;
+	default:
+		ret = OK;
+		goto done;
+	case ERROR:
+		ret = ERROR;
+		goto done;
 	}
 
+done:
 	fclose(fp);
-	return OK;
+	return ret;
 }
 
 static int

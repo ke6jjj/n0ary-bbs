@@ -196,8 +196,12 @@ kill_message_number(struct msg_dir_entry *m)
 			   !(m->flags & MsgBulletin) &&
 			   !(m->flags & MsgNTS)) {
 					PRINTF("Message #%d has not been read, kill anyway (N/y)? ", m->number);
-					if(get_yes_no(NO) == NO)
+					switch (get_yes_no(NO)) {
+					case NO:
 						return OK;
+					case ERROR:
+						return ERROR;
+					}
 			}
 
 		if(hard_delete)

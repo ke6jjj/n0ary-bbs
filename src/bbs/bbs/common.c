@@ -44,6 +44,7 @@ more(void)
 		init_more();
 		PRINT("==== More ... [CR] next page, [Q]uit, [S]croll, [!cmd] ====>");
 		switch(get_quit_scroll_cmd(YES)) {
+		case ERROR:
 		case QUIT:
 			return ERROR;
 		case NO:
@@ -72,6 +73,7 @@ force_more(void)
 	init_more();
 	PRINT("==== More ... [CR] next page, [Q]uit, [S]croll, [!cmd] ====>");
 	switch(get_quit_scroll_cmd(YES)) {
+	case ERROR:
 	case QUIT:
 		return ERROR;
 	case NO:
@@ -260,7 +262,8 @@ get_yes_no(int def)
 	char buf[256];
 	if(NeedsNewline)
 		PRINT("\n");
-	GETS(buf, 255);
+	if (GETS(buf, 255) == NULL)
+		return ERROR;
 	switch(buf[0]) {
 	case 'Y':
 	case 'y':
@@ -279,7 +282,8 @@ get_quit_scroll_cmd(int def)
 	char buf[256];
 	if(NeedsNewline)
 		PRINT("\n");
-	GETS(buf, 255);
+	if (GETS(buf, 255) == NULL)
+		return ERROR;
 
 	switch(buf[0]) {
 	case 'S':
@@ -300,7 +304,8 @@ get_yes_no_quit(int def)
 	char buf[256];
 	if(NeedsNewline)
 		PRINT("\n");
-	GETS(buf, 255);
+	if (GETS(buf, 255) == NULL)
+		return ERROR;
 
 	switch(buf[0]) {
 	case 'y':
@@ -325,8 +330,10 @@ check_long_xfer_abort(int msg, int cnt)
 		return OK;
 
 	system_msg_number(msg, cnt);
-	if(get_yes_no(NO)) {
+	switch (get_yes_no(NO)) {
+	case YES:
 		system_msg(75);
+	case ERROR:
 		return ERROR;
 	}
 
