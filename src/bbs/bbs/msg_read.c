@@ -284,7 +284,8 @@ read_message_number(int num)
 		if(IsMsgPassword(m)) {
 			char passwd[80];
 			system_msg(82);
-			GETS(passwd, 79);
+			if (GETS(passwd, 79) == NULL)
+				return ERROR;
 			case_string(passwd, AllUpperCase);
 			if(strcmp(m->passwd, passwd))
 				if(!ImSysop || strcmp(passwd, "OVERRIDE"))
@@ -637,13 +638,15 @@ msg_revfwd_cmd(char *buf)
 	snprintf(result, sizeof(result), "%s: %s", usercall, buf);
 	bbsd_msg(result);
 
-	GETS(result, 255);
+	if (GETS(result, 255) == NULL)
+		return FALSE;
 	case_string(result, AllUpperCase);
 	if(result[0] == 'O')
 		return TRUE;
 
 	do {
-		GETS(result, 255);
+		if (GETS(result, 255) == NULL)
+			return FALSE;
 		case_string(result, AllUpperCase);
 	} while(result[0] != 'F' && result[1] != '>');
 	return FALSE;
@@ -665,7 +668,8 @@ msg_revfwd_term(void)
 
 	PRINT("\x1a\n");
 	do {
-		GETS(result, 79);
+		if (GETS(result, 79) == NULL)
+			return ERROR;
 		case_string(result, AllUpperCase);
 	} while(result[0] != 'F' && result[1] != '>');
 	return OK;
@@ -678,7 +682,8 @@ msg_revfwd_dumb_term(void)
 
 	PRINT("\x1a\n");
 	do {
-		GETS(result, 79);
+		if (GETS(result, 79) == NULL)
+			return ERROR;
 		case_string(result, AllUpperCase);
 	} while(result[0] != 'F' && result[1] != '>');
 	return OK;
