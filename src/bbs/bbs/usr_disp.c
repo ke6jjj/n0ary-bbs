@@ -47,7 +47,7 @@ usr_disp_ports(char *s)
 		place_string(disp_buf, "Never", 43);
 	else {
 		tm = localtime(&t);
-		strftime(name, 80, "%m/%d/%Y @ %R", tm);
+		strftime(name, 80, "%Y-%m-%d @ %R", tm);
 		place_string(disp_buf, name, 37);
 	}
 
@@ -56,7 +56,7 @@ usr_disp_ports(char *s)
 		place_string(disp_buf, "Never", 65);
 	else {
 		tm = localtime(&t);
-		strftime(name, 80, "%m/%d/%Y @ %R", tm);
+		strftime(name, 80, "%Y-%m-%d @ %R", tm);
 		place_string(disp_buf, name, 59);
 	}
 
