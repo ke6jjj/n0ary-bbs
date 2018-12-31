@@ -47,17 +47,17 @@ usr_disp_ports(char *s)
 		place_string(disp_buf, "Never", 43);
 	else {
 		tm = localtime(&t);
-		strftime(name, 80, "%D @ %R", tm);
+		strftime(name, 80, "%m/%d/%Y @ %R", tm);
 		place_string(disp_buf, name, 37);
 	}
 
 	t = (time_t)get_number(&s);
 	if(t == 0)
-		place_string(disp_buf, "Never", 63);
+		place_string(disp_buf, "Never", 65);
 	else {
 		tm = localtime(&t);
-		strftime(name, 80, "%D @ %R", tm);
-		place_string(disp_buf, name, 57);
+		strftime(name, 80, "%m/%d/%Y @ %R", tm);
+		place_string(disp_buf, name, 59);
 	}
 
 	PRINTF("%s\n", disp_buf);
@@ -290,7 +290,7 @@ user_disp_account(char *call)
 	}
 	PRINT("\n");
 
-	PRINTF("       Type      Name   Allow  Cnt      First seen           Last seen\n");
+	PRINTF("       Type      Name   Allow  Cnt      First seen             Last seen\n");
 
 	userd_fetch_multi("PORT", usr_disp_ports);
 
