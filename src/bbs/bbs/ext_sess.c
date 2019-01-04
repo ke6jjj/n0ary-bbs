@@ -219,7 +219,13 @@ ExtSession_execChild(ExtSession *ls)
 	res = setsid();
 	if (res < 0)
 		exit(EXTSESS_CHILD_SETSID);
+#ifdef SUNOS
+	/* SunOS requires that the additional argument be the integer 1 */
+	res = ioctl(STDIN_FILENO, TIOCSCTTY, 1);
+#else
+	/* BSD requires that the additional argument be the null pointer */
 	res = ioctl(STDIN_FILENO, TIOCSCTTY, NULL);
+#endif
 	if (res < 0)
 		exit(EXTSESS_CHILD_CTTY);
 		
