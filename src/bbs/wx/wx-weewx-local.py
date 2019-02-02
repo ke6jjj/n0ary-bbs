@@ -20,16 +20,16 @@ def do_summary(db):
     return '{f}_min {f}_avg {f}_max'.format(f=field)
 
   fields = [ 'barometer', 'outTemp', 'outHumidity', 'windSpeed', 'windDir',
-    'radiation', 'UV', 'rain' ]
+    'radiation', 'UV' ]
 
   curs.execute('SELECT min(dateTime), ' + ','.join(
-    [the_triple_query(x) for x in fields]) +
+    [the_triple_query(x) for x in fields] + [ 'sum(rain)' ]) +
     ' FROM archive WHERE dateTime <= ? AND dateTime >= ? '
     'GROUP BY dateTime / 3600', (now, day_ago)
   )
     
   wx_row = collections.namedtuple('wx_row', 'when ' +
-    ' '.join([ the_triple_name(x) for x in fields ]))
+    ' '.join([ the_triple_name(x) for x in fields ]) + ' rain')
 
   rows = curs.fetchall()
 
@@ -43,10 +43,10 @@ def do_summary(db):
       barometer_avg=int(data.barometer_avg * 100),
       barometer_max=int(data.barometer_max * 100),
       # Adjust rain to integer
-      rain_max=int(data.rain_max * 100),
+      rain=int(data.rain * 100),
     )
     print ' '.join(
-      map(lambda x: str(x) if x is not None else '0', [
+      map(lambda x: str(int(x)) if x is not None else '0', [
         data.when,
         data.outTemp_min,
         data.outTemp_avg,
@@ -69,7 +69,7 @@ def do_summary(db):
         data.UV_min,
         data.UV_avg,
         data.UV_max,
-        data.rain_max
+        data.rain
         ]
       )
     )
@@ -82,6 +82,7 @@ def winddir(deg):
 def do_current(db):
   dbh = sqlite3.connect(db)
   curs = dbh.cursor()
+  now_s = time.time()
   curs.execute('SELECT dateTime, outTemp, outHumidity, barometer, windSpeed, '
     'windDir, radiation, UV, rain, rainRate FROM archive ORDER BY dateTime '
     'DESC LIMIT 1')
@@ -91,6 +92,13 @@ def do_current(db):
     ['when','temperature','humidity','pressure','windSpeed','windDir',
      'solarRad', 'uv', 'rainTotal','rainRate'])(*row)
 
+  now = time.localtime(now_s)
+  last_midnight = now_s - now.tm_sec - (now.tm_min * 60) - (now.tm_hour * 3600)
+  curs = dbh.cursor()
+  curs.execute('SELECT sum(rain) FROM archive WHERE dateTime >= %d' 
+               % last_midnight)
+  totalRain = curs.fetchone()[0]
+
   print "Weather Data as of {}".format(time.ctime(data.when))
   print "Bernal Heights, San Francisco El 87'"
   print ""
@@ -99,8 +107,7 @@ def do_current(db):
   print "Barometer         %.2f inHg" % data.pressure
   print "Solar             %d w/m^2" % data.solarRad
   print "UV                %d uvI" % data.uv
-  print "Rain (total/rate) %.2f in / %.2f in/h" % (data.rainTotal,
-    data.rainRate)
+  print "Rain (total/rate) %.2f in / %.2f in/h" % (totalRain, data.rainRate)
 
   if data.windSpeed is None or data.windSpeed == 0:
     print "Wind              calm"
