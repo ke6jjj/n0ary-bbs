@@ -101,7 +101,7 @@ add_cleanup ${new_cbdir}
 # Fetch the current callbook data from the FCC.
 echo "Fetching current FCC ULS Amateur Radio database."
 zip_file=${tmpdir}/uls.zip
-if ! ftp -v -o ${zip_file} ${uls_url}; then
+if ! ftp -4 -v -o ${zip_file} ${uls_url}; then
 	error 1 "ULS database fetch failed from ${uls_url}"
 fi
 
