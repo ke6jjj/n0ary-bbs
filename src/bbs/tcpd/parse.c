@@ -98,7 +98,7 @@ chain_bbs(struct active_processes *ap, char *call)
 		sprintf(p, "%d", port);
 		sprintf(cmd, "%s/b_bbs", Bin_Dir);
 		execl(cmd, "b_bbs", "-u", "-s", p, "-v", "TCP", "-a",
-			addr, call, 0);
+			addr, call, NULL);
 		exit(1);
 	}
 	return Ok("Waiting for connection");
@@ -130,7 +130,7 @@ spawn_program(struct active_processes *ap, char *prog)
 		system("/bin/sh");
 #if 0
 		execl("/bin/sh", "sh", 0);
-		execl("/usr/ucb/rsh", "rsh", Bbs_Host, "-l", "bbs_cntrl", 0);
+		execl("/usr/ucb/rsh", "rsh", Bbs_Host, "-l", "bbs_cntrl", NULL);
 #endif
 		exit(1);
 	}
@@ -164,9 +164,9 @@ spawn_bbs(int fd, char *call, int sysop)
 		sprintf(cmd, "%s/b_bbs", Bin_Dir);
 		if(sysop)
 			execl(cmd, "b_bbs", "-u", "-v", "TCP", "-a", addr,
-				call, 0);
+				call, NULL);
 		else
-			execl(cmd, "b_bbs", "-v", "TCP", "-a", addr, call, 0);
+			execl(cmd, "b_bbs", "-v", "TCP", "-a", addr, call, NULL);
 		exit(1);
 	}
 }

@@ -80,14 +80,14 @@ init_server(char *server, int msg_number, char *text)
 	switch(*server) {
 	case 'C':
 		if(!fork()) {
-			execl(cmd, "b_bbs", "-t3", buf, text, 0);
+			execl(cmd, "b_bbs", "-t3", buf, text, NULL);
 			exit(0);
 		}
 		break;	
 	case 'W':
 		if(!fork()) {
 			case_string(text, AllUpperCase);
-			execl(cmd, "b_bbs", "-t4", buf, text, 0);
+			execl(cmd, "b_bbs", "-t4", buf, text, NULL);
 			exit(0);
 		}
 		break;	

@@ -51,7 +51,7 @@ msg_generate(struct smtp_message *msg)
 		dup(to_gate[1]);
 		close(to_gate[1]);
 
-		execl("/bbs/bin/bbs", "bbs", "gatewy", "console", 0);
+		execl("/bbs/bin/bbs", "bbs", "gatewy", "console", NULL);
 		exit(1);
 	}
 

@@ -350,7 +350,7 @@ asy_recv(asy *asy, char *buf, int cnt)
 
 /* Send a buffer to serial transmitter */
 static int
-asy_output(struct asy *asy, char *buf, int cnt)
+asy_output(struct asy *asy, unsigned char *buf, int cnt)
 {
 	if (!asy->tx_enabled)
 		return OK;

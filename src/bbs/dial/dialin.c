@@ -139,7 +139,7 @@ char *argv[];
 	bbsd_close();
 
 	sprintf(pgm, "%s/b_bbs", Bin_Dir);
-	execl(pgm, "b_bbs", "-v", method(), call, 0);
+	execl(pgm, "b_bbs", "-v", method(), call, NULL);
 
 	return 0;
 }

@@ -420,7 +420,7 @@ read_options(int argc, char **argv)
 					if(fork() == 0) {
 						setsid();
 						sprintf(buf,"%s/bin/b_bbs", Bbs_Dir);
-						execl(buf, "b_bbs", "-t6", "-v", pd->name, 0);
+						execl(buf, "b_bbs", "-t6", "-v", pd->name, NULL);
 						exit(1);
 					}
 				}

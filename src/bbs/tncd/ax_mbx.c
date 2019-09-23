@@ -41,8 +41,8 @@ static void mbx_nagle_timer(void *obj, void *arg0, int arg1);
 static void mbx_bbs_connect(struct ax25_cb *axp);
 
 static void
-	convrt2cr(char *data, int cnt),
-	convrt2nl(char *data, int cnt),
+	convrt2cr(unsigned char *data, int cnt),
+	convrt2nl(unsigned char *data, int cnt),
 	mbx_tx(struct ax25_cb *axp, int cnt),
 	mbx_rx(struct ax25_cb *axp, int cnt),
 	mbx_accept(void *, void *, int),
@@ -407,7 +407,7 @@ static void
 mbx_process_tx_queue(struct mboxsess *mbp)
 {
 	struct mbuf *bp;
-	char *cp;
+	unsigned char *cp;
 	int testsize,size;
 
 	if (mbp->byte_cnt == 0)
@@ -660,7 +660,7 @@ mbx_bbs_connect(struct ax25_cb *axp)
 		dup2(sockpair[1], 1);
 
 		execl(cmd, "b_bbs", "-v", Tncd_Name,  "-e", "-a", addr,
-			call, 0);
+			call, NULL);
 		exit(1);
 	}
 
@@ -746,7 +746,7 @@ calleq(struct ax25_cb *axp, struct ax25_addr *addr)
 }
 
 static void
-convrt2nl(char *data, int cnt)
+convrt2nl(unsigned char *data, int cnt)
 {
 	int i;
 	for(i=0; i<cnt; i++) {
@@ -757,7 +757,7 @@ convrt2nl(char *data, int cnt)
 }
 
 static void
-convrt2cr(char *data, int cnt)
+convrt2cr(unsigned char *data, int cnt)
 {
 	int i;
 	for(i=0; i<cnt; i++) {
