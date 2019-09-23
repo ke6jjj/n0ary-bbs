@@ -43,12 +43,10 @@
  * PRIVATE MACROS                                                            *
  *****************************************************************************/
 
-#ifndef HAVE_TIMESPEC_MACROS
-
 /*
  * Handy timespec manipulation functions.
  */
-#define timespecadd(tsp, usp, vsp)                                      \
+#define local_timespecadd(tsp, usp, vsp)                                \
         do {                                                            \
                 (vsp)->tv_sec = (tsp)->tv_sec + (usp)->tv_sec;          \
                 (vsp)->tv_nsec = (tsp)->tv_nsec + (usp)->tv_nsec;       \
@@ -57,7 +55,7 @@
                         (vsp)->tv_nsec -= 1000000000;                   \
                 }                                                       \
         } while (0)
-#define timespecsub(tsp, usp, vsp)                                      \
+#define local_timespecsub(tsp, usp, vsp)                                \
         do {                                                            \
                 (vsp)->tv_sec = (tsp)->tv_sec - (usp)->tv_sec;          \
                 (vsp)->tv_nsec = (tsp)->tv_nsec - (usp)->tv_nsec;       \
@@ -66,7 +64,7 @@
                         (vsp)->tv_nsec += 1000000000;                   \
                 }                                                       \
         } while (0)
-#define timespeccmp(tsp, usp, cmp)                                      \
+#define local_timespeccmp(tsp, usp, cmp)                                \
         (((tsp)->tv_sec == (usp)->tv_sec) ?                             \
             ((tsp)->tv_nsec cmp (usp)->tv_nsec) :                       \
             ((tsp)->tv_sec cmp (usp)->tv_sec))
@@ -555,7 +553,7 @@ alEvent_poll(void)
     timerEntry = LIST_FIRST(&alTimerQueue);
     gettimeofday(&now, NULL);
     TIMEVAL_TO_TIMESPEC(&now, &nowTS);
-    timespecsub(&timerEntry->targetTime, &nowTS, &waitTime);
+    local_timespecsub(&timerEntry->targetTime, &nowTS, &waitTime);
     if (waitTime.tv_sec < 0) {
       waitTime.tv_sec = 0;
       waitTime.tv_nsec = 0;
@@ -622,7 +620,7 @@ alEvent_poll(void)
    */
   while (!LIST_EMPTY(&alTimerQueue)) {
     timerEntry = LIST_FIRST(&alTimerQueue);
-    if (timespeccmp(&nowTS, &timerEntry->targetTime, >)) {
+    if (local_timespeccmp(&nowTS, &timerEntry->targetTime, >)) {
       /*
        * This timer has expired and should be triggered.
        */
@@ -840,7 +838,7 @@ alEvent__rescheduleTimer(alTimerEntry *entry)
    */
   add.tv_sec = entry->delay_ms / 1000;
   add.tv_nsec = (entry->delay_ms % 1000) * 1000000;
-  timespecadd(&entry->targetTime, &add, &entry->targetTime);
+  local_timespecadd(&entry->targetTime, &add, &entry->targetTime);
   alEvent__insertTimer(entry);
 }
 
@@ -856,7 +854,7 @@ alEvent__insertTimer(alTimerEntry *entry)
    * time for this entry.
    */
   LIST_FOREACH(entry2, &alTimerQueue, listEntry) {
-    if (timespeccmp(&entry2->targetTime, &entry->targetTime, >))
+    if (local_timespeccmp(&entry2->targetTime, &entry->targetTime, >))
       break;
     latestEntry = entry2;
   }
