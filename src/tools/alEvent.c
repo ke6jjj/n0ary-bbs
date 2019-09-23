@@ -69,7 +69,6 @@
             ((tsp)->tv_nsec cmp (usp)->tv_nsec) :                       \
             ((tsp)->tv_sec cmp (usp)->tv_sec))
 
-#endif
 
 /*****************************************************************************
  * PRIVATE DATA TYPES                                                        *
