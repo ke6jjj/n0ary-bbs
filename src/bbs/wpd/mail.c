@@ -85,7 +85,7 @@ msg_generate(struct smtp_message *msg, int type)
 		close(to_gate[1]);
 
 		sprintf(cmd, "%s/b_bbs", Bin_Dir);
-		execl(cmd, "b_bbs", "-c", "1", "-U", "-v", "SMTP", "gatewy", 0);
+		execl(cmd, "b_bbs", "-c", "1", "-U", "-v", "SMTP", "gatewy", NULL);
 		exit(1);
 	}
 

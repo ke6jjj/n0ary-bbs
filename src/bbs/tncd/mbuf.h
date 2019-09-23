@@ -6,7 +6,7 @@ struct mbuf {
 	struct mbuf *next;		/* Links mbufs belonging to single packets */
 	struct mbuf *anext;		/* Links packets on queues */
 	int size;				/* Size of associated data buffer */
-	char *data;				/* Active working pointers */
+	unsigned char *data;				/* Active working pointers */
 	int cnt;
 };
 

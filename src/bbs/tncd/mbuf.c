@@ -17,7 +17,7 @@ alloc_mbuf(int size)
 		return NULLBUF;
 	bp->next = bp->anext = NULLBUF;
 	if(size != 0){
-		bp->data = (char *)(bp + 1);
+		bp->data = (unsigned char *)(bp + 1);
 	} else {
 		bp->data = NULL;
 	}
@@ -191,7 +191,7 @@ pushdown(struct mbuf *bp, int size)
 	 * this buffer (i.e., this is not a buffer from dup_p) before
 	 * checking to see if there's enough space at its front
 	 */
-	if(bp != NULLBUF && bp->size != 0 && bp->data - (char *)(bp+1) >= size){
+	if(bp != NULLBUF && bp->size != 0 && bp->data - (unsigned char *)(bp+1) >= size){
 		/* No need to alloc new mbuf, just adjust this one */
 		bp->data -= size;
 		bp->cnt += size;

@@ -24,7 +24,7 @@ struct slip {
 	char escaped, flags;	/* Receiver State control flag */
 	struct mbuf *rbp;	/* Head of mbuf chain being filled */
 	struct mbuf *rbp1;	/* Pointer to mbuf currently being written */
-	char *rcp;		/* Write pointer */
+	unsigned char *rcp;	/* Write pointer */
 	int rcnt;		/* Length of mbuf chain */
 	int errors;		/* Receiver input errors */
 
@@ -181,7 +181,7 @@ static struct mbuf *
 slip_encode(struct mbuf *bp, int flags)
 {
 	struct mbuf *lbp;	/* Mbuf containing line-ready packet */
-	register char *cp;
+	unsigned char *cp;
 	char c;
 
 	/* Allocate output mbuf that's twice as long as the packet.

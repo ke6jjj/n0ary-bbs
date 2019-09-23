@@ -236,8 +236,8 @@ getaxaddr(struct ax25_addr *ap, char *cp)
 	return cp;
 }
 
-static char *
-putaxaddr(char *cp, struct ax25_addr *ap)
+static unsigned char *
+putaxaddr(unsigned char *cp, struct ax25_addr *ap)
 {
 	memcpy(cp,(char*)ap->call,ALEN);
 	cp += ALEN;
@@ -250,8 +250,8 @@ struct mbuf *
 htonax25(struct ax25 *hdr, struct mbuf *data)
 {
 	struct mbuf *bp;
-	register char *cp;
-	register int i;
+	unsigned char *cp;
+	int i;
 
 	if(hdr == (struct ax25 *)NULL || hdr->ndigis > MAXDIGIS)
 		return NULLBUF;
