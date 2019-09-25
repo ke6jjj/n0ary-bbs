@@ -240,7 +240,8 @@ PORT	STATUS	SYSTEM	FALSE	FALSE	Status
 ;	tncd only knows when the frame was sent to the tnc, not when it
 ;	was actually transmitted.
 ;
-; T2: How long to wait after receiving a packet before you confirm.
+; T2: How long to wait after receiving a packet or wishing to transmit
+;	frames before initiating a transmit.
 ;
 ; T3: How often to ping the remote station to see if it is still there
 ;	when idle.
