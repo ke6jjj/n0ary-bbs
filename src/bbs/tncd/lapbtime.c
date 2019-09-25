@@ -94,7 +94,7 @@ send_data(int *n)
 	 * they need to go out now.
 	 */
 	if (axp->response != 0) {
-		sendctl(axp,LAPB_RESPONSE,axp->response);
+		sendctl(axp,RESPONSE,axp->response);
 		axp->response = 0;
 	}
 }

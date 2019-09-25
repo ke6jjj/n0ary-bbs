@@ -509,7 +509,7 @@ lapb_output(struct ax25_cb *axp)
 		if (!run_timer(&axp->t1)) {
 			start_timer(&axp->t1);
 		}
-		return;
+		return 0;
 	}
 
 	/* Dig into the send queue for the first unsent frame */

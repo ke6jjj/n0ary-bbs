@@ -70,6 +70,7 @@ send_ax25(struct ax25_cb *axp, struct mbuf *bp)
 	if (!run_timer(&axp->t2)) {
 		start_timer(&axp->t2);
 	}
+	return 0;
 }
 
 /* Receive incoming data on an AX.25 connection */
