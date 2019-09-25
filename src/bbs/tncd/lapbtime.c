@@ -121,6 +121,7 @@ static void
 tx_enq(struct ax25_cb *axp)
 {
 	char ctl;
+#if 0
 	struct mbuf *bp;
 
 	/* I believe that retransmitting the oldest unacked
@@ -140,6 +141,17 @@ tx_enq(struct ax25_cb *axp)
 		ctl = len_mbuf(axp->rxq) >= axp->window ? RNR|PF : RR|PF;	
 		sendctl(axp,COMMAND,ctl);
 	}
+#else
+	/*
+	 * Don't try to do the above; if you're unlucky then you'll
+	 * end up burning TX time to send both a very outdated I
+	 * frame /and/ have the remote end reply with a REJ for
+	 * now-stale data.  Just send a poll for now and revisit this
+	 * optimisation at a later date.
+	 */
+	ctl = len_mbuf(axp->rxq) >= axp->window ? RNR|PF : RR|PF;
+	sendctl(axp,COMMAND,ctl);
+#endif
 	axp->response = 0;	
 	stop_timer(&axp->t3);
 	start_timer(&axp->t1);
