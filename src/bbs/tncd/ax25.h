@@ -177,7 +177,7 @@ extern int
 extern void
 	recover(int *n),
 	pollthem(int *n),
-	send_ack(int *n),
+	send_data(int *n),
 	lapbstate(struct ax25_cb *axp, int s),
 	est_link(struct ax25_cb *axp);
 extern void

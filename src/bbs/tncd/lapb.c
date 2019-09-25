@@ -197,7 +197,6 @@ lapb_input(struct ax25_cb *axp, char cmdrsp, struct mbuf *bp)
 				} else if(poll)
 					enq_resp(axp);
 				axp->response = 0;
-				stop_timer(&axp->t2);
 				break;
 			}
 			axp->rejsent = NO;
@@ -207,7 +206,6 @@ lapb_input(struct ax25_cb *axp, char cmdrsp, struct mbuf *bp)
 				sendctl(axp,RESPONSE,tmp|PF);
 			} else {
 				axp->response = tmp;
-				start_timer(&axp->t2);
 			}
 			procdata(axp,bp);
 			bp = NULLBUF;
@@ -324,7 +322,6 @@ lapb_input(struct ax25_cb *axp, char cmdrsp, struct mbuf *bp)
 					sendctl(axp,RESPONSE,REJ | pf);
 				}
 				axp->response = 0;
-				stop_timer(&axp->t2);
 				break;
 			}
 			axp->rejsent = NO;
@@ -334,7 +331,6 @@ lapb_input(struct ax25_cb *axp, char cmdrsp, struct mbuf *bp)
 				sendctl(axp,RESPONSE,tmp|PF);
 			} else {
 				axp->response = tmp;
-				start_timer(&axp->t2);
 			}
 			procdata(axp,bp);
 			bp = NULLBUF;
@@ -371,14 +367,9 @@ lapb_input(struct ax25_cb *axp, char cmdrsp, struct mbuf *bp)
 	}
 	free_p(bp);	/* In case anything's left */
 
-	/* See if we can send some data, perhaps piggybacking an ack.
-	 * If successful, lapb_output will clear axp->response.
-	 */
-	lapb_output(axp);
+	/* Start the transmit timer to this peer. */
+	start_timer(&axp->t2);
 
-	/* Empty the trash */
-	if(axp->state == DISCONNECTED)
-		del_ax25(axp);
 	return 0;
 }
 /* Handle incoming acknowledgements for frames we've sent.
@@ -509,9 +500,17 @@ lapb_output(struct ax25_cb *axp)
 	int i;
 
 	if(axp == NULLAX25
-	 || (axp->state != RECOVERY && axp->state != CONNECTED)
-	 || axp->remotebusy)
+	 || (axp->state != RECOVERY && axp->state != CONNECTED)) {
 		return 0;
+	}
+
+	/* Break RNR deadlock */
+	if (axp->remotebusy) {
+		if (!run_timer(&axp->t1)) {
+			start_timer(&axp->t1);
+		}
+		return;
+	}
 
 	/* Dig into the send queue for the first unsent frame */
 	bp = axp->txq;
@@ -537,7 +536,6 @@ lapb_output(struct ax25_cb *axp)
 		 * delayed ack
 		 */
 		axp->response = 0;
-		stop_timer(&axp->t2);
 		if(!run_timer(&axp->t1)){
 			stop_timer(&axp->t3);
 			start_timer(&axp->t1);

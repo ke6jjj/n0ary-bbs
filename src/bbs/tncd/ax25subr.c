@@ -129,7 +129,7 @@ cr_ax25(kiss *dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr)
 	axp->t1.arg = (char *)axp;
 
 	axp->t2.start = Tncd_T2init;
-	axp->t2.func = send_ack;
+	axp->t2.func = send_data;
 	axp->t2.arg = (char *)axp;
 
 	axp->t3.start = Tncd_T3init;

@@ -67,21 +67,35 @@ recover(int *n)
 		del_ax25(axp);
 }
 
-/* T2 has expired, we can't delay an acknowledgement any further */
 void
-send_ack(int *n)
+send_data(int *n)
 {
 	char control;
 	register struct ax25_cb *axp;
 
 	axp = (struct ax25_cb *)n;
-	switch(axp->state){
-	case CONNECTED:
-	case RECOVERY:
-		control = len_mbuf(axp->rxq) > axp->window ? RNR : RR;
-		sendctl(axp,RESPONSE,control);
+
+	/*
+	 * See if we can send some data, perhaps piggybacking an ack.
+	 * If successful, lapb_output will clear axp->response.
+	 */
+	lapb_output(axp);
+
+	/* Empty the trash */
+	if(axp->state == DISCONNECTED) {
+		del_ax25(axp);
+		return;
+	}
+
+	/*
+	 * Handle any deferred RR/RNR responses.
+	 *
+	 * If they weren't cleared by the above I frame transmission
+	 * they need to go out now.
+	 */
+	if (axp->response != 0) {
+		sendctl(axp,LAPB_RESPONSE,axp->response);
 		axp->response = 0;
-		break;
 	}
 }
 

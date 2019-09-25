@@ -65,7 +65,11 @@ send_ax25(struct ax25_cb *axp, struct mbuf *bp)
 	if(axp == NULLAX25 || bp == NULLBUF)
 		return -1;
 	enqueue(&axp->txq,bp);
-	return lapb_output(axp);
+
+	/* Kick the send timer */
+	if (!run_timer(&axp->t2)) {
+		start_timer(&axp->t2);
+	}
 }
 
 /* Receive incoming data on an AX.25 connection */
