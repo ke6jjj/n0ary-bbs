@@ -86,8 +86,12 @@ recv_ax25(struct ax25_cb *axp)
 	axp->rxq = NULLBUF;
 
 	/* If this has un-busied us, send a RR to reopen the window */
-	if(len_mbuf(bp) >= axp->window)
-		sendctl(axp,RESPONSE,RR);
+	if(len_mbuf(bp) >= axp->window) {
+		if (! run_timer(&axp->t2)) {
+			axp->response = RR;
+			start_timer(&axp->t2);
+		}
+	}
 	return bp;
 }
 
