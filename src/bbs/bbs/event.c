@@ -6,6 +6,9 @@
 #include <dirent.h>
 #include <unistd.h>
 #include <stdlib.h>
+#if HAVE_REGCOMP
+#include <regex.h>
+#endif /* HAVE_REGCOMP */
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -159,13 +162,28 @@ static int
 event_check(struct event_entry *ev)
 {
 	int disp = FALSE;
-
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif /* HAVE_REGCOMP */
 	if(disp_all)
 		return TRUE;
 
 	if(keycnt) {
 		int i;
 		for(i=0; i<keycnt; i++) {
+#if HAVE_REGCOMP
+			if (regcomp(&preg, keyword[i], 0) != 0) {
+				PRINTF("Regular expression problem\n");
+				return FALSE;
+			}
+			ret = regexec(&preg, ev->keyword, 0, NULL, 0);
+			regfree(&preg);
+			if (ret == 0) {
+				disp = TRUE;
+				break;
+			}
+#else
 			if(re_comp(keyword[i])) {
 				PRINTF("Regular expression problem\n");
 				return FALSE;
@@ -174,6 +192,7 @@ event_check(struct event_entry *ev)
 				disp = TRUE;
 				break;
 			}
+#endif /* HAVE_REGCOMP */
 		}
 		if(disp == FALSE)
 			return FALSE;
