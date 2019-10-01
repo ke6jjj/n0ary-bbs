@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#ifndef SUNOS
+#if HAVE_REGCOMP
 #include <regex.h>
 #endif
 #include <stdlib.h>
@@ -818,6 +818,10 @@ int
 parse_bbssid(char *str, char *chksid)
 {
 	char *p, buf[1024];
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif
 
 	/* if chksid is not NULL then we should do a regular expression
 	 * check to see if this sid matches the one in our Systems file.
@@ -826,7 +830,11 @@ parse_bbssid(char *str, char *chksid)
 	 */
 
 	if(chksid != NULL) {
+#if HAVE_REGCOMP
+		if (regcomp(&preg, chksid, 0) != 0) {
+#else
 		if((re_comp(chksid)) != NULL) {
+#endif /* HAVE_REGCOMP */
 			struct text_line *tl = NULL;
 			textline_append(&tl, 
 				  "The SID presented in your Systems file doesn't appear");
@@ -837,7 +845,13 @@ parse_bbssid(char *str, char *chksid)
 			textline_free(tl);
 			return ERROR;
 		}
+#if HAVE_REGCOMP
+		ret = regexec(&preg, str, 0, NULL, 0);
+		regfree(&preg);
+		if (ret != 0) {
+#else
 		if(re_exec(str) != 1) {
+#endif /* HAVE_REGCOMP */
 			struct text_line *tl = NULL;
 			textline_append(&tl, 
 				  "The bbs we have connected to returned a bid that was");

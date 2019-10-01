@@ -4,7 +4,7 @@
 #include <sys/file.h>
 #include <unistd.h>
 #include <string.h>
-#ifndef SUNOS
+#if HAVE_REGCOMP
 #include <regex.h>
 #endif
 #include <stdlib.h>
@@ -76,6 +76,10 @@ static int
 matches_criteria(struct msg_dir_entry *ml, struct list_criteria *lc)
 {
 	char buf[80];
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif /* HAVE_REGCOMP */
 
 	if((ml->flags & lc->must_include_mask) != lc->must_include_mask)
 		return FALSE;
@@ -89,10 +93,19 @@ matches_criteria(struct msg_dir_entry *ml, struct list_criteria *lc)
 
 	if(lc->pattern_type & MatchTOmask) {
 		if(ImRegExp) {
+#if HAVE_REGCOMP
+			if (regcomp(&preg, lc->pattern[MatchTO], 0) != 0)
+				return FALSE;
+			ret = regexec(&preg, ml->to.name.str, 0, NULL, 0);
+			regfree(&preg);
+			if (ret != 0)
+				return FALSE;
+#else
 			if((re_comp(lc->pattern[MatchTO])) != NULL)
 				return FALSE;
 			if(re_exec(ml->to.name.str) != 1)
 				return FALSE;
+#endif /* HAVE_REGCOMP */
 		} else {
 			if(ml->to.name.sum != lc->pattern_sum[MatchTO])
 				return FALSE;
@@ -103,10 +116,19 @@ matches_criteria(struct msg_dir_entry *ml, struct list_criteria *lc)
 
 	if(lc->pattern_type & MatchFROMmask) {
 		if(ImRegExp) {
+#if HAVE_REGCOMP
+			if (regcomp(&preg, lc->pattern[MatchFROM], 0) != 0)
+				return FALSE;
+			ret = regexec(&preg, ml->from.name.str, 0, NULL, 0);
+			regfree(&preg);
+			if (ret != 0)
+				return FALSE;
+#else
 			if((re_comp(lc->pattern[MatchFROM])) != NULL)
 				return FALSE;
 			if(re_exec(ml->from.name.str) != 1)
 				return FALSE;
+#endif /* HAVE_REGCOMP */
 		} else {
 			if(ml->from.name.sum != lc->pattern_sum[MatchFROM])
 				return FALSE;
@@ -117,10 +139,19 @@ matches_criteria(struct msg_dir_entry *ml, struct list_criteria *lc)
 
 	if(lc->pattern_type & MatchATmask) {
 		if(ImRegExp) {
+#if HAVE_REGCOMP
+			if (regcomp(&preg, lc->pattern[MatchAT], 0) != 0)
+				return FALSE;
+			ret = regexec(&preg, ml->to.at.str, 0, NULL, 0);
+			regfree(&preg);
+			if (ret != 0)
+				return FALSE;
+#else
 			if((re_comp(lc->pattern[MatchAT])) != NULL)
 				return FALSE;
 			if(re_exec(ml->to.at.str) != 1)
 				return FALSE;
+#endif /* HAVE_REGCOMP */
 		} else {
 			if(ml->to.at.sum != lc->pattern_sum[MatchAT])
 				return FALSE;
@@ -132,10 +163,19 @@ matches_criteria(struct msg_dir_entry *ml, struct list_criteria *lc)
 	if(lc->pattern_type & MatchSUBmask) {
 		case_strcpy(buf, ml->sub, AllUpperCase);
 		if(ImRegExp) {
+#if HAVE_REGCOMP
+			if (regcomp(&preg, lc->pattern[MatchSUB], 0) != 0)
+				return FALSE;
+			ret = regexec(&preg, buf, 0, NULL, 0);
+			regfree(&preg);
+			if (ret != 0)
+				return FALSE;
+#else
 			if((re_comp(lc->pattern[MatchSUB])) != NULL)
 				return FALSE;
 			if(re_exec(buf) != 1)
 				return FALSE;
+#endif /* HAVE_REGCOMP */
 		} else
 			if(strstr(buf, lc->pattern[MatchSUB]) == NULL)
 				return FALSE;

@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#ifndef SUNOS
+#if HAVE_REGCOMP
 #include <regex.h>
 #endif
 #include <unistd.h>
@@ -397,8 +397,16 @@ hash_search_user(int fd, char *pat, int mode)
 	char buf[80];
 	int i;
 	int found = FALSE;
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif
 
+#if HAVE_REGCOMP
+	if (regcomp(&preg, pat, 0) != 0) {
+#else
 	if(re_comp(pat) != NULL) {
+#endif /* HAVE_REGCOMP */
 		char *c = "Bad regular expression\n";
 		write(fd, c, strlen(c));
 		return;
@@ -419,7 +427,11 @@ hash_search_user(int fd, char *pat, int mode)
 				p = wp->home; break;
 			}
 
+#if HAVE_REGCOMP
+			if (regexec(&preg, p, 0, NULL, 0) == 0) { /* Found */
+#else
 			if(re_exec(p) == 1) {
+#endif /* HAVE_REGCOMP */
 				found = TRUE;
 				sprintf(buf, "%s @ %s %s %s %s\n", wp->call, wp->home,
 					wp->fname, wp->zip, wp->qth);
@@ -433,6 +445,9 @@ hash_search_user(int fd, char *pat, int mode)
 		char *c = "No matches found\n";
 		write(fd, c, strlen(c));
 	}
+#if HAVE_REGCOMP
+	regfree(&preg);
+#endif /* HAVE_REGCOMP */
 	return;
 }
 
@@ -442,8 +457,16 @@ hash_search_bbs(int fd, char *pat)
 	char buf[80];
 	int i;
 	int found = FALSE;
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif /* HAVE_REGCOMP */
 
+#if HAVE_REGCOMP
+	if (regcomp(&preg, pat, 0) != 0) {
+#else
 	if(re_comp(pat) != NULL) {
+#endif /* HAVE_REGCOMP */
 		char *c = "Bad regular expression\n";
 		write(fd, c, strlen(c));
 		return;
@@ -452,7 +475,11 @@ hash_search_bbs(int fd, char *pat)
 	for(i=0; i<BBS_HASH_SIZE; i++) {
 		struct wp_bbs_entry *wp = bbs[i];
 		while(wp) {
+#if HAVE_REGCOMP
+			if (regexec(&preg, wp->hloc, 0, NULL, 0) == 0) { /* Found */
+#else
 			if(re_exec(wp->hloc) == 1) {
+#endif /* HAVE_REGCOMP */
 				found = TRUE;
 				sprintf(buf, "%s.%s\n", wp->call, wp->hloc);
 				write(fd, buf, strlen(buf));
@@ -465,5 +492,8 @@ hash_search_bbs(int fd, char *pat)
 		char *c = "No matches found\n";
 		write(fd, c, strlen(c));
 	}
+#if HAVE_REGCOMP
+	regfree(&preg);
+#endif
 	return;
 }

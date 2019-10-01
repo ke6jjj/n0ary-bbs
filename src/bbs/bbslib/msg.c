@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#ifndef SUNOS
+#if HAVE_REGCOMP
 #include <regex.h>
 #endif
 #include <ctype.h>
@@ -268,6 +268,10 @@ message_matches_criteria(char *match, struct msg_dir_entry *m, long timenow)
 	char subject[80];
 	char *p, hloc[256];
 	char pattern[80];
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif
 
 	while(*match) {
 		int found = FALSE;
@@ -285,9 +289,13 @@ message_matches_criteria(char *match, struct msg_dir_entry *m, long timenow)
 			NextChar(match);
 
 			sprintf(pattern, "^%s$", get_string(&match));
+#if HAVE_REGCOMP
+			if (regcomp(&preg, pattern, 0) != 0)
+				return FALSE;
+#else
 			if(re_comp(pattern) != NULL)
 				return FALSE;
-
+#endif /* HAVE_REGCOMP */
 			/* now let's scan the hlocs */
 			while((p = (char*)strrchr(hloc, '.')) != NULL) {
 				struct text_line *tl = our_hloc;
@@ -305,8 +313,15 @@ message_matches_criteria(char *match, struct msg_dir_entry *m, long timenow)
 				if(tl)
 					continue;
 
+#if HAVE_REGCOMP
+				ret = regexec(&preg, p, 0, NULL, 0);
+				regfree(&preg);
+				if (ret != 0) /* not matched */
+					return FALSE;
+#else
 				if(re_exec(p) == FALSE)
 					return FALSE;
+#endif /* HAVE_REGCOMP */
 				found = TRUE;
 				break;
 			}
@@ -418,11 +433,19 @@ message_matches_criteria(char *match, struct msg_dir_entry *m, long timenow)
 		NextChar(match);
 
 		sprintf(pattern, "^%s$", get_string(&match));
+#if HAVE_REGCOMP
+		if (regcomp(&preg, pattern, 0) != 0)
+			return FALSE;
+		ret = regexec(&preg, field, 0, NULL, 0);
+		regfree(&preg);
+		if (ret != 0) /* Didn't match */
+			return FALSE;
+#else
 		if(re_comp(pattern) != NULL)
 			return FALSE;
-
 		if(re_exec(field) == FALSE)
 			return FALSE;
+#endif /* HAVE_REGCOMP */
 	}
 	return TRUE;
 }

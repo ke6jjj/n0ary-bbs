@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#ifndef SUNOS
+#if HAVE_REGCOMP
 #include <regex.h>
 #endif
 #include <sys/time.h>
@@ -329,6 +329,10 @@ forward_by_tcp(struct System *sys)
 	int timeout = FALSE;
 	int sid_found = FALSE;
 	struct System_chat *chat = sys->chat;
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif /* HAVE_REGCOMP */
 
 	p = sys->connect;
 	strcpy(host, get_string(&p));
@@ -363,7 +367,11 @@ socket_watcher(tnc_fd);
 					return;
 				}
 #if 1
+#if HAVE_REGCOMP
+				if (regcomp(&preg, chat->txt, 0) != 0) {
+#else
 				if((re_comp(chat->txt)) != NULL) {
+#endif /* HAVE_REGCOMP */
 					struct text_line *tl = NULL;
 					textline_append(&tl, 
 				  "The RECV field  presented in your Systems file doesn't");
@@ -375,8 +383,15 @@ socket_watcher(tnc_fd);
 					textline_free(tl);
 					return;
 				}
+#if HAVE_REGCOMP
+				ret = regexec(&preg, buf, 0, NULL, 0);
+				regfree(&preg);
+				if (ret == 0) /* Success */
+					break;
+#else
 				if(re_exec(buf) == 1)
 					break;
+#endif /* HAVE_REGCOMP */
 #else
 				if(strstr(buf, chat->txt))
 					break;
@@ -490,6 +505,10 @@ forward_by_tnc(struct System *sys)
 	int sid_found = FALSE;
 	int result = OK;
 	struct System_chat *chat = sys->chat;
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif /* HAVE_REGCOMP */
 
 	strcpy(last_sent, "Nothing yet");
 
@@ -524,7 +543,11 @@ forward_by_tnc(struct System *sys)
 			}
 
 #if 1
+#if HAVE_REGCOMP
+			if (regcomp(&preg, chat->txt, 0) != 0) {
+#else
 			if((re_comp(chat->txt)) != NULL) {
+#endif /* HAVE_REGCOMP */
 				struct text_line *tl = NULL;
 				textline_append(&tl, 
 				  "The RECV field  presented in your Systems file doesn't");
@@ -536,10 +559,19 @@ forward_by_tnc(struct System *sys)
 				textline_free(tl);
 				return;
 			}
+#if HAVE_REGCOMP
+			ret = regexec(&preg, buf, 0, NULL, 0);
+			regfree(&preg);
+			if(ret != 0) { /* If not successful */
+				close(tnc_fd);
+				return;
+			}
+#else
 			if(re_exec(buf) != 1) {
 				close(tnc_fd);
 				return;
 			}
+#endif /* HAVE_REGCOMP */
 #else
 			if(!strstr(buf, chat->txt)) {
 				close(tnc_fd);

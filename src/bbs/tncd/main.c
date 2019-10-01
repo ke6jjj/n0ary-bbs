@@ -62,7 +62,7 @@ int
     Tncd_T3init;
 
 int background = 0;
-int shutdown = FALSE;
+int do_shutdown = FALSE;
 
 static alEventHandle bbsd_ev;
 static asy *Master_ASY;
