@@ -4,6 +4,8 @@
 QA_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 QA_OBJDIR := $(TOP_OBJDIR)/qa
 
+include include/config.mk
+
 #
 # QA executable rules.
 #
@@ -31,10 +33,10 @@ CONDUIT_APP := $(QA_OBJDIR)/conduit
 QA_PRODUCTS := $(QA_APP) $(CONDUIT_APP)
 
 $(QA_APP): $(QA_OBJS) $(TOOLS_LIB)
-	$(CC) -o $@ $^ -lcompat
+	$(CC) -o $@ $^ $(QA_LDFLAGS)
 
 $(CONDUIT_APP): $(CONDUIT_OBJS) $(TOOLS_LIB)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(QA_LDFLAGS)
 
 QA_CLEAN:
 	rm -rf $(QA_OBJDIR)
