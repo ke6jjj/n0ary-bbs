@@ -35,6 +35,7 @@ ifdef MACOSX
   HAVE_TIMEGM=1
   HAVE_TERMIOS=1
   HAVE_REGCOMP=1
+  BBS_O_CFLAGS+= -Wno-deprecated-declarations
 endif
 
 ifdef HAVE_TIMEGM
