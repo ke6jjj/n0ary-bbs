@@ -67,21 +67,35 @@ recover(int *n)
 		del_ax25(axp);
 }
 
-/* T2 has expired, we can't delay an acknowledgement any further */
 void
-send_ack(int *n)
+send_data(int *n)
 {
 	char control;
 	register struct ax25_cb *axp;
 
 	axp = (struct ax25_cb *)n;
-	switch(axp->state){
-	case CONNECTED:
-	case RECOVERY:
-		control = len_mbuf(axp->rxq) > axp->window ? RNR : RR;
-		sendctl(axp,RESPONSE,control);
+
+	/*
+	 * See if we can send some data, perhaps piggybacking an ack.
+	 * If successful, lapb_output will clear axp->response.
+	 */
+	lapb_output(axp);
+
+	/* Empty the trash */
+	if(axp->state == DISCONNECTED) {
+		del_ax25(axp);
+		return;
+	}
+
+	/*
+	 * Handle any deferred RR/RNR responses.
+	 *
+	 * If they weren't cleared by the above I frame transmission
+	 * they need to go out now.
+	 */
+	if (axp->response != 0) {
+		sendctl(axp,RESPONSE,axp->response);
 		axp->response = 0;
-		break;
 	}
 }
 
@@ -107,6 +121,7 @@ static void
 tx_enq(struct ax25_cb *axp)
 {
 	char ctl;
+#if 0
 	struct mbuf *bp;
 
 	/* I believe that retransmitting the oldest unacked
@@ -126,6 +141,17 @@ tx_enq(struct ax25_cb *axp)
 		ctl = len_mbuf(axp->rxq) >= axp->window ? RNR|PF : RR|PF;	
 		sendctl(axp,COMMAND,ctl);
 	}
+#else
+	/*
+	 * Don't try to do the above; if you're unlucky then you'll
+	 * end up burning TX time to send both a very outdated I
+	 * frame /and/ have the remote end reply with a REJ for
+	 * now-stale data.  Just send a poll for now and revisit this
+	 * optimisation at a later date.
+	 */
+	ctl = len_mbuf(axp->rxq) >= axp->window ? RNR|PF : RR|PF;
+	sendctl(axp,COMMAND,ctl);
+#endif
 	axp->response = 0;	
 	stop_timer(&axp->t3);
 	start_timer(&axp->t1);

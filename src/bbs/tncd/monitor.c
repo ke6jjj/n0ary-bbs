@@ -44,7 +44,7 @@ char *helpmsg[] = {
 	"STatus ........ show status of all procs\n",
 	"SEt ........... set tnc parameters\n",
 	"   T1 30\n",
-	"   T2 4\n",
+	"   T2 3\n",
 	"   T3 300\n",
 	"   MAXFRAME 7\n",
 	"   PACLEN 220\n",

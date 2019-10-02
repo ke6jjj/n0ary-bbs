@@ -65,7 +65,12 @@ send_ax25(struct ax25_cb *axp, struct mbuf *bp)
 	if(axp == NULLAX25 || bp == NULLBUF)
 		return -1;
 	enqueue(&axp->txq,bp);
-	return lapb_output(axp);
+
+	/* Kick the send timer */
+	if (!run_timer(&axp->t2)) {
+		start_timer(&axp->t2);
+	}
+	return 0;
 }
 
 /* Receive incoming data on an AX.25 connection */
@@ -81,8 +86,12 @@ recv_ax25(struct ax25_cb *axp)
 	axp->rxq = NULLBUF;
 
 	/* If this has un-busied us, send a RR to reopen the window */
-	if(len_mbuf(bp) >= axp->window)
-		sendctl(axp,RESPONSE,RR);
+	if(len_mbuf(bp) >= axp->window) {
+		if (! run_timer(&axp->t2)) {
+			axp->response = RR;
+			start_timer(&axp->t2);
+		}
+	}
 	return bp;
 }
 
