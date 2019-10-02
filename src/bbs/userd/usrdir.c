@@ -3,6 +3,9 @@
 #include <time.h>
 #include <stdlib.h>
 #include <unistd.h>
+#if HAVE_REGCOMP
+#include <regex.h>
+#endif /* HAVE_REGCOMP */
 
 #include "c_cmmn.h"
 #include "tools.h"
@@ -241,17 +244,29 @@ find_user_by_suffix(char *s)
 	struct UserDirectory *dir = UsrDir;
 	char pattern[80];
 	int found = FALSE;
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif /* HAVE_REGCOMP */
 
 	if(*s == 0)
 		return "NO, expected a suffix\n";
 
 	sprintf(pattern, "%s$", s);
+#if HAVE_REGCOMP
+	if (regcomp(&preg, pattern, 0) != 0)
+#else
 	if(re_comp(pattern))
+#endif /* HAVE_REGCOMP */
 		return "NO, bad suffix\n";
 
 	output[0] = 0;
 	while(dir) {
+#if HAVE_REGCOMP
+		if (regexec(&preg, dir->call, 0, NULL, 0) == 0) {
+#else
 		if(re_exec(dir->call) == 1) {
+#endif /* HAVE_REGCOMP */
 			sprintf(output, "%s %s", output, dir->call);
 			found = TRUE;
 		}
@@ -262,6 +277,9 @@ find_user_by_suffix(char *s)
 		return "NO, user not found\n";
 
 	strcat(output, "\n");
+#if HAVE_REGCOMP
+	regfree(&preg);
+#endif /* HAVE_REGCOMP */
 	return output;
 }
 

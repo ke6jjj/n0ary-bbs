@@ -12,6 +12,9 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <ctype.h>
+#if HAVE_REGCOMP
+#include <regex.h>
+#endif /* HAVE_REGCOMP */
 
 #include "c_cmmn.h"
 #include "tools.h"
@@ -453,19 +456,39 @@ kill_spaces(char *dest, char *src)
 int
 compare_string(char *p, char *q)
 {
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif /* HAVE_REGCOMP */
+
 	if(RegExp == FALSE) {
 		char buf0[1024], buf1[1024];
 		kill_spaces(buf0, p);
 		kill_spaces(buf1, q);
 		return strcmp(buf0, buf1);
 	}
-
+#if HAVE_REGCOMP
+	if (regcomp(&preg, q, 0) != 0) {
+		perror("compare_string(regcomp))");
+		exit(2);
+	}
+#else
 	if(re_comp(q)) {
 		perror("compare_string(re_comp))");
 		exit(2);
 	}
+#endif /* HAVE_REGCOMP */
+
+
+#if HAVE_REGCOMP
+	ret = regexec(&preg, q, 0, NULL, 0);
+	regfree(&preg);
+	if (ret == 0)
+		return OK;
+#else
 	if(re_exec(p) == 1)
 		return OK;
+#endif
 	return TRUE;
 }
 

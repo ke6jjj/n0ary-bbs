@@ -220,8 +220,12 @@ ntoa_tcpipv4(struct in_addr pin, int port, struct RemoteAddr *addr)
 {
 	addr->addr_type = pTCPIPv4;
 	addr->u.tcpipv4.port = port;
+#if HAVE_INETNTOA_R
 	inet_ntoa_r(pin, addr->u.tcpipv4.ip, sizeof(addr->u.tcpipv4.ip));
-
+#else
+	inet_ntop(AF_INET, (const void *) &pin, addr->u.tcpipv4.ip,
+	    sizeof(addr->u.tcpipv4.ip));
+#endif
 	return 0;
 }
 

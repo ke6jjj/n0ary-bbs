@@ -200,7 +200,7 @@ edit_message(struct active_processes *ap, struct msg_dir_entry *msg, char *s)
 		break;
 	case rBID:
 		if(!strcmp(msg->bid, "$")) {
-			snprintf(msg->bid, sizeof(buf), "%ld_%s", msg->number, Bbs_Call);
+			snprintf(msg->bid, sizeof(msg->bid), "%ld_%s", msg->number, Bbs_Call);
 			rfc822_gen(rBID, msg, buf, 80);
 			s = buf;
 		}

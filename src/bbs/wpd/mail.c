@@ -5,6 +5,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#if HAVE_REGCOMP
+#include <regex.h>
+#endif /* HAVE_REGCOMP */
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -15,8 +18,18 @@
 int
 wait_for_line(int fd, char *match)
 {
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif /* HAVE_REGCOMP */
+
+#if HAVE_REGCOMP
+	if (regcomp(&preg, match, 0) != 0)
+		return ERROR;
+#else
 	if((re_comp(match)) != NULL)
 		return ERROR;
+#endif /* HAVE_REGCOMP */
 
 	while(TRUE) {
 		char buf[1024];
@@ -27,10 +40,21 @@ wait_for_line(int fd, char *match)
 			return TRUE;
 		case sockOK:
 			log_f("wpd", "r:", buf);
+#if HAVE_REGCOMP
+			ret = regexec(&preg, buf, 0, NULL, 0);
+			if (ret == 0) {
+				regfree(&preg);
+				return OK;
+			}
+#else
 			if(re_exec(buf))
 				return OK;
+#endif /* HAVE_REGCOMP */
 		}
 	}
+#if HAVE_REGCOMP
+	regfree(&preg);
+#endif /* HAVE_REGCOMP */
 }
 
 int

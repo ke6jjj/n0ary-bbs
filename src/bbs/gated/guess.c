@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#if HAVE_REGCOMP
+#include <regex.h>
+#endif /* HAVE_REGCOMP */
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -14,9 +17,18 @@ disp_guess_on_name(char *s)
 	int cnt = 0;
 	char *p;
 	struct gate_entry *g = GateList;
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif /* HAVE_REGCOMP */
 
+#if HAVE_REGCOMP
+	if (regcomp(&preg, s, 0) != 0)
+		return 0;
+#else
 	if(re_comp(s))
 		return 0;
+#endif /* HAVE_REGCOMP */
 
 	while(g) {
 		struct gate_entry *a = g;
@@ -27,7 +39,11 @@ disp_guess_on_name(char *s)
 			if((p = (char*)index(pattern, '@')) != NULL)
 				*p =0;
 
+#if HAVE_REGCOMP
+			if (regexec(&preg, pattern, 0, NULL, 0) == 0) {
+#else
 			if(re_exec(pattern) == 1) {
+#endif /* HAVE_REGCOMP */
 				if(strlen(output) < 4000) {
 					sprintf(output, "%s%s\t%s\n", output, a->call, a->addr);
 					cnt++;
@@ -37,6 +53,9 @@ disp_guess_on_name(char *s)
 		}
 		NEXT(g);
 	}
+#if HAVE_REGCOMP
+	regfree(&preg);
+#endif /* HAVE_REGCOMP */
 	return cnt;
 }
 
@@ -46,17 +65,32 @@ disp_guess_on_domain(char *s)
 	int cnt = 0;
 	char *p;
 	struct gate_entry *g = GateList;
+#if HAVE_REGCOMP
+	regex_t preg;
+	int ret;
+#endif /* HAVE_REGCOMP */
 
+#if HAVE_REGCOMP
+	if (regcomp(&preg, s, 0) != 0)
+		return 0;
+#else
 	if(re_comp(s))
 		return 0;
+#endif /* HAVE_REGCOMP */
 
 	if((p = (char*)rindex(s, '.')) != NULL) {
 		p--;
 		while((int)p > (int)s) {
 			if(*p == '.') {
 				p++;
+#if HAVE_REGCOMP
+				regfree(&preg);
+				if (regcomp(&preg, p, 0) != 0)
+					return 0;
+#else
 				if(re_comp(p))
 					return 0;
+#endif /* HAVE_REGCOMP */
 				break;
 			}
 			p--;
@@ -75,7 +109,11 @@ disp_guess_on_domain(char *s)
 			else
 				p = pattern;
 
+#if HAVE_REGCOMP
+			if (regexec(&preg, pattern, 0, NULL, 0) == 0) {
+#else
 			if(re_exec(pattern) == 1) {
+#endif /* HAVE_REGCOMP */
 				if(strlen(output) < 4000) {
 					sprintf(output, "%s%s\t%s\n", output, a->call, a->addr);
 					cnt++;
@@ -85,6 +123,9 @@ disp_guess_on_domain(char *s)
 		}
 		NEXT(g);
 	}
+#if HAVE_REGCOMP
+	regfree(&preg);
+#endif /* HAVE_REGCOMP */
 	return cnt;
 }
 
