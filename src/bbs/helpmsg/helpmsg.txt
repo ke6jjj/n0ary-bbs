@@ -1578,7 +1578,7 @@
 1110 first letter of the word you typed.
 1110
 1110    HELP SEND      will display information on SEND command
-1110    HELP NOPROMT   information on the NOPROMPT keyword and where used
+1110    HELP NOPROMPT  information on the NOPROMPT keyword and where used
 1110    HELP CO        matches COPY and COMPUTER, displays all C commands
 1110
 1110 Use HELP # to change your current help level.
