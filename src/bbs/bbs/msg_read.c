@@ -706,14 +706,11 @@ msg_revfwd(void)
 		NEXT(sys);
 	}
 
-	{
+	if(sys) {
 		char prefix[80];
 		snprintf(prefix, sizeof(prefix), "<%s: ", sys->alias->alias);
 		bbsd_prefix_msg(prefix);
 		bbsd_msg(" ");
-	}
-
-	if(sys) {
 		fwddir_queue_messages(sys->alias, sys->order);
 		msg_forward(msg_revfwd_cmd, msg_revfwd_body, msg_revfwd_term);
 	}
