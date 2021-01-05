@@ -9,7 +9,7 @@ BBS_HOME_DIR=XXBBS_DIRXX
 # This is the default location from which to fetch the current FCC ULS
 # Amateur Radio data.
 #
-DEFAULT_ULS_URL=http://wireless.fcc.gov/uls/data/complete/l_amat.zip
+DEFAULT_ULS_URL=ftp://wirelessftp.fcc.gov/pub/uls/complete/l_amat.zip
 
 #
 # Fetch a bbs variable from BBSD
@@ -101,7 +101,7 @@ add_cleanup ${new_cbdir}
 # Fetch the current callbook data from the FCC.
 echo "Fetching current FCC ULS Amateur Radio database."
 zip_file=${tmpdir}/uls.zip
-if ! ftp -4 -v -o ${zip_file} ${uls_url}; then
+if ! curl -4 -v -o ${zip_file} ${uls_url}; then
 	error 1 "ULS database fetch failed from ${uls_url}"
 fi
 
