@@ -480,7 +480,7 @@ msg_title_write(int num, FILE *fp)
 	}
 
 	dt = localtime(&(m->cdate));
-	strftime(datebuf, sizeof(datebuf), "[%y%m%d/%H""%M]", dt);
+	strftime(datebuf, sizeof(datebuf), "[%Y-%m-%dT%H:%M]", dt);
 
 	fprintf(fp, "Msg: %ld %s", m->number, datebuf);
 
