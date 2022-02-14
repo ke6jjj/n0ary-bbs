@@ -1498,7 +1498,7 @@
 1110    DIr [path]
 1110    LS [path]
 1110    Read [File] filename [NOPrompt]
-1110    WRite [File] filename
+1110    WRite [File] filename [msg_num]
 1110
 1110 Files and directories can also be accessed via the server.
 
@@ -2031,13 +2031,20 @@
 
 !983
 1110 WRITE command ============================================================
-1110    WRite filename [msg_num]
+1110    WRite filename           (upload a file)
+1110    WRite filename [msg_num] (copy a message to a file)
 1110
-1110 This command is used to upload a file to the system. Upon issuing the
-1110 command you are placed in input mode until one of the standard methods
-1110 of terminating a message input is encountered, ^Z, /ex, etc. If a
-1110 message number is supplied the message will be turned into a file and
-1110 you will not be prompted for a body to the file.
+1110 This command is used to upload a file to the system or to create a 
+1110 permanent record of a bulletin or other message by also supplying
+1110 the message number to save.
+1110
+1110 In upload usage, upon issuing the command you are placed in input mode
+1110 until one of the standard methods of terminating a message input is
+1110 encountered, ^Z, /ex, etc.
+1110
+1110 In the message copy usage (by adding an additional message number to the
+1110 command), the system will search for the given message number, and if it
+1110 is found, its body will be copied to the given filename.
 1110
 1110 The file will be written into the current directory. The file will
 1110 not actually become visible until a sysop has reviewed it. Files 
