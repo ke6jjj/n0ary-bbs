@@ -583,9 +583,8 @@ filesys_write_msg(int msgnum, char *path)
 	msg_ReadBodyBy(&msg, "BBS");
 	tl = msg.body;
 
-	while(tl) {
-
-			/* strip routing information */
+	for (;tl; NEXT(tl)) {
+		/* strip routing information */
 		if(!strncmp(tl->s, "R:", 2))
 			continue;
 
@@ -597,7 +596,6 @@ filesys_write_msg(int msgnum, char *path)
 			result = "Error on Writing";
 			break;
 		}
-		NEXT(tl);
 	}
 
 
