@@ -569,6 +569,12 @@ filesys_write_msg(int msgnum, char *path)
 	struct text_line *tl;
 
 	bzero(&msg, sizeof(msg));
+	msg.number = msgnum;
+
+	if (msg_ReadBodyBy(&msg, "BBS") != OK) {
+		PRINTF("No message by the number %d exists.\n", msgnum);
+		return ERROR;
+	}
 
 	sprintf(buf, "filesys_write_msg(msgnum=%d, path=%s)", msgnum, path);
 	buffer_msg_to_user(Bbs_Sysop, buf);
@@ -576,14 +582,11 @@ filesys_write_msg(int msgnum, char *path)
 	if((fpw = fopen(path, "w")) == NULL) {
 		sprintf(buf, "Failed opening file for write \"%s\"", path);
 		send_msg_to_user(Bbs_Sysop, "Stat: WRITE", buf);
+		msg_free_body(&msg);
 		return ERROR;
 	}
 
-	msg.number = msgnum;
-	msg_ReadBodyBy(&msg, "BBS");
-	tl = msg.body;
-
-	for (;tl; NEXT(tl)) {
+	for (tl = msg.body; tl != NULL; NEXT(tl)) {
 		/* strip routing information */
 		if(!strncmp(tl->s, "R:", 2))
 			continue;
@@ -592,11 +595,13 @@ filesys_write_msg(int msgnum, char *path)
 			break;
 
 			/* write meat to the file */
-		if(fputs(tl->s, fpw) == EOF) {
+		if(fprintf(fpw, "%s\n", tl->s) < 0) {
 			result = "Error on Writing";
 			break;
 		}
 	}
+
+	msg_free_body(&msg);
 
 
 		/* now write an audit trail at the bottom, just in case we have
