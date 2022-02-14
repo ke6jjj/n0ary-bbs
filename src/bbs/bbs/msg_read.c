@@ -39,6 +39,7 @@ static int read_messages_why(struct TOKEN *t);
 static int display_routing(struct msg_dir_entry *m, struct text_line **tl,
 	int mode);
 static int build_send_cmd(struct msg_dir_entry *m, char *cmd, size_t sz);
+static int format_routing_timestamp(char *buf, size_t size, struct tm *dt);
 
 int
 msg_read_t(struct TOKEN *t)
@@ -364,10 +365,10 @@ display_routing(struct msg_dir_entry *m, struct text_line **tl, int mode)
 	char datebuf[40];
 	time_t t = Time(NULL);
 	struct tm *dt = gmtime(&t);
-	strftime(datebuf, 40, "%y%m%d/%H""%M", dt);
+	format_routing_timestamp(datebuf, sizeof(datebuf), dt);
 
 	if(ImBBS)
-		PRINTF("R:%sz %d@%s.%s %s\n",
+		PRINTF("R:%s %d@%s.%s %s\n",
 			datebuf, m->number, Bbs_Call, Bbs_Hloc, Bbs_Header_Comment);
 	else {
 		PRINTF("\n"); if(more()) return ERROR;
@@ -479,7 +480,7 @@ msg_title_write(int num, FILE *fp)
 	}
 
 	dt = localtime(&(m->cdate));
-	strftime(datebuf, 40, "[%y%m%d/%H""%M]", dt);
+	strftime(datebuf, sizeof(datebuf), "[%y%m%d/%H""%M]", dt);
 
 	fprintf(fp, "Msg: %ld %s", m->number, datebuf);
 
@@ -565,15 +566,15 @@ msg_forward(
 					break;
 				}
 
-				strftime(datebuf, 40, "%y%m%d/%H""%M", dt);
+				format_routing_timestamp(datebuf, sizeof(datebuf), dt);
 				if(m->bid[0])
-					snprintf(buf, sizeof(buf), "R:%s %ld@%s.%s %s $%s",
-						datebuf, m->number, Bbs_Call, Bbs_Hloc,
-						Bbs_Header_Comment, m->bid);
+					snprintf(buf, sizeof(buf), "R:%s @:%s.%s [%s] #:%ld $:%s",
+						datebuf, Bbs_Call, Bbs_Hloc,
+						Bbs_Header_Comment, m->number, m->bid);
 				else
-					snprintf(buf, sizeof(buf), "R:%s %ld@%s.%s %s",
-						datebuf, m->number, Bbs_Call, Bbs_Hloc,
-						Bbs_Header_Comment);
+					snprintf(buf, sizeof(buf), "R:%s @:%s.%s [%s] #:%ld",
+						datebuf, Bbs_Call, Bbs_Hloc,
+						Bbs_Header_Comment, m->number);
 
 				if(body_upcall(buf) != OK) {
 					logd("***Could not issue our route entry");
@@ -717,4 +718,10 @@ msg_revfwd(void)
 	PRINTF("*** Done\n");
 	exit_bbs();
 	return OK;
+}
+
+static int
+format_routing_timestamp(char *buf, size_t size, struct tm *dt)
+{
+	return strftime(buf, size, "%y%m%d/%H%Mz", dt);
 }
