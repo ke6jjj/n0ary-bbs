@@ -35,7 +35,7 @@
 #include "common_proc.h"
 
 FPStatus
-HD_proc_header(void *_ctx, const char *field_contents)
+HD_proc_header(void *_ctx, char *field_contents)
 {
 	HD_process_ctx *ctx = (HD_process_ctx *)_ctx;
 
@@ -46,7 +46,7 @@ HD_proc_header(void *_ctx, const char *field_contents)
 }
 
 FPStatus
-HD_proc_uls_id(void *_ctx, const char *field_contents)
+HD_proc_uls_id(void *_ctx, char *field_contents)
 {
 	HD_process_ctx *ctx = (HD_process_ctx *)_ctx;
 
@@ -54,7 +54,7 @@ HD_proc_uls_id(void *_ctx, const char *field_contents)
 }
 
 FPStatus
-HD_proc_license_status(void *_ctx, const char *field_contents)
+HD_proc_license_status(void *_ctx, char *field_contents)
 {
 	HD_process_ctx *ctx = (HD_process_ctx *)_ctx;
 
@@ -67,7 +67,7 @@ HD_proc_license_status(void *_ctx, const char *field_contents)
 }
 
 FPStatus
-HD_proc_expire_date(void *_ctx, const char *field_contents)
+HD_proc_expire_date(void *_ctx, char *field_contents)
 {
 	HD_process_ctx *ctx = (HD_process_ctx *)_ctx;
 

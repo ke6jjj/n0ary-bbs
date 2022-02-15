@@ -35,7 +35,7 @@
 #include "common_proc.h"
 
 FPStatus
-EN_proc_header(void *_ctx, const char *field_contents)
+EN_proc_header(void *_ctx, char *field_contents)
 {
 	if (strcmp(field_contents, "EN") != 0)
 		return FP_Skip_Record_Warn_Ex;
@@ -44,7 +44,7 @@ EN_proc_header(void *_ctx, const char *field_contents)
 }
 
 FPStatus
-EN_proc_uls_id(void *_ctx, const char *field_contents)
+EN_proc_uls_id(void *_ctx, char *field_contents)
 {
 	EN_process_ctx *ctx = (EN_process_ctx *)_ctx;
 
@@ -52,7 +52,7 @@ EN_proc_uls_id(void *_ctx, const char *field_contents)
 }
 
 FPStatus
-EN_proc_call_sign(void *_ctx, const char *field_contents)
+EN_proc_call_sign(void *_ctx, char *field_contents)
 {
 	EN_process_ctx *ctx = (EN_process_ctx *)_ctx;
 	
@@ -64,7 +64,7 @@ EN_proc_call_sign(void *_ctx, const char *field_contents)
 }
 
 FPStatus 
-EN_proc_entity_name(void *_ctx, const char *field_contents)
+EN_proc_entity_name(void *_ctx, char *field_contents)
 {
 	EN_process_ctx *ctx = (EN_process_ctx *)_ctx;
 
@@ -74,7 +74,7 @@ EN_proc_entity_name(void *_ctx, const char *field_contents)
 }
 
 FPStatus 
-EN_proc_first_name(void *_ctx, const char *field_contents)
+EN_proc_first_name(void *_ctx, char *field_contents)
 {
 	EN_process_ctx *ctx = (EN_process_ctx *)_ctx;
 
@@ -84,7 +84,7 @@ EN_proc_first_name(void *_ctx, const char *field_contents)
 }
 
 FPStatus 
-EN_proc_mi(void *_ctx, const char *field_contents)
+EN_proc_mi(void *_ctx, char *field_contents)
 {
 	EN_process_ctx *ctx = (EN_process_ctx *)_ctx;
 
@@ -94,7 +94,7 @@ EN_proc_mi(void *_ctx, const char *field_contents)
 }
 
 FPStatus 
-EN_proc_last_name(void *_ctx, const char *field_contents)
+EN_proc_last_name(void *_ctx, char *field_contents)
 {
 	EN_process_ctx *ctx = (EN_process_ctx *)_ctx;
 
@@ -104,7 +104,7 @@ EN_proc_last_name(void *_ctx, const char *field_contents)
 }
 
 FPStatus 
-EN_proc_suffix(void *_ctx, const char *field_contents)
+EN_proc_suffix(void *_ctx, char *field_contents)
 {
 	EN_process_ctx *ctx = (EN_process_ctx *)_ctx;
 
@@ -114,7 +114,7 @@ EN_proc_suffix(void *_ctx, const char *field_contents)
 }
 
 FPStatus 
-EN_proc_street_addr(void *_ctx, const char *field_contents)
+EN_proc_street_addr(void *_ctx, char *field_contents)
 {
 	EN_process_ctx *ctx = (EN_process_ctx *)_ctx;
 
@@ -124,7 +124,7 @@ EN_proc_street_addr(void *_ctx, const char *field_contents)
 }
 
 FPStatus 
-EN_proc_city(void *_ctx, const char *field_contents)
+EN_proc_city(void *_ctx, char *field_contents)
 {
 	EN_process_ctx *ctx = (EN_process_ctx *)_ctx;
 
@@ -134,7 +134,7 @@ EN_proc_city(void *_ctx, const char *field_contents)
 }
 
 FPStatus 
-EN_proc_state(void *_ctx, const char *field_contents)
+EN_proc_state(void *_ctx, char *field_contents)
 {
 	EN_process_ctx *ctx = (EN_process_ctx *)_ctx;
 
@@ -144,7 +144,7 @@ EN_proc_state(void *_ctx, const char *field_contents)
 }
 
 FPStatus 
-EN_proc_zip(void *_ctx, const char *field_contents)
+EN_proc_zip(void *_ctx, char *field_contents)
 {
 	EN_process_ctx *ctx = (EN_process_ctx *)_ctx;
 

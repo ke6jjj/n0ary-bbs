@@ -9,7 +9,13 @@ BBS_HOME_DIR=XXBBS_DIRXX
 # This is the default location from which to fetch the current FCC ULS
 # Amateur Radio data.
 #
-DEFAULT_ULS_URL=ftp://wirelessftp.fcc.gov/pub/uls/complete/l_amat.zip
+DEFAULT_ULS_URL=https://data.fcc.gov/download/pub/uls/complete/l_amat.zip
+
+#
+# The same, but for Canadian amateurs, from ISEDC (Innovation, Science and
+# Economic Development Canada).
+#
+DEFAULT_ISEDC_URL=http://apc-cap.ic.gc.ca/datafiles/amateur_delim.zip
 
 #
 # Fetch a bbs variable from BBSD
@@ -54,6 +60,11 @@ if [ $# -gt 1 ]; then
 	uls_url="$1"
 else
 	uls_url="$DEFAULT_ULS_URL"
+fi
+if [ $# -gt 2 ]; then
+	isedc_url="$2"
+else
+	isedc_url="$DEFAULT_ISEDC_URL"
 fi
 
 cleanup_dirs=
@@ -101,14 +112,24 @@ add_cleanup ${new_cbdir}
 # Fetch the current callbook data from the FCC.
 echo "Fetching current FCC ULS Amateur Radio database."
 zip_file=${tmpdir}/uls.zip
-if ! curl -4 -v -o ${zip_file} ${uls_url}; then
+if ! curl -k -s -o ${zip_file} ${uls_url}; then
 	error 1 "ULS database fetch failed from ${uls_url}"
+fi
+
+# Fetch the current Canadian callbook data from ISEDC.
+echo "Fetching current ISEDC (CA) Amateur Radio database."
+ca_zip_file=${tmpdir}/isedc.zip
+if ! curl -k -s -o ${ca_zip_file} ${isedc_url}; then
+	error 1 "ISEDC database fetch failed from ${isedc_url}"
 fi
 
 # Unzip the data
 echo "Unzipping data."
-if ! unzip -q -d ${tmpdir} ${zip_file}; then
+if ! unzip -q -d ${tmpdir} ${zip_file} AM.dat HD.dat EN.dat; then
 	error 1 "Unzip failed"
+fi
+if ! unzip -q -d ${tmpdir} ${ca_zip_file} amateur_delim.txt; then
+	error 1 "CA Unzip failed"
 fi
 
 # Process the records
@@ -118,7 +139,8 @@ if ! ${makecb} \
 	${new_cbdir} \
 	${tmpdir}/AM.dat \
 	${tmpdir}/HD.dat \
-	${tmpdir}/EN.dat 1>/dev/null; then
+	${tmpdir}/EN.dat \
+	${tmpdir}/amateur_delim.txt 1>/dev/null; then
 	error 1 "Callbook processing failed".
 fi
 
