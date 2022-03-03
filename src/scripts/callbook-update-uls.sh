@@ -15,7 +15,7 @@ DEFAULT_ULS_URL=https://data.fcc.gov/download/pub/uls/complete/l_amat.zip
 # The same, but for Canadian amateurs, from ISEDC (Innovation, Science and
 # Economic Development Canada).
 #
-DEFAULT_ISEDC_URL=http://apc-cap.ic.gc.ca/datafiles/amateur_delim.zip
+DEFAULT_ISEDC_URL=https://apc-cap.ic.gc.ca/datafiles/amateur_delim.zip
 
 #
 # Fetch a bbs variable from BBSD
