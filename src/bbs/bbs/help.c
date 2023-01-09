@@ -27,8 +27,9 @@ FILE *hlpmsg_fp = NULL;
 
 static int 
 	hlpmsg_value = 9876,
-	hlpmsg_cnt = 0,
-	*hlpmsg_indx = NULL;
+	hlpmsg_cnt = 0;
+
+static long *hlpmsg_indx = NULL;
 
 static char
 	hlpmsg_string[80];
@@ -92,9 +93,9 @@ initialize_help_message(void)
 		return ERROR;
 	}
 
-	hlpmsg_cnt = sbuf.st_size / sizeof(int);
+	hlpmsg_cnt = sbuf.st_size / sizeof(long);
 	
-	if((hlpmsg_indx = (int*)malloc(sbuf.st_size)) == NULL) {
+	if((hlpmsg_indx = (long*)malloc(sbuf.st_size)) == NULL) {
 		error_log("initialize_help_message.malloc(): %s", sys_errlist[errno]);
 		fclose(fp);
 		return ERROR;
