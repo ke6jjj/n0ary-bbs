@@ -90,7 +90,7 @@ main(int argc, char *argv[])
 		}
 	}
 	
-	fwrite(indx, (maxfound+1)*sizeof(int), 1, idx);
+	fwrite(indx, (maxfound+1)*sizeof(long), 1, idx);
 
 	fclose(txt);
 	fclose(dat);
