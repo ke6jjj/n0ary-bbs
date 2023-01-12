@@ -49,7 +49,7 @@ maybe_get() {
 	eval "${_varname}='${_value}'" || error "Horrible eval!?"
 }
 
-if [ $# != 2 ]; then
+if [ $# != 1 ]; then
 	error "usage: $0 <path-to-bbs-config-file>"
 fi
 
