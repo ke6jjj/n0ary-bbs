@@ -25,7 +25,7 @@
 
 static int echo(int cond);
 
-time_t
+extern time_t
 	time_now;
 
 int

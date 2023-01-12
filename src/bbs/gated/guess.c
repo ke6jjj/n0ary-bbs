@@ -80,7 +80,7 @@ disp_guess_on_domain(char *s)
 
 	if((p = (char*)rindex(s, '.')) != NULL) {
 		p--;
-		while((int)p > (int)s) {
+		while(p > s) {
 			if(*p == '.') {
 				p++;
 #if HAVE_REGCOMP

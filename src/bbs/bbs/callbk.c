@@ -300,7 +300,7 @@ parse_lookup_request(struct TOKEN *t)
 				last = CB_Req;
 				while(last) {
 					if(last->match[0]) {
-						char str[20];
+						char str[64];
 						sprintf(str, "Searching for matches to %s ======",
 							last->match);
 						CB_PRINT(str);

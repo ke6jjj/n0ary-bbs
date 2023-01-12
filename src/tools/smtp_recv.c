@@ -49,9 +49,9 @@ static void
 smtp_recv_stdin(char *buf)
 {
 	char *s;
-	int p = 0;
-	while(p==0 && !feof(stdin) && !ferror(stdin))
-		p = (int)fgets(buf, SMTP_BUF_SIZE, stdin);
+	char *p = NULL;
+	while(p==NULL && !feof(stdin) && !ferror(stdin))
+		p = fgets(buf, SMTP_BUF_SIZE, stdin);
 	
 	if((s = (char*)rindex(buf, '\r')) != NULL)
 		*s = 0;

@@ -34,6 +34,7 @@ char
     *Default_Beacon_Call,
     *Default_Beacon_Dest,
     *Default_Beacon_Message,
+    *Tncd_Host,
     *Tncd_Beacon_Call,
     *Tncd_Beacon_Dest,
     *Tncd_Beacon_Message,

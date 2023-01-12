@@ -63,9 +63,7 @@ struct mboxlist base;  /*pointer to base of mailbox chain*/
 static struct mboxsess *newmbox();
 
 int control = 0;
-char *Tncd_Host;
 char *Tncd_Name;
-char *Tncd_Device;
 kiss *Master_Interface;
 
 extern struct ax25_addr bbscall, fwdcall;

@@ -13,9 +13,9 @@ extern char
 	*Bbs_Host,
 	*Userd_Acc_Path;
 
-extern time_t time_now;
 time_t
-	Time(time_t *t),
+	Time(time_t *t);
+extern time_t
 	time_now,
 	Userd_Age_Suspect,
 	Userd_Age_Home,

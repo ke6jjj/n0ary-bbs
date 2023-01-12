@@ -151,10 +151,11 @@ cr_ax25(kiss *dev, struct ax25_addr *my_addr, struct ax25_addr *their_addr)
 int
 setcall(struct ax25_addr *out, const char *call)
 {
-	int csize;
+	size_t csize;
 	unsigned ssid;
 	register int i;
-	unsigned char *cp,*dp;
+	uint8_t *cp;
+	const char *dp;
 	char c;
 
 	if(out == (struct ax25_addr *)NULL || call == NULL || *call == '\0'){
@@ -165,17 +166,17 @@ setcall(struct ax25_addr *out, const char *call)
 	 * it isn't excessive
 	 */
 
-	dp = (unsigned char*)index(call, '-');
+	dp = index(call, '-');
 	if(dp == NULL)
 		csize = strlen(call);
 	else
-		csize = (int)dp - (int)call;
+		csize = dp - call;
 	if(csize > ALEN)
 		return -1;
 	/* Now find and convert ssid, if any */
 	if(dp != NULL){
 		dp++;	/* skip dash */
-		ssid = atoi((char*)dp);
+		ssid = atoi(dp);
 		if(ssid > 15)
 			return -1;
 	} else

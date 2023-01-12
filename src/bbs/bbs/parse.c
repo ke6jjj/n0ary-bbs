@@ -184,7 +184,7 @@ parse_command_line(char *cl)
 	history_add(new_cmd_line);
 	str = new_cmd_line;
 	do {
-		int begin;
+		char *begin;
 		struct possible_tokens *pt = Opcodes;
 		struct TOKEN *t;
 		int allowed = pUSER;
@@ -216,7 +216,7 @@ parse_command_line(char *cl)
 			NextChar(str);
 		}
 
-		begin = (int)str;
+		begin = str;
 		strcpy(CmdLine, str);
 
 		if(debug_level & DBG_TOKENS)
@@ -313,7 +313,7 @@ parse_command_line(char *cl)
 			break;
 		}
 
-		t->location = (int)str - begin;
+		t->location = str - begin;
 		get_token(allowed, &pt, t, &str);
 
 		if(t->token == HELP) {
@@ -342,7 +342,7 @@ parse_command_line(char *cl)
 
 		do {
 			t = grab_token_struct(t);
-			t->location = (int)str - begin;
+			t->location = str - begin;
 			get_token(allowed, &pt, t, &str);
 				
 			t->target_func = target_func;
