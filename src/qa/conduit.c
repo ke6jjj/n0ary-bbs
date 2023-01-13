@@ -71,7 +71,11 @@ print_socket(int fd, char *fmt, ...)
 int
 main(int argc, char *argv[])
 {
+#ifdef SUNOS
 	char c;
+#else
+	int c;
+#endif
 	int port_number = 40001;
 	char *str, *host = NULL, *bind_addr = NULL;
 	char buf[1024];
@@ -82,7 +86,9 @@ main(int argc, char *argv[])
 	int listen_sock = ERROR;
 	int listen_fd = ERROR;
 
+#ifdef SUNOS
 	extern char *optarg;
+#endif
 	while((c = getopt(argc, argv, "b:p:s:h:")) != -1) {
 		switch(c) {
 		case 'b':
