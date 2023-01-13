@@ -38,7 +38,9 @@ parse_options(int argc, char *argv[],  struct ConfigurationList *cl, char *me)
 {
 	int c;
 	int show_config = 0;
+#ifdef SUNOS
 	extern char *optarg;
+#endif
 
 	while((c = getopt(argc, argv, "p:lLwWd:f:h:?")) != -1) {
 		char *p = optarg;

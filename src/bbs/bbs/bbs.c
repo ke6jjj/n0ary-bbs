@@ -193,8 +193,10 @@ usage(char *pgm)
 static void
 read_options(int argc, char **argv)
 {
+#ifdef SUNOS
 	extern char *optarg;
 	extern int optind;
+#endif
 	int show_config = 0;
 	int socket_number = 0;
 	char *p, *config_fn, *to_whom, buf[1024];

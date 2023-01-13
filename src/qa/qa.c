@@ -195,7 +195,9 @@ int
 main(int argc, char *argv[])
 {
 	int c;
+#ifdef SUNOS
 	extern int optind;
+#endif
 	struct text_line *tl;
 	char *log_path = "/dev/null", *prog = argv[0];
 
