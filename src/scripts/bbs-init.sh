@@ -7,7 +7,8 @@ get_variable() {
 	_bbs_conf_path="$1"
 	_varname="$2"
 
-	grep "${_bbs_conf_path}" "^${_varname}"
+	set -- $( grep "^${_varname}" "${_bbs_conf_path}" ) || return 1
+	echo $2
 }
 
 error() {
@@ -21,7 +22,7 @@ get() {
 	_value=$( get_variable "$CONFIG_PATH" "$_varname" ) || \
 		error "Can't find variable $_varname in '$CONFIG_PATH'."
 
-	eval "${_varname}='${_value}'" || error "Horrible eval!?"
+	eval "${_varname}=${_value}" || error "Horrible eval!?"
 }
 
 directory() {
@@ -31,14 +32,31 @@ directory() {
 	mkdir -p "$_dirname" || error "Can't create directory $_dirname"
 }
 
+full_path() {
+	_path="$1"
+	echo "$BBS_DIR/$_path"
+}
+
 file() {
 	_path="$1"
+	_contents="$2"
+	_contents2="$3"
 
-	_dirname=$( dirname "$_path" )
+	_fullpath=$( full_path "$_path" )
+	_dirname=$( dirname "$_fullpath" )
 	
 	directory "$_dirname"
-	[ -e "$_path" ] && error "File $_path aready exists...aborting."
-	touch "$_path" || error "Can't create file $_path."
+	[ -e "$_fullpath" ] && error "File $_fullpath aready exists...aborting."
+	touch "$_fullpath" || error "Can't create file $_path."
+
+	if [ -n "$_contents" ]; then
+		echo "$_contents" > "$_fullpath" || \
+			error "Can't write to $_fullpath"
+		if [ -n "$_contents2" ]; then
+			echo "$_contents2" >> "$_fullpath" || \
+				error "Can't write to $_fullpath"
+		fi
+	fi
 }
 
 maybe_get() {
@@ -55,6 +73,8 @@ fi
 
 CONFIG_PATH="$1"; shift
 
+get BBS_CALL
+get BBS_HLOC
 get BBS_DIR
 get Bbs_Event_Path
 get Bbs_Event_Dir
@@ -67,7 +87,6 @@ get MSGD_FWD_DIR
 get USERD_ACC_PATH
 get WPD_USER_FILE
 get WPD_BBS_FILE
-get WPD_DUMP_FILE
 get Bbs_History_File
 get Bbs_History_Path
 get Bbs_WxLog_File
@@ -90,17 +109,15 @@ maybe_get MSGD_ARCHIVE_PATH	message/Archive
 # d = ensure directory, e = ensure empty file, t = example file
 directory "${Bbs_Event_Path}/Body"
 file "$Bbs_Event_Dir"
-file "$BIDD_FILE"
-file "$GATED_FILE"
+file "$BIDD_FILE" "#"
+file "$GATED_FILE" "#"
 file "$LOGD_FILE"
 directory "$LOGD_DIR"
 directory "$MSGD_BODY_PATH"
 directory "$MSGD_FWD_DIR"
-directory "$MSGD_ARCHIVE_PATH"
 directory "$USERD_ACC_PATH"
-file "$WPD_USER_FILE"
-file "$WPD_BBS_FILE"
-file "$WPD_DUMP_FILE"
+file "$WPD_USER_FILE" "# v1 hello" "+$BBS_CALL 0 0 0 0 0 $BBS_CALL ? ? ?"
+file "$WPD_BBS_FILE" "# v1 hello" "+$BBS_CALL 0 $BBS_HLOC"
 file "$Bbs_History_File"
 directory "$Bbs_History_Path"
 file "$Bbs_WxLog_File"
