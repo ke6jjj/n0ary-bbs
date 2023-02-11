@@ -12,13 +12,15 @@ BSD_AUTOMATED_DIR ?= /usr/local/libexec
 SCRIPTS_INSTALL:
 	install -d $(BSD_STARTUP_DIR)
 	for sc in $(STARTUP_SCRIPTS_SRCS); do \
+		shless=$$( basename $$sc .sh ); \
 		sed -e s,XXBBS_DIRXX,$(BBS_DIR), < $(SCRIPTS_SRCDIR)/$$sc \
-		> $(BSD_STARTUP_DIR)/$$sc; \
-		chmod 755 $(BSD_STARTUP_DIR)/$$sc; \
+		> $(BSD_STARTUP_DIR)/$$shless; \
+		chmod 755 $(BSD_STARTUP_DIR)/$$shless; \
 	done
 	install -d $(BSD_AUTOMATED_DIR)
 	for sc in $(AUTOMATED_SCRIPTS_SRCS); do \
+		shless=$$( basename $$sc .sh ); \
 		sed -e s,XXBBS_DIRXX,$(BBS_DIR), < $(SCRIPTS_SRCDIR)/$$sc \
-		> $(BSD_AUTOMATED_DIR)/$$sc; \
-		chmod 755 $(BSD_AUTOMATED_DIR)/$$sc; \
+		> $(BSD_AUTOMATED_DIR)/$$shless; \
+		chmod 755 $(BSD_AUTOMATED_DIR)/$$shless; \
 	done
