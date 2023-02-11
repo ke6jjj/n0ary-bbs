@@ -215,7 +215,7 @@ event_list()
 		if(event_check(ev)) {
 			char dbuf[40];
 			struct tm *dt = localtime(&(ev->time));
-			strftime(dbuf, 40, "%D %a %R", dt);
+			strftime(dbuf, sizeof(dbuf), "%Y-%m-%d %a %R", dt);
 			PRINTF("%4d %s %s @ %s\n", ev->number, dbuf, ev->title, ev->location);
 		}
 		ev++;
@@ -236,11 +236,11 @@ event_add()
 
 	bzero(&tm, sizeof(tm));
 
-	PRINTF("Enter event date (mo/da/yr):\n");
+	PRINTF("Enter event date (YYYY-MM-DD):\n");
 	GETS(buf, 1023);
-	strptime(buf, "%D", &tm);
+	strptime(buf, "%Y-%m-%d", &tm);
 
-	PRINTF("Enter event time (hr:mn):\n");
+	PRINTF("Enter event time (hh:mm):\n");
 	GETS(buf, 1023);
 	strptime(buf, "%H:%M", &tm);
 	tm.tm_sec = 0;

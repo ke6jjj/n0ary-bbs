@@ -54,8 +54,7 @@ msg_mail(int msgnum, char *name)
 	struct msg_dir_entry *m = msg_locate(msgnum);
 	struct text_line *tl;
 	struct smtp_message *smtpmsg = malloc_struct(smtp_message);
-	char rcpt[1024];
-	char from[1024], to[1024];
+	char scratch[1024];
 	int result;
 
 	if(m == NULL)
@@ -63,10 +62,10 @@ msg_mail(int msgnum, char *name)
 	msg_ReadBodyBy(m, m->to.name.str);
 	tl = m->body;
 
-	strcpy(rcpt, name);
+	strcpy(scratch, name);
 
-	if(rcpt[0] == 0) {
-		if(scan_for_to(&tl, rcpt) != OK)
+	if(scratch[0] == 0) {
+		if(scan_for_to(&tl, scratch) != OK)
 			return ERROR;
 	} else {
 		while(tl) {
@@ -75,18 +74,26 @@ msg_mail(int msgnum, char *name)
 			NEXT(tl);
 		}
 	}
+	smtp_add_recipient(smtpmsg, scratch, SMTP_REAL);
 
 	if(m->from.at.str[0])
-		sprintf(from, "%s%%%s",
+		sprintf(scratch, "%s%%%s",
 			m->from.name.str, m->from.at.str);
 	else
-		sprintf(from, "%s", m->from.name.str);
+		sprintf(scratch, "%s", m->from.name.str);
+	smtp_add_sender(smtpmsg, scratch);
 
-	sprintf(to, "%s@%s", m->to.name.str, m->to.at.str);
+	sprintf(scratch, "%s@%s", m->to.name.str, m->to.at.str);
+	smtp_add_recipient(smtpmsg, scratch, SMTP_ALIAS);
 
-	smtp_add_recipient(smtpmsg, rcpt, SMTP_REAL);
-	smtp_add_sender(smtpmsg, from);
-	smtp_add_recipient(smtpmsg, to, SMTP_ALIAS);
+	if (m->flags & MsgActive)
+		sprintf(scratch, "Message-ID: <%d.%"PRTMd"@%s>",
+			msgnum, m->cdate, Bbs_Call);
+	else
+		sprintf(scratch, "Message-ID: <%d.X@%s>",
+			msgnum, Bbs_Call);
+	smtp_add_header(smtpmsg, scratch);
+
 	while(tl) {
 		smtp_add_body(smtpmsg, tl->s);
 		NEXT(tl);

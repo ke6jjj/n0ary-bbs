@@ -47,7 +47,9 @@ typedef enum FPStatus_enum FPStatus;
  *
  * The data given to the processor in the "field" argument is guaranteed to
  * stay valid until the record has been processed and the context is reset.
+ *
+ * Processor may alter characters in the field.
  */
-typedef FPStatus (*field_proc_t)(void *ctx, const char *field);
+typedef FPStatus (*field_proc_t)(void *ctx, char *field);
 
 #endif
