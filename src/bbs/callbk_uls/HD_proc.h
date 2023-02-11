@@ -49,9 +49,9 @@ typedef struct HD_process_ctx_struct HD_process_ctx;
 /*
  * The HD processors available.
  */
-FPStatus HD_proc_header(void *HD_ctx, const char *field_contents);
-FPStatus HD_proc_uls_id(void *HD_ctx, const char *field_contents);
-FPStatus HD_proc_license_status(void *HD_ctx, const char *field_contents);
-FPStatus HD_proc_expire_date(void *HD_ctx, const char *field_contents);
+FPStatus HD_proc_header(void *HD_ctx, char *field_contents);
+FPStatus HD_proc_uls_id(void *HD_ctx, char *field_contents);
+FPStatus HD_proc_license_status(void *HD_ctx, char *field_contents);
+FPStatus HD_proc_expire_date(void *HD_ctx, char *field_contents);
 
 #endif

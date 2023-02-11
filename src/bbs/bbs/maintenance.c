@@ -158,7 +158,7 @@ maint(void)
 				else {
 					struct tm *dt = localtime(&time_now);
 					char datebuf[40];
-					strftime(datebuf, 40, "%D %R", dt);
+					strftime(datebuf, 40, "%Y-%m-%d %R", dt);
 					PRINT(datebuf);
 				}
 				return OK;

@@ -47,8 +47,8 @@ typedef struct AM_process_ctx_struct AM_process_ctx;
 /*
  * The AM field parsers available.
  */
-FPStatus AM_proc_header(void *AM_ctx, const char *);
-FPStatus AM_proc_uls_id(void *AM_ctx, const char *);
-FPStatus AM_proc_op_class(void *AM_ctx, const char *);
+FPStatus AM_proc_header(void *AM_ctx, char *);
+FPStatus AM_proc_uls_id(void *AM_ctx, char *);
+FPStatus AM_proc_op_class(void *AM_ctx, char *);
 
 #endif

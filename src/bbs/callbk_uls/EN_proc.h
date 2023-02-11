@@ -56,17 +56,17 @@ typedef struct EN_process_ctx_struct EN_process_ctx;
 /*
  * The EN field parsers available.
  */
-FPStatus EN_proc_header(void *EN_ctx, const char *field_contents);
-FPStatus EN_proc_uls_id(void *EN_ctx, const char *field_contents);
-FPStatus EN_proc_call_sign(void *EN_ctx, const char *field_contents);
-FPStatus EN_proc_entity_name(void *EN_ctx, const char *field_contents);
-FPStatus EN_proc_first_name(void *EN_ctx, const char *field_contents);
-FPStatus EN_proc_mi(void *EN_ctx, const char *field_contents);
-FPStatus EN_proc_last_name(void *EN_ctx, const char *field_contents);
-FPStatus EN_proc_suffix(void *EN_ctx, const char *field_contents);
-FPStatus EN_proc_street_addr(void *EN_ctx, const char *field_contents);
-FPStatus EN_proc_city(void *EN_ctx, const char *field_contents);
-FPStatus EN_proc_state(void *EN_ctx, const char *field_contents);
-FPStatus EN_proc_zip(void *EN_ctx, const char *field_contents);
+FPStatus EN_proc_header(void *EN_ctx, char *field_contents);
+FPStatus EN_proc_uls_id(void *EN_ctx, char *field_contents);
+FPStatus EN_proc_call_sign(void *EN_ctx, char *field_contents);
+FPStatus EN_proc_entity_name(void *EN_ctx, char *field_contents);
+FPStatus EN_proc_first_name(void *EN_ctx, char *field_contents);
+FPStatus EN_proc_mi(void *EN_ctx, char *field_contents);
+FPStatus EN_proc_last_name(void *EN_ctx, char *field_contents);
+FPStatus EN_proc_suffix(void *EN_ctx, char *field_contents);
+FPStatus EN_proc_street_addr(void *EN_ctx, char *field_contents);
+FPStatus EN_proc_city(void *EN_ctx, char *field_contents);
+FPStatus EN_proc_state(void *EN_ctx, char *field_contents);
+FPStatus EN_proc_zip(void *EN_ctx, char *field_contents);
 
 #endif

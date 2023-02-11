@@ -482,7 +482,7 @@ get_body(struct text_line **tl, int type, char *orig_bbs,
 					time_t t = Time(NULL);
 					struct tm *tm = localtime(&t);
 					char datebuf[40];
-					strftime(datebuf, 40, "%D", tm);
+					strftime(datebuf, 40, "%Y-%m-%d", tm);
 					sprintf(buf, "\n# %s %s\n", datebuf, usercall);
 					link_line(buf);
 				}

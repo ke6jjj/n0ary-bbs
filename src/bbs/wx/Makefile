@@ -1,10 +1,10 @@
-include ../../include/config.mk
-include ../bbs.mk
+THIS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-PROD = b_wx
-OBJS = wx.o dial.o
-CFILES = wx.c dial.c
-HDRS = 
-SUPPORT = Makefile
+all: WX_APPS
 
-include ../common.mk
+include $(THIS_SRCDIR)/../../top.mk
+
+WX_APPS: $(WX_APP)
+
+clean: WX_APP_CLEAN
+install: WX_APP_INSTALL

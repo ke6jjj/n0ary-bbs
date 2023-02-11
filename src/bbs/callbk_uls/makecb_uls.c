@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, Jeremy Cooper.  All rights reserved.
+ * Copyright 2022, Jeremy Cooper.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,6 +31,9 @@
  * This program was written based on specifications in the FCC
  * ULS data file formats as found in a document titled "ULS Data File Formats"
  * from the FCC website as of January, 2017.
+ *
+ * In 2022 it was upgraded to additionally process amateur records from
+ * Innovation, Science and Economic Development Canada.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -48,6 +51,7 @@
 #include "AM_proc.h"
 #include "HD_proc.h"
 #include "EN_proc.h"
+#include "CA_proc.h"
 #include "cb_date.h"
 #include "call_id.h"
 
@@ -84,6 +88,8 @@ static void load_ULSDatabase_from_HD_file(struct ULSDatabase *ULSDb,
 	slab_t ULSSlab, const char *path);
 static void process_and_dump_EN_file(struct callbook_out_context *cbf,
 	struct ULSDatabase *ULSDb, const char *ENpath);
+static void process_and_dump_CA_file(struct callbook_out_context *cbf,
+	const char *CApath);
 static void test_query(struct ULSDatabase *ULSDb);
 static void warn_skip(const char *prefix, size_t lineno, const char *reason);
 static void warn_skip_ex(const char *prefix, size_t lineno, const char *reason,
@@ -103,12 +109,13 @@ static void add_call(struct callbook_out_context *,
 	uint16_t expire_year,
 	uint8_t expire_month,
 	uint8_t expire_day,
-	char op_class
+	char op_class,
+	uint8_t use_entity_name
 );
 static int strncpy_upr(char *dst, const char *src, size_t max);
 static int process_record(const Record_Field_Process *fields,
 	size_t num_fields, void *ctx, const char *warn_prefix,
-	size_t lineno, char *line);
+	size_t lineno, char *line, const char *delim);
 
 /*
  * The processing scheme for an 'AM' record.
@@ -165,6 +172,31 @@ const Record_Field_Process EN_fields[] = {
 };
 const int EN_fields_count = sizeof(EN_fields) / sizeof(EN_fields[0]);
 
+/*
+ * The processing scheme for a 'CA' record.
+ */
+const Record_Field_Process CA_fields[] = {
+	{ "Call Sign",                 CA_proc_call_sign      },
+	{ "First Name",                CA_proc_first_name     },
+	{ "Surname",                   CA_proc_surname        },
+	{ "Address",                   CA_proc_address        },
+	{ "City",                      CA_proc_city           },
+	{ "Province",                  CA_proc_province       },
+	{ "Postal Code",               CA_proc_postal_code    },
+	{ "Quailification A",          CA_proc_qual_a         },
+	{ "Quailification B",          CA_proc_qual_b         },
+	{ "Quailification C",          CA_proc_qual_c         },
+	{ "Quailification D",          CA_proc_qual_d         },
+	{ "Quailification E",          CA_proc_qual_e         },
+	{ "Club Name",                 CA_proc_club_name      },
+	{ "Club Name 2",               CA_proc_club_name2     },
+	{ "Club Address",              CA_proc_club_addr      },
+	{ "Club City",                 CA_proc_club_city      },
+	{ "Club Province",             CA_proc_club_prov      },
+	{ "Club Postal Code",          CA_proc_club_postal    },
+};
+const int CA_fields_count = sizeof(CA_fields) / sizeof(CA_fields[0]);
+
 int
 main(int argc, char *argv[])
 {
@@ -189,8 +221,14 @@ main(int argc, char *argv[])
 	load_ULSDatabase_from_AM_file(&ULSDb, ULSSlab, argv[2]);
 	load_ULSDatabase_from_HD_file(&ULSDb, ULSSlab, argv[3]);
 	process_and_dump_EN_file(&cbf, &ULSDb, argv[4]);
+	if (argc > 5) {
+		process_and_dump_CA_file(&cbf, argv[5]);
+	}
 
 	close_out_context(&cbf);
+
+	printf("\nDone.\n");
+	fflush(stdout);
 
 	slab_free(ULSSlab);
 
@@ -344,7 +382,7 @@ load_ULSDatabase_from_AM_file(struct ULSDatabase *ULSDb, slab_t ULSSlab,
 		AM_process_ctx ctx;
 
 		int res = process_record(AM_fields, AM_fields_count, &ctx,
-			"AM", lineno, line);
+			"AM", lineno, line, "|");
 
 		if (res != 0)
 			/* Skip this record */
@@ -414,7 +452,7 @@ load_ULSDatabase_from_HD_file(struct ULSDatabase *ULSDb, slab_t ULSSlab,
 		HD_process_ctx ctx;
 
 		int res = process_record(HD_fields, HD_fields_count, &ctx,
-			"HD", lineno, line);
+			"HD", lineno, line, "|");
 
 		if (res != 0)
 			/* Skip this record */
@@ -483,7 +521,7 @@ process_and_dump_EN_file(struct callbook_out_context *cbf,
 		EN_process_ctx ctx;
 
 		int res = process_record(EN_fields, EN_fields_count, &ctx,
-			"EN", lineno, line);
+			"EN", lineno, line, "|");
 
 		if (res != 0)
 			/* Skip this record */
@@ -523,10 +561,118 @@ process_and_dump_EN_file(struct callbook_out_context *cbf,
 			ULS->op_expire_year,
 			ULS->op_expire_month, /* 1 = Jan */
 			ULS->op_expire_day,   /* 1 = 1st */
-			ULS->op_class
+			ULS->op_class,
+			ULS->op_class == 'C' ? 1 : 0 /* Use entity name */
 		);
 	}
 
+}
+
+static void
+process_and_dump_CA_file(struct callbook_out_context *cbf, const char *CApath)
+{
+	char line[1024]; /* A CA record can be over 600 characters long */
+	int lineno, recno, has_code, is_club;
+	FILE *fp;
+	char synth_class;
+
+	/*
+	 * Load the information from the Industry Canada file.
+	 */
+	fp = fopen(CApath, "rt");
+	if (fp == NULL) {
+		fprintf(stderr, "Can't open CA file.\n");
+		exit(1);
+	}
+
+	if (fgets(line, sizeof(line)-1, fp) == NULL) {
+		fprintf(stderr, "Can't read header from CA file.\n");
+		exit(1);
+	}
+
+	if (strcmp(line, "callsign;first_name;surname;address_line;city;"
+	                 "prov_cd;postal_code;qual_a;qual_b;qual_c;qual_d;"
+	                 "qual_e;club_name;club_name_2;club_address;"
+	                 "club_city;club_prov_cd;club_postal_code\r\n") != 0) {
+		fprintf(stderr, "CA header line unrecognized/changed.\n");
+		exit(1);
+	}
+
+	lineno = 1;
+	recno = 0;
+
+	while (fgets(line, sizeof(line)-1, fp) != NULL) {
+		if ((lineno & 0xffff) == 0) {
+			printf("CA:%07d lines processed.\r", lineno);
+			fflush(stdout);
+		}
+
+		lineno++;
+
+		/*
+		 * Process fields until done.
+		 */
+		CA_process_ctx ctx;
+
+		int res = process_record(CA_fields, CA_fields_count, &ctx,
+			"CA", lineno, line, ";");
+
+		if (res != 0)
+			/* Skip this record */
+			continue;
+
+		/*
+		 * Industry Canada represents Canadian license classes
+		 * as binary bit vectors, labelled A-E. Not all combinations
+		 * are valid. This is what I have observed:
+		 *
+		 *  A B C D E  Class
+		 *  - - - - -  -----
+		 *  x          Basic
+		 *          x  Basic with Honours
+		 *    x     x  Basic with Honours with Code
+		 *  x     x    Advanced
+		 *  x x   x    Advanced with (basic?) Code
+		 *  x   x x    Advanced with (advanced?) Code
+		 *  x x x x    Advanced with (basic+advanced?) Code 
+		 *        x x  Advanced, Basic with Honours
+		 *    x   x x  Advanced, Basic with Honours, Code
+		 *    x x x x  Advanced with Code
+		 *
+		 * I choose to represent this mess as just four classes:
+		 *   B - Basic 
+		 *   C - Basic with Code
+		 *   A - Advanced
+		 *   E - Advanced with Code
+		 */
+		has_code = (ctx.CA_qual_b || ctx.CA_qual_c);
+		if (ctx.CA_qual_d)
+			synth_class = has_code ? 'C' : 'B';
+		else
+			synth_class = has_code ? 'E' : 'A';
+			
+		is_club = strcmp(ctx.CA_club_name, "") != 0;
+
+		/* Save the data */
+		add_call(cbf,
+			ctx.CA_call_id,
+			ctx.CA_club_name,
+			is_club ? ctx.CA_club_name2  : ctx.CA_surname,
+			NULL, /* Last name suffix */
+			ctx.CA_first_name,
+			is_club ? ""                 : ctx.CA_middle_name,
+			is_club ? ctx.CA_club_addr   : ctx.CA_addr_line,
+			is_club ? ctx.CA_club_city   : ctx.CA_city,
+			is_club ? ctx.CA_club_prov   : ctx.CA_province,
+			is_club ? ctx.CA_club_postal : ctx.CA_postal_code,
+			"", /* Birthdate no longer available in ULS */
+			2099, /* Expire year */
+			99,   /* Expire month, 1 = Jan */
+			99,   /* Expire day, 1 = 1st */
+			synth_class,
+			is_club
+		);
+	}
 }
 
 static void
@@ -545,7 +691,8 @@ add_call(struct callbook_out_context *cbf,
 	uint16_t expire_year,
 	uint8_t expire_month, /* 1 = January */
 	uint8_t expire_day, /* 1 = 1st */
-	char op_class
+	char op_class,
+	uint8_t use_entity_name
 )
 {
 	struct callbook_entry entry;
@@ -619,7 +766,7 @@ add_call(struct callbook_out_context *cbf,
 	 * entity names. Use the entity name as the first name in such
 	 * cases.
 	 */
-	if (op_class == 'C')
+	if (use_entity_name)
 		strncpy(entry.fname, entity_name, sizeof(entry.fname)-1);
 	else
 		strncpy(entry.fname, fname, sizeof(entry.fname)-1);
@@ -760,7 +907,8 @@ Terminated:
  */
 static int
 process_record(const Record_Field_Process *fields, size_t num_fields,
-	void *ctx, const char *warn_prefix, size_t lineno, char *line)
+	void *ctx, const char *warn_prefix, size_t lineno, char *line,
+	const char *delim)
 {
 	char *iter = line;
 
@@ -774,7 +922,7 @@ process_record(const Record_Field_Process *fields, size_t num_fields,
 		 * Fetch the next field from the line.
 		 */
 		const char *field_name = fields[i].field_name;
-		char *contents = strsep(&iter, "|");
+		char *contents = strsep(&iter, delim);
 
 		/*
 		 * Make sure we at least found a field delimiter.
@@ -834,7 +982,8 @@ process_record(const Record_Field_Process *fields, size_t num_fields,
 static void
 usage(const char *prog)
 {
-	fprintf(stderr, "usage: %s <outdir> <AM.dat> <HD.dat> <EN.dat>\n", prog);
+	fprintf(stderr, "usage: %s <outdir> <AM.dat> <HD.dat> <EN.dat>"
+	                "[<CA.txt>]\n", prog);
 	fprintf(stderr, "Callbook processor for FCC ULS Database files.\n");
 }
 

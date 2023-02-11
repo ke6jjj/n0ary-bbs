@@ -35,7 +35,7 @@
 #include "common_proc.h"
 
 FPStatus
-AM_proc_header(void *_ctx, const char *field_contents)
+AM_proc_header(void *_ctx, char *field_contents)
 {
 	AM_process_ctx *ctx = (AM_process_ctx *)_ctx;
 
@@ -46,7 +46,7 @@ AM_proc_header(void *_ctx, const char *field_contents)
 }
 
 FPStatus
-AM_proc_uls_id(void *_ctx, const char *field_contents)
+AM_proc_uls_id(void *_ctx, char *field_contents)
 {
 	AM_process_ctx *ctx = (AM_process_ctx *)_ctx;
  
@@ -54,7 +54,7 @@ AM_proc_uls_id(void *_ctx, const char *field_contents)
 }
 
 FPStatus
-AM_proc_op_class(void *_ctx, const char *field_contents)
+AM_proc_op_class(void *_ctx, char *field_contents)
 {
 	AM_process_ctx *ctx = (AM_process_ctx *)_ctx;
 

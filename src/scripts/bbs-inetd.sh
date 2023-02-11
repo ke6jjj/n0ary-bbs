@@ -90,9 +90,44 @@ if [ "$username" == bbs ]; then
 else
   # Honeypot trap
   echo -n "Password: "
+  prompt=">"
+  ignore=1
   while read line; do
     echo $( date '+%Y-%m-%dT%H:%M:%S' ) $remote "${line}" >> /var/log/honeypot
-    printf "\r\n> "
+    set -- ${line}
+    cmd=$1
+    if [ ${ignore} -eq 1 ]; then
+      ignore=0
+    else
+      if [ "${cmd}" == "sh" ]; then
+        echo ""
+        echo ""
+        echo "BusyBox v1.00 (2010.06.21-09:23+0000) Built-in shell (msh)"
+        echo "Enter 'help' for a list of built-in commands."
+        prompt="#"
+      elif [ "${cmd}" == "/bin/busybox" ]; then
+        if [ $# -gt 1 ]; then
+          cmd=$2
+          if [ "${cmd}" == "wget" ]; then
+            if [ $# -gt 2 ]; then
+              echo "You wish."
+            else
+              echo "usage: wget [-c|--continue] [-s|--spider] [-q|--quiet] [-O|--output-document file]"
+            fi
+          else
+            echo "${2}: applet not found"
+          fi
+        else
+          echo "BusyBox v1.00 (2010.06.21-09:23+0000) multi-call binary"
+          echo ""
+          echo "Usage: busybox [function] [arguments]..."
+        fi
+      else
+        echo "${cmd}: not found"
+      fi
+    fi
+
+    printf "\r\n${prompt} "
   done
 fi
 exit 1
