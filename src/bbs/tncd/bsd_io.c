@@ -250,10 +250,17 @@ asy_init_serial(struct asy *asy, char *ttydev)
 #endif
 #endif
 
+#ifdef HAVE_TERMIOS
+	cfmakeraw(&tt);
+	tt.c_cc[VMIN] = 1;
+	tt.c_cc[VTIME] = 0;
+	tt.c_cflag = B9600 | CS8 | CREAD | CLOCAL;
+#else
 	tt.c_iflag = 0;
 	tt.c_oflag = 0;
 	tt.c_cflag = B9600 | CS8 | CREAD;
 	tt.c_lflag = 0;
+#endif
 
 
 #ifdef HAVE_TERMIOS
