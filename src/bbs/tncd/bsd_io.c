@@ -252,7 +252,7 @@ asy_init_serial(struct asy *asy, char *ttydev)
 
 	tt.c_iflag = 0;
 	tt.c_oflag = 0;
-	tt.c_cflag = B4800 | CS8 | CREAD;
+	tt.c_cflag = B9600 | CS8 | CREAD;
 	tt.c_lflag = 0;
 
 
