@@ -97,7 +97,7 @@ chain_bbs(struct active_processes *ap, char *call)
 		print_remote_addr(&raddr, addr, sizeof(addr));
 		sprintf(p, "%d", port);
 		sprintf(cmd, "%s/b_bbs", Bin_Dir);
-		execl(cmd, "b_bbs", "-u", "-s", p, "-v", "TCP", "-a",
+		execl(cmd, "b_bbs", "-u", "-s", p, "-l", "-v", "TCP", "-a",
 			addr, call, NULL);
 		exit(1);
 	}
