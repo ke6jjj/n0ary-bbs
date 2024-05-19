@@ -138,9 +138,13 @@ struct ax25_cb {
 	struct timer t2;		/* Acknowledgement delay timer */
 	struct timer t3;		/* Keep-alive poll timer */
 
-	void (*r_upcall)();		/* Receiver upcall */
-	void (*t_upcall)();		/* Transmit upcall */
-	void (*s_upcall)();		/* State change upcall */
+	/* Receiver upcall */
+	void (*r_upcall)(struct ax25_cb *axp, int cnt);
+	/* Transmit upcall */
+	void (*t_upcall)(struct ax25_cb *axp, int cnt);
+	/* State change upcall */
+	void (*s_upcall)(struct ax25_cb *axp, int old, int new);
+
 	void *user;			/* User pointer */
 };
 
@@ -175,9 +179,9 @@ extern int
 	lapb_input(struct ax25_cb *axp, char cmdrsp, struct mbuf *bp);
 
 extern void
-	recover(int *n),
-	pollthem(int *n),
-	send_data(int *n),
+	recover(void *n),
+	pollthem(void *n),
+	send_data(void *n),
 	lapbstate(struct ax25_cb *axp, int s),
 	est_link(struct ax25_cb *axp);
 extern void

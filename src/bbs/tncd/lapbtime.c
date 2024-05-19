@@ -8,10 +8,10 @@ static void
 
 /* Called whenever timer T1 expires */
 void
-recover(int *n)
+recover(void *vn)
 {
+	int *n = (int *) vn;
 	register struct ax25_cb *axp;
-	void lapbstate();
 
 	axp = (struct ax25_cb *)n;
 
@@ -68,8 +68,9 @@ recover(int *n)
 }
 
 void
-send_data(int *n)
+send_data(void *vn)
 {
+	int *n = (int *) vn;
 	char control;
 	register struct ax25_cb *axp;
 
@@ -101,8 +102,9 @@ send_data(int *n)
 
 /* Send a poll (S-frame command with the poll bit set) */
 void
-pollthem(int *n)
+pollthem(void *vn)
 {
+	int *n = (int *) vn;
 	register struct ax25_cb *axp;
 
 	axp = (struct ax25_cb *)n;

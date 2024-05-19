@@ -191,7 +191,7 @@ smtp_reject_connection(void)
 }
 
 int
-smtp_recv_message(struct smtp_message *msg, void (*handler)())
+smtp_recv_message(struct smtp_message *msg, void (*handler)(struct smtp_message *smtpmsg))
 {
 	char buf[SMTP_BUF_SIZE];
 	char *p;

@@ -22,8 +22,8 @@
  */
 struct timer {
 	int start;		/* Period of counter (load value) */
-	void (*func)();		/* Function to call at expiration */
-	char *arg;		/* Arg to pass function */
+	void (*func)(void *);	/* Function to call at expiration */
+	void *arg;		/* Arg to pass function */
 	char state;		/* Timer state */
 	int al_timerid;         /* Alib timer identifier (if running) */
 #define	TIMER_STOP	0

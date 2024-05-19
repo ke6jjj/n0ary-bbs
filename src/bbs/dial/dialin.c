@@ -69,9 +69,7 @@ method()
 
 /*ARGSUSED*/
 int
-main(argc, argv)
-int argc;
-char *argv[];
+main(int argc, char *argv[])
 {
 	char pgm[256];
 	char call[80], *p;

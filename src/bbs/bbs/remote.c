@@ -68,7 +68,7 @@ static int
 static struct commands {
 	char *code;
 	int len;
-	int (*func)();
+	int (*func)(char *);
 } cmds[30] = {
 	{ "01",	2,	fwd_stats },
 	{ "02",	2,	current_time },

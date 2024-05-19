@@ -27,7 +27,7 @@ static void create_callbook(FILE *fp, char *dir);
 
 struct input_record {
 	int pos, len;
-	int (*func)();
+	int (*func)(struct callbook_entry *cb, char *s, int len);
 } field[] = {
 	{ 0,	6,	parse_call },
 	{ 6,	20,	parse_lname },
