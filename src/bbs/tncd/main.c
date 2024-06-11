@@ -41,7 +41,8 @@ char
     *Tncd_Control_Bind_Addr = NULL,
     *Tncd_Monitor_Bind_Addr = NULL,
     *Tncd_KISS_Mux_Bind_Addr = NULL,
-    *Tncd_Device;
+    *Tncd_Device,
+    *Tncd_Line_Protocol;
 
 int
     Tncd_Control_Port,
@@ -92,12 +93,13 @@ struct ConfigurationList DynamicConfigList[] = {
   { "CONTROL_BIND_ADDR",          tSTRING,    (int*)&Tncd_Control_Bind_Addr },
   { "MONITOR_PORT",               tINT,       (int*)&Tncd_Monitor_Port },
   { "MONITOR_BIND_ADDR",          tSTRING,    (int*)&Tncd_Monitor_Bind_Addr },
+  { "DEVICE",                     tSTRING,    (int*)&Tncd_Device },
+  { "LINE_PROTOCOL",              tSTRING,    (int*)&Tncd_Line_Protocol },
+  { "",                                                       tCOMMENT, NULL },
+  { "  AX25 KISS parameters",                                 tCOMMENT, NULL },
+  { "",                                                       tCOMMENT, NULL },
   { "KISS_MUX_BIND_ADDR",         tSTRING,    (int*)&Tncd_KISS_Mux_Bind_Addr },
   { "KISS_MUX_PORT",              tINT,       (int*)&Tncd_KISS_Mux_Port },
-  { "DEVICE",                     tSTRING,    (int*)&Tncd_Device },
-  { "",                                                       tCOMMENT, NULL },
-  { "  AX25 parameters",                                      tCOMMENT, NULL },
-  { "",                                                       tCOMMENT, NULL },
   { "T1INIT",                     tTIME,      (int*)&Tncd_T1init },
   { "T2INIT",                     tTIME,      (int*)&Tncd_T2init },
   { "T3INIT",                     tTIME,      (int*)&Tncd_T3init },
@@ -130,6 +132,7 @@ preload(char *name)
 	Tncd_Monitor_Bind_Addr = tnc_monitor_bind_addr(name);
 	Tncd_Monitor_Port = tnc_monitor_port(name);
 	Tncd_Device = tnc_device(name);
+        Tncd_Line_Protocol = tnc_line_protocol(name);
 	Tncd_Name = name;
 	Tncd_Host = tnc_host(name);
 

@@ -589,25 +589,29 @@ struct PortDefinition {
 #define TNC_AX25_ESCAPE_ASCII_C 1
 
 struct ax25_params {
-		/* AX25 parameters
-		 * t1 = This is how long to wait after a frame is sent before
-		 *      sending a poll request for error recovery.
-		 * t2 = The amount of time to wait after a frame is received for
-		 *		another frame. If the timer expires before
-		 *              another frame is received an ACK is sent.
-		 * t3 = How often to ping the remote site if no other frame
-		 *		has been received.
-		 * maxframe = maximum number of frames to send in a row without
-		 *				requiring an acknowlegement.
-		 * paclen = maximum packet size in bytes. Typical setting would
-		 *			be 110, should never go beyond 256.
-		 * n2 = number of retries to allow.
-		 * flags = Special KISS encoding flags, in ASCII hexadecimal:
-		 *   1 = Escape ASCII 'C' on this port
-		 * pthresh = theshold below which an unack'd packet will be
-		 *   simply resent vs being queried.
-		 */
-
+	/* AX25 parameters - For KISS Line Protocol ONLY.
+	 *
+	 * These settings apply only to TNCs configured for KISS
+	 * operation. TNCs managed by AGWPE/DireWolf have their own
+	 * AX.25 stacks and have their settings managed there.
+	 *
+	 * t1 = This is how long to wait after a frame is sent before
+	 *      sending a poll request for error recovery.
+	 * t2 = The amount of time to wait after a frame is received for
+	 *		another frame. If the timer expires before
+	 *              another frame is received an ACK is sent.
+	 * t3 = How often to ping the remote site if no other frame
+	 *		has been received.
+	 * maxframe = maximum number of frames to send in a row without
+	 *				requiring an acknowlegement.
+	 * paclen = maximum packet size in bytes. Typical setting would
+	 *			be 110, should never go beyond 256.
+	 * n2 = number of retries to allow.
+	 * flags = Special KISS encoding flags, in ASCII hexadecimal:
+	 *   1 = Escape ASCII 'C' on this port
+	 * pthresh = theshold below which an unack'd packet will be
+	 *   simply resent vs being queried.
+	 */
 	int t1, t2, t3;
 	int maxframe, paclen, pthresh;
 	int n2;
@@ -621,6 +625,7 @@ struct TncDefinition {
 	int   control_port;
 	char *monitor_bind_addr;
 	int   monitor_port;
+	int   line_protocol;
 	char *device;
 	char *host;
 	struct ax25_params ax25;

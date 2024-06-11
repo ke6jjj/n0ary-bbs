@@ -2,7 +2,7 @@
 # Edit this file to configure the BBS and what to build.
 #
 
-BBS_DIR=/usr/home/bbs
+BBS_DIR=/home/bbs
 
 # Uncomment only one of the target OS platforms
 FREEBSD=1
