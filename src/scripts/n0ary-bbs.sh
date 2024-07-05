@@ -29,7 +29,7 @@ case "${n0ary_bbs_enable}" in
 esac
 
 case "$1" in
-  "start")
+  "quietstart"|"start")
     if [ ${n0ary_bbs_enable} == 0 ]; then
       exit 0
     fi

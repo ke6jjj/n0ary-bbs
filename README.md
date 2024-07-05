@@ -77,6 +77,41 @@ The BBS has many options to configure. To begin, you should probably copy
 There are many comments inside the sample configuration file for setting things
 up.
 
+## Hardware Access
+
+If you intend to have the BBS use serially-connected TNCs (radio modems) then
+you need to ensure that the bbs "user" has the ability to interact with the
+serial port devices you've configured in the configuration file. This will
+require your intervention to set up because most UNIX operating systems do not,
+by default, allow non-root users to access serial ports at will.
+
+(Note: this section does not apply if you have configured the BBS to connect
+to a network terminal server to access the TNCs. That access is controlled
+via the networking stack and/or system firewall).
+
+When running under FreeBSD you can ensure that the BBS user is granted serial
+port access by modifying the configuration file(s) that control device setup
+at boot time. There are two ways to control device access under FreeBSD:
+
+1. Through the "devfs" rules, which are loaded at boot time and are
+   interpreted by the FreeBSD kernel (see devfs.rules(5)), and
+
+2. Through the "devd.conf" configuration file, which controls the "devd"
+   device daemon (devd(8)).
+
+It's outside the scope of this document to fully describe these two methods,
+but as an example, here's a sample `devfs.rules` file for method #1. It
+ensures that the devices `/dev/cuaU0`, `/dev/cuaU1`, `/dev/cuaU2` and
+`/dev/cuaU3` are all "owned" by the `bbs` user and have appropriate read/write
+permissions before the BBS starts up:
+
+```
+[localrules=100]
+# Ensure that the serial ports for tnc0, 1, 2 and 3 are owned by
+# the BBS.
+add path "cuaU[0-3]" mode 0660 user bbs group dialer
+```
+
 # Startup
 
 The BBS comes with an etc/rc.d style BSD startup script which will
@@ -101,7 +136,14 @@ Some additional variables you can set are:
     the username you provide here. The default is `bbs`, which you should have
     set up previously during the installation step.
 
-# Forwarding and other tasks
+# Periodic Tasks
+
+After the BBS has been installed and is running, you should begin setting
+up several periodic tasks to run through "cron" -- the UNIX task scheduling
+daemon. These tasks include outbound message forwarding and updating the
+US & Canada callbook database.
+
+## Message forwarding
 
 Once your BBS is configured and running, you will likely need to begin
 forwarding messages and traffic to other BBSes. The international BBS routing
@@ -115,9 +157,59 @@ forwarding mode and on the schedules you desire. Here's an ancient, unchecked
 example from the original SunOS setup instructions. This example assumes
 that the BBS home directory is `/nbbs`.
 
+```
     0,20,40 * * * * /nbbs/bin/b_bbs -t6 -vTNC1
     20 * * * * /nbbs/bin/b_bbs -t6 -vTNC0
     3,13,23,33,43,53 * * * * /nbbs/bin/b_bbs -t6 -vSMTP
     7,17,27,37,47,57 * * * * /nbbs/bin/b_bbs -t6 -vTCP
     1,11,21,31,41,51 * * * * /nbbs/bin/b_process
+```
 
+## Callbook Database
+
+The BBS has the ability to use a local callsign database to greet new users by
+name and provide callsign search and lookup services. To use these features you
+must first build the callsign database, and to keep it up to date, you should
+periodically re-build it from up-to-date data.
+
+Both of these tasks are wrapped into a single shell script which the
+installation process should have deposited in
+
+`/usr/local/libexec/callbook-update-uls`
+
+This script can be invoked manually (through a terminal session) or through an
+automated system (like cron) to cleanly, and safely update (or create) the
+callbook database, even while there are users connected and other active
+sessions running.
+
+IMPORTANT: The script should be run as the "bbs" user you set up for the BBS.
+If you run it as a different user (or as root), you may find that the BBS is
+unable to use the database at runtime, or that it is impossible to update
+later (due to permission errors).
+
+## Update details
+
+The update script will download the most recent US FCC _AND_ Canadian ISEDC
+Amateur Radio licensing data, uncompress it, compile and index it in the
+format used by the BBS. It will then atomically move the old database aside
+while installing the new database in its place (using a directory rename).
+Finally, upon success, it will delete the old database.
+
+An example crontab entry which completes this task once a week looks like this:
+
+```
+# Update BBS callbook database from ULS every Thursday
+12 1 * * 4	/usr/local/libexec/callbook-update-uls
+```
+
+(Again, this works best when installing this entry in the _bbs_ user's
+crontab).
+
+## Dependence on bbsd
+
+The script is coded to be quite robust in obeying your particular local setup.
+This means that it does its best to discover where the BBS is installed and
+even further, whether you have customized the location of the callsign database
+via the `Bbs_Callbk_Path` variable. For this reason, the BBS's `bbsd` process
+must be running when the update is attempted. If `bbsd` is not running, the
+script will complain and refuse to run.
