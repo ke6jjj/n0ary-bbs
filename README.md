@@ -77,6 +77,41 @@ The BBS has many options to configure. To begin, you should probably copy
 There are many comments inside the sample configuration file for setting things
 up.
 
+## Hardware Access
+
+If you intend to have the BBS use serially-connected TNCs (radio modems) then
+you need to ensure that the bbs "user" has the ability to interact with the
+serial port devices you've configured in the configuration file. This will
+require your intervention to set up because most UNIX operating systems do not,
+by default, allow non-root users to access serial ports at will.
+
+(Note: this section does not apply if you have configured the BBS to connect
+to a network terminal server to access the TNCs. That access is controlled
+via the networking stack and/or system firewall).
+
+When running under FreeBSD you can ensure that the BBS user is granted serial
+port access by modifying the configuration file(s) that control device setup
+at boot time. There are two ways to control device access under FreeBSD:
+
+1. Through the "devfs" rules, which are loaded at boot time and are
+   interpreted by the FreeBSD kernel (see devfs.rules(5)), and
+
+2. Through the "devd.conf" configuration file, which controls the "devd"
+   device daemon (devd(8)).
+
+It's outside the scope of this document to fully describe these two methods,
+but as an example, here's a sample `devfs.rules` file for method #1. It
+ensures that the devices `/dev/cuaU0`, `/dev/cuaU1`, `/dev/cuaU2` and
+`/dev/cuaU3` are all "owned" by the `bbs` user and have appropriate read/write
+permissions before the BBS starts up:
+
+```
+[localrules=100]
+# Ensure that the serial ports for tnc0, 1, 2 and 3 are owned by
+# the BBS.
+add path "cuaU[0-3]" mode 0660 user bbs group dialer
+```
+
 # Startup
 
 The BBS comes with an etc/rc.d style BSD startup script which will
