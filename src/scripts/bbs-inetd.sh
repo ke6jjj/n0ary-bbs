@@ -3,6 +3,9 @@ BBS_DIR=XXBBS_DIRXX
 BBS_BIN=${BBS_DIR}/bin/b_bbs
 GETPEERNAME=${BBS_DIR}/bin/getpeername
 
+# On SIGPIPE, just exit.
+trap 'exit 0' PIPE
+
 #
 # Get remote address.
 #
