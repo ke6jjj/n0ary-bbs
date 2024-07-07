@@ -52,7 +52,7 @@ if [ "$username" == bbs ]; then
   while :; do
     echo -n "Enter your callsign (first name if non-ham): "
     if ! read callsign; then
-      exit 1
+      exit 0
     fi
 
     #
@@ -133,4 +133,4 @@ else
     printf "\r\n${prompt} "
   done
 fi
-exit 1
+exit 0
