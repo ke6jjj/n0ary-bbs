@@ -43,7 +43,7 @@ fi
 # return character that is sent with every newline. We need to remove
 # it from the username received.
 #
-username=$( echo "$username" | sed -e 's,[^A-Za-z0-9]*,,g' )
+username=$( echo "$username" | LC_CTYPE=bg_BG.CP1251 tr -d -C A-Za-z0-9 )
 
 if [ "$username" == bbs ]; then
   #
