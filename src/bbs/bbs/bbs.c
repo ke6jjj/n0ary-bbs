@@ -307,7 +307,7 @@ read_options(int argc, char **argv)
 			PRINT("Expected a callsign to be supplied\n");
 			exit(1);
 		}
-		strcpy(usercall, "IMPORT");
+		strlcpy(usercall, "IMPORT", sizeof(usercall));
 		sprintf(buf, "IMPORT from %s", argv[optind]);
 		if(Via == NULL)
 			Via = "CONSOLE";
@@ -318,7 +318,7 @@ read_options(int argc, char **argv)
 			PRINT("Expected a message number and the operation\n");
 			exit(1);
 		}
-		strcpy(usercall, "CALLBK");
+		strlcpy(usercall, "CALLBK", sizeof(usercall));
 		if(Via == NULL)
 			Via = "SERVER";
 		break;
@@ -328,7 +328,7 @@ read_options(int argc, char **argv)
 			PRINT("Expected a message number and the operation\n");
 			exit(1);
 		}
-		strcpy(usercall, "WP");
+		strlcpy(usercall, "WP", sizeof(usercall));
 		if(Via == NULL)
 			Via = "SERVER";
 		break;
@@ -338,7 +338,7 @@ read_options(int argc, char **argv)
 			PRINT("Expected a string to execute\n");
 			exit(1);
 		}
-		strcpy(usercall, "REMOTE");
+		strlcpy(usercall, "REMOTE", sizeof(usercall));
 		if(Via == NULL)
 			Via = "SERVER";
 		break;
@@ -349,7 +349,7 @@ read_options(int argc, char **argv)
 			 *   2) bbs -t6 -vTNC1     forward to all on this port
 			 *   3) bbs -t6 call       forward to this bbs
 			 */
-		strcpy(usercall, "FWD");
+		strlcpy(usercall, "FWD", sizeof(usercall));
 		if(Via == NULL)
 			Via = "SERVER";
 		break;
@@ -359,7 +359,7 @@ read_options(int argc, char **argv)
 			PRINT("Expected a callsign\n");
 			exit(1);
 		}
-		strcpy(usercall, argv[optind]);
+		strlcpy(usercall, argv[optind], sizeof(usercall));
 		uppercase(usercall);
 		if(Via == NULL)
 			Via = "CONSOLE";
@@ -717,8 +717,8 @@ ports(void)
 			break;
 		
 		get_number(&s);	/* proc number, skip over */
-		strcpy(call, get_string(&s));
-		strcpy(via, get_string(&s));
+		strlcpy(call, get_string(&s), sizeof(call));
+		strlcpy(via, get_string(&s), sizeof(via));
 		get_number(&s); /* chat port, skip over */
 		pid = get_number(&s);
 		delta = t1 - get_number(&s);
