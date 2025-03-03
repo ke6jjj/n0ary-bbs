@@ -4,8 +4,6 @@
 QA_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 QA_OBJDIR := $(TOP_OBJDIR)/qa
 
-include include/config.mk
-
 #
 # QA executable rules.
 #
