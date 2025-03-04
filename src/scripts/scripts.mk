@@ -3,13 +3,15 @@
 #
 SCRIPTS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
-STARTUP_SCRIPTS_SRCS := n0ary-bbs.sh
+STARTUP_SCRIPTS_SRCS := n0ary_bbs.sh
 AUTOMATED_SCRIPTS_SRCS := callbook-update-uls.sh bbs-inetd.sh bbs-init.sh
 
 BSD_STARTUP_DIR ?= /usr/local/etc/rc.d
 BSD_AUTOMATED_DIR ?= /usr/local/libexec
 
 SCRIPTS_INSTALL:
+	-@# Ensure old startup file is removed.
+	-@rm $(BSD_STARTUP_DIR)/n0ary-bbs
 	install -d $(BSD_STARTUP_DIR)
 	for sc in $(STARTUP_SCRIPTS_SRCS); do \
 		shless=$$( basename $$sc .sh ); \
