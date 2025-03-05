@@ -22,13 +22,17 @@ load_rc_config ${name}
 required_files="${n0ary_bbs_conf}"
 pidfile="${n0ary_bbs_pidfile}"
 command="/usr/sbin/daemon"
-command_args="-c -P ${pidfile} -r -R 30 -S -u ${n0ary_bbs__user}"
-process_args="${n0ary_bbs_conf}"
-if [ "${n0ary_bbs_debug}" != "YES" ]; then
-        command_args="${command_args} -f"
+command_args="-c -P ${pidfile} -R 30 -S -u ${n0ary_bbs__user}"
+
+if [ "${n0ary_bbs_debug}" == "YES" ]; then
+	# Remain in foreground, add verbose logging
+	debug_flags="0x101"
 else
-        process_args="${process_args} -d"
+	# Remain in foreground
+        debug_flags="0x100"
 fi
+
+process_args="-d ${debug_flags} ${n0ary_bbs_conf}"
 
 command_args="${command_args} ${n0ary_bbs_bin} ${process_args}"
 
