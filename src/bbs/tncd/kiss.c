@@ -106,7 +106,7 @@ kiss_set_pcap_dump(kiss *kiss, FILE *fp)
 		return -1;
 	}
 
-	if (ftell(fp) != 0) {
+	if (ftell(fp) == 0) {
 		if ((res = kiss_write_pcap_header(fp)) != 0) {
 			return res;
 		}
