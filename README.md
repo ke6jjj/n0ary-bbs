@@ -57,25 +57,56 @@ To compile the BBS:
 
 # Installation
 
-To install the BBS you'll need to run the `make install` rule, you'll need
-to set up a user ID for the bbs to run under, and finally you'll need to
-edit the BBS configuration file, `<bbs-dir>/etc/Config`
+To install the BBS and get it running you'll need to take several steps,
+each of which is detailed below. As a general outline, though, you'll need to:
+
+1. Install the BBS binaries and scripts.
+1. Establish a UNIX user for the BBS to run as.
+1. Edit the BBS "Config" file and ensure that "BBS_DIR" is correct.
+1. Run the bbs "bootstrap" script to set up the BBS for the first time.
+1. If you'll be using TNCs, set up TNC device permissions and make them stick.
+1. Make edits to the system to ensure the BBS starts up at boot.
+
+Let's describe each of these steps in detail.
 
 ## Make install
+
+After compiling all of the BBS you are ready to install the binaries and
+other utilities. Do so by running
 
     cd src/
     gmake install
 
 ## BBS user ID
 
-Create a user for the BBS to run under. Perhaps use `bbs`.
+Next you'll need to ensure your system has a non-privileged user for the
+BBS processes to run under. It's best if you use `bbs`.
 
 ## BBS Configuration
 
-The BBS has many options to configure. To begin, you should probably copy
-`<bbs-dir>/etc/Config.sample` to `<bbs-dir>/etc/Config` and then edit it.
+Next you'll need to get a basic Config file for the BBS set up.
+
+To begin, you should probably copy `<bbs-dir>/etc/Config.sample` to `<bbs-dir>/etc/Config` and then edit it.
+
 There are many comments inside the sample configuration file for setting things
-up.
+up, but at this stage the most important thing to ensure is that the "BBS_DIR"
+setting is correct.
+
+## BBS Bootstrapping
+
+After you have the Config file in place and ensured that "BBS_DIR" is set
+correctly within it, you're ready to run the "bootstrap" script to make
+sure that the BBS's various sub-directories and database files are initialized.
+
+1. Ensure that the BBS_DIR directory is owned by the `bbs` user and its
+   permissions are set up so that the `bbs` user can create sub-directories
+   under it. (`-rwxr-xr-x`).
+
+2. Become the BBS user (`sudo su -m bbs`).
+
+3. Run the bootstrap script, pointing it at the BBS config file:
+
+   /usr/local/libexec/bbs-init.sh <bbs-dir>/etc/Config
 
 ## Hardware Access
 
@@ -112,7 +143,10 @@ permissions before the BBS starts up:
 add path "cuaU[0-3]" mode 0660 user bbs group dialer
 ```
 
-# Startup
+## Startup
+
+The last step in setting up the BBS is to ensure that it starts up at
+system boot (or, alternatively, starts up manually when you ask for it).
 
 The BBS comes with an etc/rc.d style BSD startup script which will
 automatically start up the BBS when the system starts up, provided you setup
@@ -136,7 +170,18 @@ Some additional variables you can set are:
     the username you provide here. The default is `bbs`, which you should have
     set up previously during the installation step.
 
+## Manual Startup
+
+After you've set things up above, you can get the BBS started by running
+the startup script:
+
+   sudo /usr/local/etc/rc.d/n0ary_bbs start
+
 # Periodic Tasks
+
+Congratulations! The BBS should now be running. Your next steps are to
+begin "administrating" the BBS by ensuring that various tasks are scheduled
+to run periodically by your system.
 
 After the BBS has been installed and is running, you should begin setting
 up several periodic tasks to run through "cron" -- the UNIX task scheduling
