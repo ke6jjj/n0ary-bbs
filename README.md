@@ -106,7 +106,7 @@ sure that the BBS's various sub-directories and database files are initialized.
 
 3. Run the bootstrap script, pointing it at the BBS config file:
 
-   /usr/local/libexec/bbs-init.sh <bbs-dir>/etc/Config
+   `/usr/local/libexec/bbs-init.sh <bbs-dir>/etc/Config`
 
 ## Hardware Access
 
