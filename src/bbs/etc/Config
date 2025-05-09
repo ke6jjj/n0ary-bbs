@@ -343,6 +343,27 @@ TNC	TNC3	44453	44463	/dev/ttyb  bbshost 10  4 300 7   220  5  0
 ; TNC0_KISS_MUX_BIND_ADDR     (not set, defaults to 127.0.0.1)
 ; TNC0_KISS_MUX_PORT          (not set, defaults to 0, disabling feature)
 ; TNC0_KISS_MUX_SEE_OTHERS    (not set, defaults to 1)
+;
+;     PCAP log/dump files
+;
+;  If PCAP dumping is enabled for a TNC, then all packets received and
+;  transmitted on that TNC will be written to a tcpdump.org comptatible
+;  packet capture file, using the "KISS" dump format. These capture files
+;  can be inspected using a tool like "WireShark", to audit what was received
+;  and transmitted on the TNC and possibly help debug connection issues
+;  (or even protocol bugs in the BBS!).
+;
+;  To enable PCAP dumping, set the TNCx_PCAP_DUMP_PATH variable to the
+;  full filesystem path you would like the session for that TNC to be
+;  captured to.
+;
+;  PCAP capture files are cumulative, which means that any existing packets
+;  found in the file will be preserved at startup. New packets are simply
+;  appended to the file. So it is safe to restart any particular TNC as
+;  many times as you like, and to keep the same PCAP file in place for
+;  days (or even years), if you care.
+;
+; TNC0_PCAP_DUMP_PATH (not set, defaults to empty, and thus, disabled)
 
 
 ;###

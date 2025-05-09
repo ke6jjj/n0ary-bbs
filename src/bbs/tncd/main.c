@@ -41,6 +41,7 @@ char
     *Tncd_Control_Bind_Addr = NULL,
     *Tncd_Monitor_Bind_Addr = NULL,
     *Tncd_KISS_Mux_Bind_Addr = NULL,
+    *Tncd_Pcap_Dump_Path = NULL,
     *Tncd_Device;
 
 int
@@ -111,6 +112,7 @@ struct ConfigurationList DynamicConfigList[] = {
   { "BEACON_DEST",                tSTRING,    (int*)&Tncd_Beacon_Dest },
   { "BEACON_MESSAGE",             tSTRING,    (int*)&Tncd_Beacon_Message },
   { "KISS_MUX_SEE_OTHERS",        tINT,       (int*)&Tncd_KISS_Mux_See_Others },
+  { "PCAP_DUMP_PATH",             tSTRING,    (int*)&Tncd_Pcap_Dump_Path },
   { NULL,                         tEND,       NULL}
 };
 
@@ -215,6 +217,7 @@ main(int argc, char *argv[])
 	char *tnc_name;
 	slip *master_slip;
 	kiss *master_kiss;
+	FILE *pcap;
 
 	parse_options(argc, argv, ConfigList,
 		"TNCD - Terminal Node Controller (KISS) Daemon");
@@ -284,6 +287,16 @@ main(int argc, char *argv[])
 	/* Set downcall chain from ax25 stack into TNC */
 	kiss_set_send(master_kiss, kiss_nexus_send, master_slip);
 	slip_set_send(master_slip, asy_send, Master_ASY);
+
+	/* Setup PCAP dumping, if configured */
+	if (Tncd_Pcap_Dump_Path != NULL) {
+		pcap = fopen(Tncd_Pcap_Dump_Path, "ab");
+		if (pcap == NULL)
+			return 1;
+		if (kiss_set_pcap_dump(master_kiss, pcap) != 0)
+			return 1;
+	}
+
 
 	asy_enable(Master_ASY, 1);
 	asy_start(Master_ASY);
