@@ -162,7 +162,10 @@ Some additional variables you can set are:
     is, but it generally needn't be set unless you move the BBS to a different
     directory than the one you set in `site_config.mk` at build time.
 
-* `n0ary_bbs_user=`
+* `n0ary_bbs__user=`
+
+    NOTE: TWO UNDERSCORES BETWEEN `bbs` and `user`. Do not accidentally only
+    use one or the system will fail to start up.
 
     The BBS is a federation of several daemons that run in the background. For
     system security, these daemons should run as an unpriviledged user. The
