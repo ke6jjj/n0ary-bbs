@@ -45,27 +45,27 @@
 ;       not have this flexibility. When specifying a path to a daemon
 ;       program below, you must use a full, absolute path.
 
-;DAEMON IGNORE	/bbs/bin/your.program.here
+;DAEMON IGNORE	/home/bbs/bin/your.program.here
 
 ; These daemons have to be started
 
-DAEMON MSGD	/bbs/bin/b_msgd
-DAEMON LOGD	/bbs/bin/b_logd
-DAEMON WPD	/bbs/bin/b_wpd
-DAEMON BIDD	/bbs/bin/b_bidd
-DAEMON GATED	/bbs/bin/b_gated
-DAEMON USERD	/bbs/bin/b_userd
+DAEMON MSGD	/home/bbs/bin/b_msgd
+DAEMON LOGD	/home/bbs/bin/b_logd
+DAEMON WPD	/home/bbs/bin/b_wpd
+DAEMON BIDD	/home/bbs/bin/b_bidd
+DAEMON GATED	/home/bbs/bin/b_gated
+DAEMON USERD	/home/bbs/bin/b_userd
 
 ; Just enable these for the RF links you have
 
-DAEMON TNC0	/bbs/bin/b_tncd TNC0
-DAEMON TNC1	/bbs/bin/b_tncd TNC1
-DAEMON TNC2	/bbs/bin/b_tncd TNC2
+DAEMON TNC0	/home/bbs/bin/b_tncd TNC0
+DAEMON TNC1	/home/bbs/bin/b_tncd TNC1
+DAEMON TNC2	/home/bbs/bin/b_tncd TNC2
 
 ; This variable defines the root location for all FILE variables. It
 ; will automatically be prepended to all requests for FILE type vars.
 
-BBS_DIR         /bbs
+BBS_DIR         /home/bbs
 
 ; Who and where are we? Change this to your call (without the -X) and
 ; your hloc. There are two HLOC variables, BBS_HLOC and BBS_HLOC_COMP
