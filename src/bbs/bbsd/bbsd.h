@@ -1,5 +1,6 @@
 #include <time.h>
 #include "smtp.h"
+#include "alib.h"
 
 #define Error(s)	"NO, "s"\n"
 #define Ok(s)		"OK, "s"\n"
@@ -30,6 +31,9 @@ struct active_processes {
 	int verbose;
 	char *text;
 	char call[10];
+	char buf[1024];
+	size_t sz;
+	alEventHandle ev;
 };
 
 extern struct active_processes *procs;

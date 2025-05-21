@@ -4,7 +4,9 @@
 #include <sys/time.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <errno.h>
 
+#include "alib.h"
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
@@ -31,6 +33,11 @@ struct text_line
 
 struct active_processes *procs = NULL;
 
+struct daemon_check_context {
+	int ping_interval;
+	int starting_up;
+};
+
 struct ConfigurationList ConfigList[] = {
 	{ "",					tCOMMENT,	NULL },
 	{ "BBS_HOST",			tSTRING,	(int*)&Bbs_Host },
@@ -43,25 +50,48 @@ struct ConfigurationList ConfigList[] = {
 	{ "BBS_DOMAIN",			tSTRING,	(int*)&dummy_str },
 	{ NULL, 0, NULL}};
 
+static void accept_callback(void *ctx, void *arg0, int arg1);
+static void service_callback(void *ctx, void *arg0, int arg1);
+static void daemon_check_callback(void *ctx, void *arg0, int arg1);
+static int next_check_delay_s(int ping_interval, int starting_up);
+static void notify(char *msg);
+static void notify_callback(void *ctx, void *arg0, int arg1);
+
 static int
 service_port(struct active_processes *ap)
 {
-    char *c, *s, buf[1024];
+	char *c, *s, *buf;
+	int have_line;
 
-    c = buf;
-    while(TRUE) {
-        if(read(ap->fd, c, 1) <= 0)
-            return ERROR;
+	for (have_line = 0; ap->sz < sizeof(ap->buf);) {
+		c = &ap->buf[ap->sz];
+		if (read(ap->fd, c, 1) <= 0) {
+			if (errno == EAGAIN) {
+				/* No more data available right now */
+				return OK;
+			}
+			return ERROR;
+		}
 		if(*c == '\r')
 			continue;
 
-        if(*c == '\n') {
+		if(*c == '\n') {
 			*c = 0;
-            break;
+			have_line = 1;
+			break;
 		}
-		c++;
-    }
 
+		ap->sz++;
+	}
+
+	if (have_line != 1) {
+		/* peer has spewed too much garbage */
+		return ERROR;
+	}
+
+	ap->sz = 0;
+
+	buf = ap->buf;
 	if(VERBOSE)
 		printf("R: %s\n", buf);
 
@@ -88,6 +118,7 @@ service_port(struct active_processes *ap)
 static struct active_processes *
 add_proc()
 {
+	alCallback cb;
 	char buf[256];
 	struct active_processes
 		*tap = procs,
@@ -108,10 +139,12 @@ add_proc()
 	ap->proc_num = proc_num++;
 	ap->pid = ERROR;
 	ap->verbose = FALSE;
+	ap->sz = 0;
+	ap->ev = NULL;
 
 	snprintf(buf, sizeof(buf),
 		"LOGIN %d UnKwn STATUS %ld", ap->proc_num, ap->t0);
-	textline_append(&Notify, buf);
+	notify(buf);
 
 	return ap;	
 }
@@ -137,9 +170,13 @@ remove_proc(struct active_processes *ap)
 	}
 
 	sprintf(buf, "LOGOUT %d", ap->proc_num);
-	textline_append(&Notify, buf);
+	notify(buf);
 
 	daemon_check_out(ap);
+
+	if (ap->ev != NULL) {
+		alEvent_deregister(ap->ev);
+	}
 
 	close(ap->fd);
 	free(ap);
@@ -158,24 +195,6 @@ ping_monitors(void)
 				ap = remove_proc(ap);
 				continue;
 			}
-		NEXT(ap);
-	}
-}
-
-/* Every process must checkin every KILL_INTERVAL seconds. If not
- * then the process should be killed if it has supplied us with a 
- * PID.
- */
-static void
-chk_procs(void)
-{
-	struct active_processes *ap = procs;
-	long threshold = time(NULL) - KILL_INTERVAL;
-
-	while(ap) {
-		if(ap->pid != ERROR)
-			if(ap->idle < threshold)
-				kill(ap->pid, SIGKILL);
 		NEXT(ap);
 	}
 }
@@ -249,10 +268,11 @@ main(int argc, char *argv[])
 {
 	int listen_port;
 	char *listen_addr;
-	int listen_sock;
-	int ping_interval = PING_INTERVAL;
+	int listen_sock, delay_s;
+	alEventHandle listen_ev;
+        alCallback cb;
 	struct active_processes *ap;
-	int dmnchk = TRUE;
+	struct daemon_check_context check_ctx;
 
 	extern char *config_fn;
 	extern int optind;
@@ -290,90 +310,29 @@ main(int argc, char *argv[])
 	}
 
 	build_daemon_list();
-	while(TRUE) {
-		int cnt;
-		fd_set ready;
-		int fdlimit;
-		struct timeval t;
 
-		if(shutdown_daemon)
-			return 0;
+	if (alEvent_init() != 0) {
+		fprintf(stderr, "Unable to initialize event system\n");
+		return 1;
+	}
 
-		ap = procs;
-		FD_ZERO(&ready);
-		FD_SET(listen_sock, &ready);
-		fdlimit = listen_sock;
-		
-		while(ap) {
-			if(ap->fd != ERROR) {
-				FD_SET(ap->fd, &ready);
-				if(ap->fd > fdlimit)
-					fdlimit = ap->fd;
-			}
-			NEXT(ap);
-		}
-		fdlimit++;
+	AL_CALLBACK(&cb, NULL, accept_callback);
+	if (alEvent_registerFd(listen_sock, ALFD_READ, cb, &listen_ev) != 0) {
+		fprintf(stderr, "Unable to register listen socket\n");
+		return 1;
+	}
 
-			/* if we have statuses pending then make the timeout short
-			 * this allows us to buffer up a little if it comes in hunks.
-			 */
+	check_ctx.ping_interval = PING_INTERVAL;
+	check_ctx.starting_up = TRUE;
+	delay_s = next_check_delay_s(PING_INTERVAL, TRUE);
+	AL_CALLBACK(&cb, &check_ctx, daemon_check_callback);
+	if (alEvent_addTimer(delay_s * 1000, 0, cb) < 0) {
+		fprintf(stderr, "Unable to set up daemon timer\n");
+		return 1;
+	}
 
-		t.tv_usec = 0;
-		if(Notify || dmnchk)
-			t.tv_sec = 2;
-		else
-			t.tv_sec = ping_interval;
-
-		if((cnt = select(fdlimit, &ready, NULL, NULL, &t)) < 0)
-			continue;
-		
-		if(cnt == 0) {
-			if(Notify != NULL)
-				notify_monitors();
-			else {
-				if(ping_interval < 120)
-					ping_interval++;
-				ping_monitors();
-			}
-#if 0
-			chk_procs();
-#endif
-			dmnchk = daemons_start();
-			continue;
-		}
-
-		ping_interval = PING_INTERVAL;
-
-		if(FD_ISSET(listen_sock, &ready)) {
-			ap = add_proc();
-			if((ap->fd = socket_accept(listen_sock)) < 0)
-				ap = remove_proc(ap);
-			else {
-				if(socket_write(ap->fd, daemon_version("bbsd", Bbs_Call)) != sockOK)
-					ap = remove_proc(ap);
-				else {
-					char buf[80];
-					snprintf(buf, sizeof(buf),
-						"# %d\n", ap->proc_num);
-					if(write(ap->fd, buf, strlen(buf)) < 0)
-						ap = remove_proc(ap);
-				}
-			}
-		}
-
-		ap = procs;
-		while(ap) {
-			if(FD_ISSET(ap->fd, &ready)) {
-				if(service_port(ap) == ERROR) {
-					ap = remove_proc(ap);
-					continue;
-				}
-			}
-			NEXT(ap);
-		}
-
-		if(Notify != NULL)
-			notify_monitors();
+	while (!shutdown_daemon && alEvent_pending()) {
+		alEvent_poll();
 	}
 
 	return 0;
@@ -400,4 +359,107 @@ bbs_time(long *t)
 	if(t != NULL)
 		*t = now;
 	return now;
+}
+
+static void
+accept_callback(void *ctx, void *arg0, int arg1)
+{
+	struct active_processes *ap;
+	int fd, res, listen_sock;
+	char buf[80];
+	alCallback cb;
+
+	listen_sock = arg1;
+	fd = socket_accept(listen_sock);
+	if (fd < 0) {
+		fprintf(stderr, "accept failed on new connection.\n");
+		return;
+	}
+
+	if (socket_write(fd, daemon_version("bbsd", Bbs_Call)) != sockOK) {
+		fprintf(stderr, "couldn't write hello banner.\n");
+		close(fd);
+		return;
+	}
+
+	ap = add_proc();
+	ap->fd = fd;
+
+	snprintf(buf, sizeof(buf), "# %d\n", ap->proc_num);
+	if(write(fd, buf, strlen(buf)) < 0) {
+		fprintf(stderr, "couldn't write second hello banner.\n");
+		remove_proc(ap);
+	}
+
+	AL_CALLBACK(&cb, ap, service_callback);
+	res = alEvent_registerFd(fd, ALFD_READ, cb, &ap->ev);
+	if (res != 0) {
+		fprintf(stderr, "couldn't register new process\n");
+		remove_proc(ap);
+	}
+}
+
+static void
+service_callback(void *ctx, void *arg0, int arg1)
+{
+	struct active_processes *ap = (struct active_processes *) ctx;
+
+	if(service_port(ap) == ERROR) {
+		remove_proc(ap);
+	}
+}
+
+
+static int
+next_check_delay_s(int ping_interval, int starting_up)
+{
+	if(Notify || starting_up)
+		return 2;
+	else
+		return ping_interval;
+}
+
+static void
+daemon_check_callback(void *_ctx, void *arg0, int arg1)
+{
+	struct daemon_check_context *ctx;
+	int delay_s, res;
+	alCallback cb;
+
+	ctx = (struct daemon_check_context *) _ctx;
+
+	ping_monitors();
+
+	ctx->starting_up = daemons_start();
+
+	delay_s = next_check_delay_s(ctx->ping_interval, ctx->starting_up);
+	
+	AL_CALLBACK(&cb, ctx, daemon_check_callback);
+	res = alEvent_addTimer(delay_s * 1000, 0, cb);
+	if (res < 0) {
+		fprintf(stderr, "can't register daemon check timer\n");
+		exit(1);
+	}
+}
+
+static void
+notify(char *msg)
+{
+	alCallback cb;
+
+	textline_append(&Notify, msg);
+	AL_CALLBACK(&cb, NULL, notify_callback);
+	if (alEvent_queueCallback(cb, ALCB_UNIQUE,  NULL, 0) != 0) {
+		fprintf(stderr, "unable to queue notify callback\n");
+		exit(1);
+	}
+}
+
+static void
+notify_callback(void *ctx, void *arg0, int arg1)
+{
+	if (Notify == NULL)
+		return;
+
+	notify_monitors();
 }
