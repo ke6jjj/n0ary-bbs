@@ -316,7 +316,7 @@ main(int argc, char *argv[])
 		return 1;
 	}
 
-	AL_CALLBACK(&cb, NULL, accept_callback);
+	AL_CALLBACK(&cb, (void *)listen_sock, accept_callback);
 	if (alEvent_registerFd(listen_sock, ALFD_READ, cb, &listen_ev) != 0) {
 		fprintf(stderr, "Unable to register listen socket\n");
 		return 1;
@@ -369,7 +369,7 @@ accept_callback(void *ctx, void *arg0, int arg1)
 	char buf[80];
 	alCallback cb;
 
-	listen_sock = arg1;
+	listen_sock = (int) ctx;
 	fd = socket_accept(listen_sock);
 	if (fd < 0) {
 		fprintf(stderr, "accept failed on new connection.\n");
