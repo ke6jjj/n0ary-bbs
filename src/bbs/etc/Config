@@ -232,7 +232,8 @@ PORT	STATUS	SYSTEM	FALSE	FALSE	Status
 ; Device: UNIX path for the device OR
 ;         hostname:port for TCP connection to a terminal server.
 ;
-; Host: Where is the physical hardware located?
+; Host: Where is the physical hardware located? This field may very well be
+;       completely unused in the code now.
 ;
 ; The rest are AX25 definitions
 ; T1: The number of seconds to wait for a response from the remote
@@ -287,11 +288,11 @@ PORT	STATUS	SYSTEM	FALSE	FALSE	Status
 ; the packet size and MxF values down to cooperate better with other stations
 ; on the channel.
 ;
-;	Name	dPort	cPort	Device	   Host    T1 T2  T3 MxF Plen N2 (Flgs)
-TNC	TNC0	44450	44460	/dev/ttyr5 bbshost 10  4 300 7   220  5  0
-TNC	TNC1	44451	44461	/dev/ttyr6 bbshost 10  4 300 3   128  5  0
-TNC	TNC2	44452	44462	/dev/ttyr7 bbshost 10  4 300 7   220  5  0
-TNC	TNC3	44453	44463	/dev/ttyb  bbshost 10  4 300 7   220  5  0
+;   Name dPort cPort Device     Host      T1 T2  T3 MxF Plen N2 (Flgs)
+TNC TNC0 44450 44460 /dev/ttyr5 localhost 10  4 300 7   220  5  0
+TNC TNC1 44451 44461 /dev/ttyr6 localhost 10  4 300 3   128  5  0
+TNC TNC2 44452 44462 /dev/ttyr7 localhost 10  4 300 7   220  5  0
+TNC TNC3 44453 44463 /dev/ttyb  localhost 10  4 300 7   220  5  0
 
 ;###
 ;#	TNC DEFINITIONS - The new method.
@@ -305,7 +306,7 @@ TNC	TNC3	44453	44463	/dev/ttyb  bbshost 10  4 300 7   220  5  0
 ; TNC0_MONITOR_BIND_ADDR  (not set, defaults to 127.0.0.1)
 ; TNC0_MONITOR_PORT       44460
 ; TNC0_DEVICE             /dev/ttyr5
-; TNC0_HOST               bbshost
+; TNC0_HOST               localhost
 ;
 ;  AX.25 Parameters
 ;
@@ -416,10 +417,10 @@ AX25_BEACON_MESSAGE  N0ARY-1/D Full Service Packet BBS
 ; connections are not supported at this time this is just preparation for
 ; things to come.
 
-;	Name	Device		Host	Chat Script
-PHONE	PHONE0	/dev/ttyr0	bbshost	ATE1V1 OK
-PHONE	PHONE1	/dev/ttyr1	bbshost	ATE1V1 OK
-PHONE	PHONE2	/dev/ttyr2	bbshost	ATE1V1 OK
+;	Name	Device		Host		Chat Script
+PHONE	PHONE0	/dev/ttyr0	localhost	ATE1V1 OK
+PHONE	PHONE1	/dev/ttyr1	localhost	ATE1V1 OK
+PHONE	PHONE2	/dev/ttyr2	localhost	ATE1V1 OK
 
 ; This is the WP stuff. Where do you want your updates sent
 WPD_GLOBAL_SERVER	WP@WW
@@ -453,7 +454,7 @@ WPD_LOCAL_TYPE		B
 ; On the hosts you can use a host name rather than the aliases shown
 ; here.
 
-BBS_HOST	bbshost
+BBS_HOST	localhost
 MAIL_HOST	mailhost
 SMTP_PORT	25
 
