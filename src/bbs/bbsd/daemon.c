@@ -159,17 +159,15 @@ daemons_check(void)
 	time_t now = bbs_time(NULL);
 
 	while(dl) {
-		struct active_processes *ap = procs;
+		struct active_process *ap;
 		if(!strcmp(dl->name, "IGNORE")) {
 			NEXT(dl);
 			continue;
 		}
 
-		while(ap) {
+		LIST_FOREACH(ap, &procs, entries) {
 			if(!strcmp(dl->name, ap->call))
 				break;
-
-			NEXT(ap);
 		}
 		if(ap == NULL) {
 				/* not found, must not be up */
@@ -186,7 +184,7 @@ daemons_check(void)
 }
 
 int
-daemon_up(struct active_processes *ap)
+daemon_up(struct active_process *ap)
 {
 	int down_cnt = 0;
 	struct Daemons *dl = DmnList;
@@ -215,7 +213,7 @@ daemon_up(struct active_processes *ap)
 }
 
 int
-daemon_check_in(struct active_processes *ap)
+daemon_check_in(struct active_process *ap)
 {
 	struct Daemons *dl = DmnList;
 
@@ -236,7 +234,7 @@ daemon_check_in(struct active_processes *ap)
 }
 
 int
-daemon_check_out(struct active_processes *ap)
+daemon_check_out(struct active_process *ap)
 {
 	struct Daemons *dl = DmnList;
 

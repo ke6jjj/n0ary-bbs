@@ -5,44 +5,40 @@
 #include "bbslib.h"
 #include "bbsd.h"
 
-struct Ports *PortList = NULL;
-
+struct port_list PortList = SLIST_HEAD_INITIALIZER(PortList);
 
 void
 lock_clear_all(void)
 {
-	struct Ports *port = PortList;
+	struct Port *port;
 
-	while(port) {
+	SLIST_FOREACH(port, &PortList, entries) {
 		port->lock = FALSE;
 		port->reason = NULL;
-		NEXT(port);
 	}
 }
 
 void
 lock_all(char *reason)
 {
-	struct Ports *port = PortList;
+	struct Port *port;
 
-	while(port) {
+	SLIST_FOREACH(port, &PortList, entries) {
 		if(port->lockable) {
 			port->lock = TRUE;
 			port->reason = reason;
 		}
-		NEXT(port);
 	}
 }
 
-struct Ports *
+struct Port *
 locate_port(char *via)
 {
-	struct Ports *port = PortList;
+	struct Port *port;
 
-	while(port) {
+	SLIST_FOREACH(port, &PortList, entries) {
 		if(!stricmp(port->name, via))
 			return port;
-		NEXT(port);
 	}
 	return NULL;
 }

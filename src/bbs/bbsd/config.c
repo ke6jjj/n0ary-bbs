@@ -39,20 +39,19 @@ static void
 port_define(char *s)
 {
 	char *c;
-	struct Ports **port = &PortList;
+	struct Port *port;
 
-	while(*port)
-		port = &((*port)->next);
-	*port = malloc_struct(Ports);
-
-	c = (*port)->name = copy_string(get_string(&s));
+	port = malloc_struct(Port);
+	port->name = c = copy_string(get_string(&s));
 
 	if(!strcmp(c, "STATUS") || !strcmp(c, "DAEMON"))
-		(*port)->lockable = FALSE;
+		port->lockable = FALSE;
 	else
-		(*port)->lockable = TRUE;
-	(*port)->lock = FALSE;
-	(*port)->reason = NULL;
+		port->lockable = TRUE;
+	port->lock = FALSE;
+	port->reason = NULL;
+
+	SLIST_INSERT_HEAD(&PortList, port, entries);
 }
 
 int
