@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <fcntl.h>
 
 #include "alib.h"
 #include "c_cmmn.h"
@@ -373,6 +374,12 @@ accept_callback(void *ctx, void *arg0, int arg1)
 	fd = socket_accept(listen_sock);
 	if (fd < 0) {
 		fprintf(stderr, "accept failed on new connection.\n");
+		return;
+	}
+
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
+		fprintf(stderr, "unable to make new connection non-blocking\n");
+		close(fd);
 		return;
 	}
 
