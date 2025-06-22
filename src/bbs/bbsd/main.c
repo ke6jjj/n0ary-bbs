@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
+#include <stdint.h>
 
 #include "alib.h"
 #include "c_cmmn.h"
@@ -268,7 +269,8 @@ main(int argc, char *argv[])
 {
 	int listen_port;
 	char *listen_addr;
-	int listen_sock, delay_s;
+	intptr_t listen_sock;
+	int delay_s;
 	alEventHandle listen_ev;
         alCallback cb;
 	struct active_processes *ap;
@@ -365,11 +367,12 @@ static void
 accept_callback(void *ctx, void *arg0, int arg1)
 {
 	struct active_processes *ap;
-	int fd, res, listen_sock;
+	int fd, res;
+	intptr_t listen_sock;
 	char buf[80];
 	alCallback cb;
 
-	listen_sock = (int) ctx;
+	listen_sock = (intptr_t) ctx;
 	fd = socket_accept(listen_sock);
 	if (fd < 0) {
 		fprintf(stderr, "accept failed on new connection.\n");
