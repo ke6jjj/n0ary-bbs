@@ -1,6 +1,8 @@
+#include <inttypes.h>
+
 #ifndef TIME_T_FORMAT_SET
 #  ifdef __LP64__
-#    define PRTMd "ld"
+#    define PRTMd PRId64
 #  else
 #    define PRTMd "d"
 #  endif
@@ -9,7 +11,7 @@
 
 #ifndef OFF_T_FORMAT_SET
 #  ifdef __LP64__
-#    define PROFFTd "ld"
+#    define PROFFTd PRId64
 #  else
 #    define PROFFTd "lld"
 #  endif
