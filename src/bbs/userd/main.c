@@ -163,7 +163,7 @@ main(int argc, char *argv[])
 	if((listen_sock = socket_listen(bind_addr, &listen_port)) == ERROR)
 		return 1;
 
-    bbsd_port(Userd_Port);
+	bbsd_port(Userd_Port);
 	if(!(dbug_level & dbgNODAEMONS))
 		bbsd_msg("");
 
