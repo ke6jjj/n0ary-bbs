@@ -144,12 +144,12 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);
 
-    if(bbsd_open(Bbs_Host, Bbsd_Port, "userd", "DAEMON") == ERROR)
+	if(bbsd_open(Bbs_Host, Bbsd_Port, "userd", "DAEMON") == ERROR)
 		error_print_exit(0);
 	error_clear();
 
 	bbsd_get_configuration(ConfigList);
-    bbsd_msg("Startup");
+	bbsd_msg("Startup");
 	bbsd_sock = bbsd_socket();
 	time_now = bbsd_get_time();
 
