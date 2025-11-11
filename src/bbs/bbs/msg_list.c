@@ -106,7 +106,7 @@ display_criteria(struct list_criteria *lc)
 static void
 display_listing(struct list_criteria *lc, int to_pipe)
 {
-	struct msg_dir_entry *m = MsgDirList;
+	struct msg_dir_entry *m;
 	int cnt = lc->range[0];
 
 	if(to_pipe == FALSE) {
@@ -120,26 +120,28 @@ display_listing(struct list_criteria *lc, int to_pipe)
 
 	if(ImAscending) {
 		if(lc->range_type == LAST) {
-			while(m->next)
-				NEXT(m);
-
 			cnt--;
-			while(cnt && m->last) {
+			TAILQ_FOREACH_REVERSE(m, &MsgDirList, msg_dir_list, entries) {
+				if (cnt == 0)
+					break;
+				if (TAILQ_PREV(m, msg_dir_list, entries) == NULL)
+					break;
 				if(m->visible)
 					cnt--;
-				PREV(m);
 			}
 		}
 	} else {
 		if(lc->range_type == FIRST) {
-			while(m->next && cnt) {
+			TAILQ_FOREACH(m, &MsgDirList, entries) {
+				if (cnt == 0)
+					break;
+				if (TAILQ_NEXT(m, entries) == NULL)
+					break;
 				if(m->visible)
 					cnt--;
-				NEXT(m);
 			}
 		} else
-			while(m->next)
-				NEXT(m);
+			m = TAILQ_LAST(&MsgDirList, msg_dir_list);
 
 		if(lc->must_include_mask & MsgNew)
 			LastMsgListedCdate = m->cdate;
@@ -202,11 +204,9 @@ display_listing(struct list_criteria *lc, int to_pipe)
 
 				if(more()) {
 					if(ImAscending) {
-						while(m->next)
-							NEXT(m);
-						} else {
-						while(m->last)
-							PREV(m);
+						m = TAILQ_LAST(&MsgDirList, msg_dir_list);
+					} else {
+						m = TAILQ_FIRST(&MsgDirList);
 					}
 				}
 			}
@@ -220,11 +220,11 @@ display_listing(struct list_criteria *lc, int to_pipe)
 				LastMsgListedCdate = m->cdate;
 			if(lc->range_type == FIRST && cnt == 0)
 				break;
-			NEXT(m);
+			m = TAILQ_NEXT(m, entries);
 		} else {
 			if(lc->range_type == LAST && cnt == 0)
 				break;
-			PREV(m);
+			m = TAILQ_PREV(m, msg_dir_list, entries);
 		}
 	}
 
@@ -573,11 +573,10 @@ msg_list_t(struct TOKEN *t)
 		display_listing(&lc, to_pipe);
 	else 
 		if(lc.must_include_mask & MsgNew) {
-			struct msg_dir_entry *m = MsgDirList;
-			while(m) {
+			struct msg_dir_entry *m;
+			TAILQ_FOREACH(m, &MsgDirList, entries) {
 				if(m->visible)
 					LastMsgListedCdate = m->cdate;
-				NEXT(m);
 			}
 		}
 		
@@ -602,11 +601,11 @@ msg_catchup(void)
 		if(build_partial_list(&lc) == 0)
 			return system_msg(116);
 
-		m = MsgDirList;
-		while(m->next) {
+		TAILQ_FOREACH(m, &MsgDirList, entries) {
+			if (TAILQ_NEXT(m, entries) == NULL)
+				break;
 			if(m->visible)
 				LastMsgListedCdate = m->cdate;
-			NEXT(m);
 		}
 	}
 

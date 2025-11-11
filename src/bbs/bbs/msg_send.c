@@ -439,7 +439,7 @@ msg_copy(int num, struct msg_dir_entry *msg)
 		 */
 
 	bcopy(m, &new, sizeof(new));
-	new.next = new.last = NULL;
+	bzero(&new.entries, sizeof(new.entries));
 	new.header = new.read_by = NULL;
 
 		/* Now change the fields that should be changed, basically just

@@ -73,8 +73,7 @@ immune_range(int mode, int start, int finish)
 		return OK;
 
 	for(num=start; num<=finish; num++) {
-		m = MsgDirList;
-		while(m) {
+		TAILQ_FOREACH(m, &MsgDirList, entries) {
 			if(m->number == num && m->visible) {
 				if(mode == IMMUNE)
 					msgd_cmd_num(msgd_xlate(mIMMUNE), num);
@@ -83,7 +82,6 @@ immune_range(int mode, int start, int finish)
 				active_message = num;
 				break;
 			}
-			NEXT(m);
 		}
 	}
 	return OK;
@@ -101,8 +99,7 @@ immune_messages(int mode, struct TOKEN *t)
 
 	while(t->token != END) {
 		if(t->token == NUMBER) {
-			m = MsgDirList;
-			while(m) {
+			TAILQ_FOREACH(m, &MsgDirList, entries) {
 				if(m->number == t->value && m->visible) {
 					if(mode == IMMUNE)
 						msgd_cmd_num(msgd_xlate(mIMMUNE), t->value);
@@ -111,7 +108,6 @@ immune_messages(int mode, struct TOKEN *t)
 					active_message = t->value;
 					break;
 				}
-				NEXT(m);
 			}
 
 			if(m == NULL)

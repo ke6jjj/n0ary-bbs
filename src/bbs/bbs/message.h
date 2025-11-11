@@ -1,4 +1,5 @@
 #include <sys/types.h>
+#include <sys/queue.h>
 
 struct list_criteria {
 	int		must_include_mask;
@@ -37,8 +38,9 @@ struct generated_message {
 struct generated_message *
 	buffer_msg_to_user(char *name, char *buf);
 
-extern struct msg_dir_entry
-	*MsgDirList;
+
+TAILQ_HEAD(msg_dir_list, msg_dir_entry);
+extern struct msg_dir_list MsgDirList;
 
 extern int
 	active_message,
@@ -117,8 +119,8 @@ extern int
 
 extern struct msg_dir_entry
 	*msg_locate(int msgnum),
-	*free_message_list(void),
 	*build_full_message_list(void);
+extern void free_message_list(void);
 
 extern void
 	check_for_recpt_options(struct msg_dir_entry *m);

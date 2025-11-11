@@ -9,11 +9,7 @@
 #include "rfc822.h"
 #include "msgd.h"
 
-struct msg_dir_entry
-	*MsgDir = NULL;
-
-static struct msg_dir_entry
-	*MsgDirTail = NULL;
+TAILQ_HEAD(MsgList, msg_dir_entry) MsgDir = TAILQ_HEAD_INITIALIZER(MsgDir);
 
 struct groups
 	*GrpList;
@@ -161,77 +157,58 @@ append_msg_list(void)
 {
 	struct msg_dir_entry *m = malloc_struct(msg_dir_entry);
 
-	if(MsgDirTail == NULL)
-		MsgDir = m;
-	else {
-		MsgDirTail->next = m;
-		m->last = MsgDirTail;
-	}
-	MsgDirTail = m;
+	TAILQ_INSERT_TAIL(&MsgDir, m, entries);
+
 	return m;
 }
 
 struct msg_dir_entry *
 unlink_msg_list(struct msg_dir_entry *msg)
 {
-	struct msg_dir_entry *m = msg->last;
-
-	if(msg == MsgDir) {
-		if(msg == MsgDirTail) {
-			MsgDir = NULL;
-			MsgDirTail = NULL;
-		} else {
-			MsgDir = msg->next;
-			MsgDir->last = NULL;
-		}
-	} else {
-		if(msg == MsgDirTail) {
-			MsgDirTail = msg->last;
-			MsgDirTail->next = NULL;
-		} else {
-			msg->last->next = msg->next;
-			msg->next->last = msg->last;
-		}
-	}
+	struct msg_dir_entry *prev = TAILQ_PREV(msg, MsgList, entries);
+	TAILQ_REMOVE(&MsgDir, msg, entries);
 
 	if(msg->read_by != NULL)
 		textline_free(msg->read_by);
 	free(msg);
-	return m;
+
+	return prev;
 }
 
 void
 free_msgdir(void)
 {
-	while(MsgDir) {
-		struct msg_dir_entry *m = MsgDir;
+	struct msg_dir_entry *m;
 
+	while (!TAILQ_EMPTY(&MsgDir)) {
+		m = TAILQ_FIRST(&MsgDir);
+		TAILQ_REMOVE(&MsgDir, m, entries);
 		if(m->read_by != NULL)
 			textline_free(m->read_by);
-
-		NEXT(MsgDir);
 		free(m);
 	}
-	MsgDirTail = NULL;
 }
 
 void
 check_msgdir(void)
 {
-	struct msg_dir_entry *msg = MsgDir;
+	struct msg_dir_entry *msg;
 	char *oops = NULL;
 
-	while(msg) {
-		if(msg->next != NULL) {
-			if(msg->next->last != msg)
+	TAILQ_FOREACH(msg, &MsgDir, entries) {
+		struct msg_dir_entry *next, *prev;
+		next = TAILQ_NEXT(msg, entries);
+		if (next != NULL) {
+			if (TAILQ_PREV(next, MsgList, entries) != msg)
 				oops = "msg->next->last != msg";
 		} else {
-			if(msg != MsgDirTail)
+			if(msg != TAILQ_LAST(&MsgDir, MsgList))
 				oops = "msg != MsgDirTail";
 		}
 
-		if(msg->last != NULL) {
-			if(msg->last->next != msg)
+		prev = TAILQ_PREV(msg, MsgList, entries);
+		if(prev != NULL) {
+			if(TAILQ_NEXT(prev, entries) != msg)
 				oops = "msg->last->next != msg";
 		}
 
@@ -242,23 +219,21 @@ check_msgdir(void)
 			snprintf(buf, sizeof(buf), "msg #%ld [0x%p]",
 				msg->number, msg);
 			log_f("msgd", "TERMINAL:", buf);
-			if(msg->next != NULL) {
+			if(next != NULL) {
 				snprintf(buf, sizeof(buf),
 					"next: 0x%p, next->last: 0x%p",
-					msg->next, msg->next->last);
+					next, TAILQ_PREV(next, MsgList, entries));
 				log_f("msgd", "TERMINAL:", buf);
 			}
-			if(msg->last != NULL) {
+			if(prev != NULL) {
 				snprintf(buf, sizeof(buf),
 					"last: 0x%p, last->next: 0x%p",
-					msg->last, msg->last->next);
+					prev, TAILQ_NEXT(prev, entries));
 				log_f("msgd", "TERMINAL:", buf);
 			}
 			log_f("msgd", "ABORTING", "bye");
 			exit(1);
 		}
-
-		NEXT(msg);
 	}
 
 }
@@ -266,7 +241,7 @@ check_msgdir(void)
 int
 compress_messages(struct active_processes *ap)
 {
-	struct msg_dir_entry *msg = MsgDir;
+	struct msg_dir_entry *msg;
 	int number = 1;
 
 	fwddir_open();
@@ -274,11 +249,10 @@ compress_messages(struct active_processes *ap)
 	bbsd_msg("Begin Compress");
 	log_f("msgd", "AGING:", "Start");
 
-	while(msg) {
+	TAILQ_FOREACH(msg, &MsgDir, entries) {
 		fwddir_rename(msg->number, number);
 		msg_body_rename(msg->number, number);
 		number++;
-		NEXT(msg);
 	}
 	return OK;
 }
@@ -286,7 +260,7 @@ compress_messages(struct active_processes *ap)
 void
 type_stats(void)
 {
-	struct msg_dir_entry *msg = MsgDir;
+	struct msg_dir_entry *msg;
 	int type, class;
 	int cnt[3][4];
 	int pers = 0, bull = 0, nts = 0;
@@ -297,7 +271,7 @@ type_stats(void)
 		for(j=0; j<4; j++)
 			cnt[i][j] = 0;
 
-	while(msg) {
+	TAILQ_FOREACH(msg, &MsgDir, entries) {
 		switch(msg->flags & MsgTypeMask) {
 		case MsgBulletin:
 			type = 1;
@@ -329,8 +303,6 @@ type_stats(void)
 				}
 			}
 		}
-
-		NEXT(msg);
 	}
 		
 	snprintf(output, sizeof(output),
@@ -348,7 +320,7 @@ type_stats(void)
 void
 age_messages(void)
 {
-	struct msg_dir_entry *msg = MsgDir;
+	struct msg_dir_entry *msg, *msg_temp;
 	time_t now = Time(NULL);
 	int type;
 	char log_buf[256];
@@ -358,10 +330,14 @@ age_messages(void)
 	bbsd_msg("Begin Aging");
 	log_f("msgd", "AGING:", "Start");
 
-	while(msg) {
+	msg = TAILQ_FIRST(&MsgDir);
+	while (msg != NULL) {
+		struct msg_dir_entry *next, *prev;
+		next = TAILQ_NEXT(msg, entries);
+		prev = TAILQ_PREV(msg, MsgList, entries);
 		snprintf(log_buf, sizeof(log_buf),
 			"%05ld [0x%p last: 0x%p next: 0x%p]", 
-			msg->number, msg, msg->last, msg->next);
+			msg->number, msg, prev, next);
 
 		switch(msg->flags & MsgTypeMask) {
 		case MsgBulletin:
@@ -376,7 +352,7 @@ age_messages(void)
 
 		if(IsMsgImmune(msg) || fwddir_check(msg->number)) {
 			log_f("msgd", "IMMUNE:", log_buf);
-			NEXT(msg);
+			msg = TAILQ_NEXT(msg, entries);
 			continue;
 		}
 
@@ -386,7 +362,7 @@ age_messages(void)
 				msg_body_kill(msg->number);
 				msg = unlink_msg_list(msg);
 				if(msg == NULL) {
-					msg = MsgDir;
+					msg = TAILQ_FIRST(&MsgDir);
 					continue;
 				}
 			} else
@@ -414,8 +390,7 @@ age_messages(void)
 
 			} else
 				log_f("msgd", "not_active:", log_buf);
-
-		NEXT(msg);
+		msg = TAILQ_NEXT(msg, entries);
 	}
 	bbsd_msg("Validate");
 	check_msgdir();
@@ -613,11 +588,11 @@ show_message(struct active_processes *ap, struct msg_dir_entry *msg)
 struct msg_dir_entry *
 get_message(int number)
 {
-	struct msg_dir_entry *msg = MsgDir;
-	while(msg) {
+	struct msg_dir_entry *msg;
+
+	TAILQ_FOREACH(msg, &MsgDir, entries) {
 		if(msg->number == number)
 			return msg;
-		NEXT(msg);
 	}
 	return NULL;
 }
@@ -634,22 +609,20 @@ list_messages(struct active_processes *ap)
 				NEXT(ml);
 			}
 		} else {
-			struct msg_dir_entry *msg = MsgDir;
+			struct msg_dir_entry *msg;
 			if(ap->list_mode == BbsMode) {
 				fwddir_open();
-				while(msg) {
+				TAILQ_FOREACH(msg, &MsgDir, entries) {
 					if(fwddir_check(msg->number))
 						show_message(ap, msg);
-					NEXT(msg);
 				}
 				fwddir_close();
 				ap->list_mode = SysopMode;
 			} else
-				while(msg) {
+				TAILQ_FOREACH(msg, &MsgDir, entries) {
 					if(msg->update_t > ap->list_sent)
 						if(visible_by(ap, msg) == OK)
 							show_message(ap, msg);
-					NEXT(msg);
 				}
 		}
 	ap->list_sent = Time(NULL);
@@ -672,15 +645,18 @@ int
 send_message(struct active_processes *ap)
 {
 	FILE *fp;
-	struct msg_dir_entry *msg = append_msg_list();
+	struct msg_dir_entry *msg, *prev;
 	int in_rfc = FALSE;
 	int dup = FALSE;
 	int nl, next_nl;
 	char buf[4096];
 	
-	msg->number = 1;
-	if(msg->last != NULL)
-		msg->number = msg->last->number + 1;
+	msg = append_msg_list();
+	prev = TAILQ_PREV(msg, MsgList, entries);
+	if(prev != NULL)
+		msg->number = prev->number + 1;
+	else
+		msg->number = 1;
 
 	if((fp = open_message_write(msg->number)) == NULL)
 		return ERROR;

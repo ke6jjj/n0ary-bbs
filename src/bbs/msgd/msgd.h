@@ -84,8 +84,7 @@ extern time_t
 extern struct msg_dir_entry
 	*get_message(int number),
 	*append_msg_list(void),
-	*unlink_msg_list(struct msg_dir_entry *msg),
-	*MsgDir;
+	*unlink_msg_list(struct msg_dir_entry *msg);
 
 extern struct groups
 	*find_group(char *name),

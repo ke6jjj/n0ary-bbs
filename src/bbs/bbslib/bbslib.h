@@ -1,6 +1,7 @@
 #include <netinet/in.h>
 #include <stdint.h>
 #include <time.h>
+#include <sys/queue.h>
 
 #define FOREGROUND	(dbug_level & dbgFOREGROUND)
 #define VERBOSE		(dbug_level & dbgVERBOSE && FOREGROUND)
@@ -307,7 +308,7 @@ extern struct MsgdCommands MsgdCmds[];
 #define mWHY		(mWHO+1)
 
 struct msg_dir_entry {
-	struct msg_dir_entry *next, *last;
+	TAILQ_ENTRY(msg_dir_entry) entries;
 	long	number;
 	long	size;
 	long	flags;

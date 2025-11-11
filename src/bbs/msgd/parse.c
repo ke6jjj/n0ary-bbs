@@ -331,7 +331,7 @@ parse(struct active_processes *ap, char *s)
 			set_groups(msg);
 		}
 		msg_body_kill(msg->number);
-		msg = unlink_msg_list(msg);
+		unlink_msg_list(msg);
 		return "OK\n";
 	}
 

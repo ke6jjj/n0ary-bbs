@@ -665,11 +665,9 @@ msg_activate_all_held(void)
 	}
 
 	PRINTF("cnt=%d\n", cnt);
-	m = MsgDirList;
-	while(m) {
+	TAILQ_FOREACH(m, &MsgDirList, entries) {
 		if(m->visible)
 			msgd_cmd_num(msgd_xlate(mACTIVE), m->number);
-		NEXT(m);
 	}
 }
 

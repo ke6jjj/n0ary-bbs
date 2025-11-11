@@ -243,13 +243,12 @@ user_unread(int what, int msgnum)
 	cnt = build_partial_list(&lc);
 
 	if(what == READMSG) {
-		struct msg_dir_entry *m = MsgDirList;
-		while(m) {
+		struct msg_dir_entry *m;
+		TAILQ_FOREACH(m, &MsgDirList, entries) {
 			if(m->visible) {
 				if(--msgnum == 0)
 					break;
 			}
-			NEXT(m);
 		}
 
 		if(m) {
@@ -294,8 +293,8 @@ user_unread(int what, int msgnum)
 	sprintf(play_str, "%s has, %d un red messages", play_str, cnt);
 
 	if((what == LISTCALLS) && (cnt != 0)) {
-		struct msg_dir_entry *m = MsgDirList;
-		while(m) {
+		struct msg_dir_entry *m;
+		TAILQ_FOREACH(m, &MsgDirList, entries) {
 			if(m->visible) {
 				if(m->flags & MsgSecure)
 					sprintf(play_str, "%s, secure", play_str);
@@ -308,7 +307,6 @@ user_unread(int what, int msgnum)
 					sprintf(play_str, "%s, \nfrom %s subject %s", 
 						play_str, xlate_call(m->from.name.str), m->sub);
 			}
-			NEXT(m);
 		}
 	}
 	return OK;
