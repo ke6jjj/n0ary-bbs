@@ -1,3 +1,4 @@
+#include <sys/queue.h>
 #include <time.h>
 #include "smtp.h"
 #include "alib.h"
@@ -7,24 +8,25 @@
 #define JustOk		"OK\n"
 #define NoResponse	""
 
-struct Ports {
-	struct Ports *next;
+struct Port {
+	SLIST_ENTRY(Port) entries;
 	char *name;
 	int lock;
 	int lockable;
 	char *reason;
 };
 
-extern struct Ports *PortList;
+SLIST_HEAD(port_list, Port);
+extern struct port_list PortList;
 
-struct active_processes {
-	struct active_processes *next;
+struct active_process {
+	LIST_ENTRY(active_process) entries;
 	int proc_num;
 	int fd;
 	int pid;
 	long t0;
 	long idle;
-	struct Ports *via;
+	struct Port *via;
 	int chat;
 	int chat_port;
 	int notify;
@@ -36,7 +38,8 @@ struct active_processes {
 	alEventHandle ev;
 };
 
-extern struct active_processes *procs;
+LIST_HEAD(proc_list, active_process);
+extern struct proc_list procs;
 
 extern struct text_line *Notify;
 
@@ -54,13 +57,13 @@ extern int
 	read_config_file(char *fn),
 	config_fetch_multi(char *token, struct text_line **tl),
 	config_override(char *token, char *value),
-	daemon_check_in(struct active_processes *ap),
-	daemon_check_out(struct active_processes *ap),
+	daemon_check_in(struct active_process *ap),
+	daemon_check_out(struct active_process *ap),
 	daemons_start(void),
 	daemons_check(void);
 
 extern char
-	*parse(struct active_processes *ap, char *s),
+	*parse(struct active_process *ap, char *s),
 	*config_fetch(char *token),
 	*config_fetch_orig(char *token);
 
@@ -70,5 +73,5 @@ extern void
 	lock_clear_all(void),
 	lock_init(void);
 
-extern struct Ports
+extern struct Port
 	*locate_port(char *via);

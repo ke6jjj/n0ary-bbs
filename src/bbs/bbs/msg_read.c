@@ -135,10 +135,8 @@ read_mine(void)
 		return OK;
 	}
 
-	m = MsgDirList;
-	while(m) {
+	TAILQ_FOREACH(m, &MsgDirList, entries) {
 		if(m->visible == FALSE) {
-			NEXT(m);
 			continue;
 		}
 
@@ -151,7 +149,6 @@ read_mine(void)
 			who_has_read(m->number);
 		else
 			read_message_number(m->number);
-		NEXT(m);
 
 		if(port_type(Via) == tTNC)
 			sleep(4);

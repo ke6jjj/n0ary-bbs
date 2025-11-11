@@ -32,7 +32,7 @@ char
 struct text_line
 	*Notify = NULL;
 
-struct active_processes *procs = NULL;
+struct proc_list procs = LIST_HEAD_INITIALIZER(procs);
 
 struct daemon_check_context {
 	int ping_interval;
@@ -59,7 +59,7 @@ static void notify(char *msg);
 static void notify_callback(void *ctx, void *arg0, int arg1);
 
 static int
-service_port(struct active_processes *ap)
+service_port(struct active_process *ap)
 {
 	char *c, *s, *buf;
 	int have_line;
@@ -116,24 +116,13 @@ service_port(struct active_processes *ap)
 	return OK;
 }
 
-static struct active_processes *
+static struct active_process *
 add_proc()
 {
 	alCallback cb;
 	char buf[256];
-	struct active_processes
-		*tap = procs,
-		*ap = malloc_struct(active_processes);
+	struct active_process *ap = malloc_struct(active_process);
 
-	if(tap == NULL)
-		procs = ap;
-	else {
-		while(tap->next)
-			NEXT(tap);
-		tap->next = ap;
-	}
-
-	strcpy(ap->call, "WHO?");
 	ap->via = NULL;
 	ap->t0 = ap->idle = bbs_time(NULL);
 	ap->fd = ERROR;
@@ -142,6 +131,9 @@ add_proc()
 	ap->verbose = FALSE;
 	ap->sz = 0;
 	ap->ev = NULL;
+	LIST_INSERT_HEAD(&procs, ap, entries);
+
+	strcpy(ap->call, "WHO?");
 
 	snprintf(buf, sizeof(buf),
 		"LOGIN %d UnKwn STATUS %ld", ap->proc_num, ap->t0);
@@ -150,25 +142,12 @@ add_proc()
 	return ap;	
 }
 
-static struct active_processes *
-remove_proc(struct active_processes *ap)
+static void
+remove_proc(struct active_process *ap)
 {
-	struct active_processes *tap = procs;
 	char buf[80];
 
-	if((long)procs == (long)ap) {
-		NEXT(procs);
-		tap = procs;
-	} else {
-		while(tap) {
-			if((long)tap->next == (long)ap) {
-				tap->next = tap->next->next;
-				NEXT(tap);
-				break;
-			}
-			NEXT(tap);
-		}
-	}
+	LIST_REMOVE(ap, entries);
 
 	sprintf(buf, "LOGOUT %d", ap->proc_num);
 	notify(buf);
@@ -181,22 +160,19 @@ remove_proc(struct active_processes *ap)
 
 	close(ap->fd);
 	free(ap);
-	return tap;
 }
 
 static void
 ping_monitors(void)
 {
-	struct active_processes *ap = procs;
+	struct active_process *ap, *ap_temp;
 	char *ping = "! PING\n";
 
-	while(ap) {
+	LIST_FOREACH_SAFE(ap, &procs, entries, ap_temp) {
 		if(ap->notify)
 			if(write(ap->fd, ping, strlen(ping)) < 0) {
-				ap = remove_proc(ap);
-				continue;
+				remove_proc(ap);
 			}
-		NEXT(ap);
 	}
 }
 
@@ -210,17 +186,15 @@ notify_monitors(void)
 	Notify = NULL;
 
 	while(tl) {
-		struct active_processes *ap = procs;
+		struct active_process *ap, *ap_temp;
 		char buf[256];
 		sprintf(buf, "! %s\n", tl->s);
 
-		while(ap) {
+		LIST_FOREACH_SAFE(ap, &procs, entries, ap_temp) {
 			if(ap->notify)
 				if(write(ap->fd, buf, strlen(buf)) < 0) {
-					ap = remove_proc(ap);
-					continue;
+					remove_proc(ap);
 				}
-			NEXT(ap);
 		}
 		NEXT(tl);
 	}
@@ -273,7 +247,6 @@ main(int argc, char *argv[])
 	int delay_s;
 	alEventHandle listen_ev;
         alCallback cb;
-	struct active_processes *ap;
 	struct daemon_check_context check_ctx;
 
 	extern char *config_fn;
@@ -405,7 +378,7 @@ accept_callback(void *ctx, void *arg0, int arg1)
 static void
 service_callback(void *ctx, void *arg0, int arg1)
 {
-	struct active_processes *ap = (struct active_processes *) ctx;
+	struct active_process *ap = (struct active_process *) ctx;
 
 	if(service_port(ap) == ERROR) {
 		remove_proc(ap);

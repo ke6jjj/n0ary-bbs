@@ -31,10 +31,7 @@ static int matches_criteria(struct msg_dir_entry *ml, struct list_criteria *lc);
 
 int time_list_built = 0;
 
-struct msg_dir_entry
-	*free_message_list(void),
-	*MsgDirTail = NULL,
-	*MsgDirList = NULL;
+struct msg_dir_list MsgDirList = TAILQ_HEAD_INITIALIZER(MsgDirList);
 
 static struct user_list_info ui;
 
@@ -382,11 +379,9 @@ msg_quick_locate(int msgnum)
 	if (msg_hash_get(msgnum, &m) == OK)
 		return m;
 	
-	m = MsgDirList;
-	while(m) {
+	TAILQ_FOREACH(m, &MsgDirList, entries) {
 		if(m->number == msgnum)
 			return m;
-		NEXT(m);
 	}
 	return NULL;
 }
@@ -399,11 +394,9 @@ msg_locate(int msgnum)
 	if (msg_hash_get(msgnum, &m) == OK)
 		return m;
 	
-	m = MsgDirList;
-	while(m) {
+	TAILQ_FOREACH(m, &MsgDirList, entries) {
 		if(m->number == msgnum)
 			return m;
-		NEXT(m);
 	}
 
 		/* in an attempt to speed accessing msgd we have reduced the
@@ -411,11 +404,9 @@ msg_locate(int msgnum)
 		 * therefore get a fresh copy if the message isn't here.
 		 */
 	build_full_message_list();
-	m = MsgDirList;
-	while(m) {
+	TAILQ_FOREACH(m, &MsgDirList, entries) {
 		if(m->number == msgnum)
 			return m;
-		NEXT(m);
 	}
 	return NULL;
 }
@@ -428,14 +419,7 @@ msg_delete(int msgnum)
 	if(m == NULL)
 		return ERROR;
 
-	if(m->last != NULL)
-		m->last->next = m->next;
-	else
-		MsgDirList = m->next;
-
-	if(m->next != NULL)
-		m->next->last = m->last;
-
+	TAILQ_REMOVE(&MsgDirList, m, entries);
 	free(m);
 	return OK;
 }
@@ -504,32 +488,17 @@ msg_parse(struct msg_dir_entry *m, char *s, int read_by_me)
 static int
 msg_insert(struct msg_dir_entry *m, int num)
 {
-	struct msg_dir_entry *msg = MsgDirList;
+	struct msg_dir_entry *msg;
 
-	if(MsgDirList == NULL) {
-		MsgDirList = m;
-		return OK;
-	}
-
-	if(MsgDirList->number > num) {
-		m->next = MsgDirList;
-		MsgDirList = m;
-		return OK;
-	}
-
-	while(msg->next) {
-		if(msg->next->number > num) {
-			m->next = msg->next;
-			m->next->last = m;
-			msg->next = m;
-			m->last = msg;
+	TAILQ_FOREACH_REVERSE(msg, &MsgDirList, msg_dir_list, entries) {
+		if (num < msg->number) {
+			TAILQ_INSERT_BEFORE(msg, m, entries);
 			return OK;
 		}
-		NEXT(msg);
 	}
 
-	msg->next = m;
-	m->last = msg;
+	TAILQ_INSERT_HEAD(&MsgDirList, m, entries);
+
 	return OK;
 }
 
@@ -613,24 +582,21 @@ build_full_message_list(void)
 		NEXT(mb);
 	}
 	msg_buffer = textline_free(msg_buffer);
-	return MsgDirList;
+	return TAILQ_FIRST(&MsgDirList);
 }
 
-struct msg_dir_entry *
+void
 free_message_list(void)
 {
-	struct msg_dir_entry *tmp;
+	struct msg_dir_entry *msg, *tmp;
 	
-	while(MsgDirList) {
-		tmp = MsgDirList;
-		NEXT(MsgDirList);
-		if(tmp->body)
-			msg_free_body(tmp);
-		free(tmp);
+	TAILQ_FOREACH_SAFE(msg, &MsgDirList, entries, tmp) {
+		if(msg->body)
+			msg_free_body(msg);
+		free(msg);
 	}
-	MsgDirTail = NULL;
+	TAILQ_INIT(&MsgDirList);
 	msg_hash_init();
-	return NULL;
 }
 
 int
@@ -737,18 +703,16 @@ build_partial_list(struct list_criteria *lc)
 
 	while(ml) {
 		ml->visible = FALSE;
-		NEXT(ml);
+		ml = TAILQ_NEXT(ml, entries);
 	}
-	ml = MsgDirList;
 
-	while(ml) {
+	TAILQ_FOREACH(ml, &MsgDirList, entries) {
 		if(matches_criteria(ml, lc)) {
 			ml->visible = TRUE;
 			cnt++;
 			if(lc->range_type == FIRST && cnt == lc->range[0])
 				break;
 		}
-		NEXT(ml);	
 	}
 
 	if(lc->range_type == LAST && cnt > lc->range[0])

@@ -104,11 +104,9 @@ kill_mine(void)
 	lc.exclude_mask = 0;
 	build_partial_list(&lc);
 
-	m = MsgDirList;
-	while(m) {
+	TAILQ_FOREACH(m, &MsgDirList, entries) {
 		if(m->visible)
 			kill_message_number(m);
-		NEXT(m);
 	}
 }
 
@@ -124,8 +122,7 @@ kill_range(int start, int finish)
 	build_partial_list(&lc);
 
 	for(num=start; num<=finish; num++) {
-		m = MsgDirList;
-		while(m) {
+		TAILQ_FOREACH(m, &MsgDirList, entries) {
 			if(m->number == num && m->visible) {
 				if(IsMsgActive(m)) {
 					kill_message_number(m);
@@ -133,7 +130,6 @@ kill_range(int start, int finish)
 				}
 				break;
 			}
-			NEXT(m);
 		}
 	}
 	return OK;
@@ -154,14 +150,12 @@ kill_messages(struct TOKEN *t)
 
 	while(t->token != END) {
 		if(t->token == NUMBER) {
-			m = MsgDirList;
-			while(m) {
+			TAILQ_FOREACH(m, &MsgDirList, entries) {
 				if(m->number == t->value && m->visible) {
 					kill_message_number(m);
 					active_message = t->value;
 					break;
 				}
-				NEXT(m);
 			}
 
 			if(m == NULL)

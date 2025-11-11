@@ -27,8 +27,8 @@ static char *
 parse_check(char *s)
 {
 	char call[80];
-	struct Ports *port = NULL;
-	struct active_processes *ap = procs;
+	struct Port *port = NULL;
+	struct active_process *ap;
 	int cnt = 0;
 
 	if(*s == 0)
@@ -40,7 +40,7 @@ parse_check(char *s)
 
 	uppercase(call);
 
-	while(ap) {
+	LIST_FOREACH(ap, &procs, entries) {
 		if(!strcmp(ap->call, call)) {
 			if(port != NULL) {
 				if(ap->via == port)
@@ -48,7 +48,6 @@ parse_check(char *s)
 			} else
 				cnt++;
 		}
-		NEXT(ap);
 	}
 
 	snprintf(output, sizeof(output), "%d\n", cnt);
@@ -56,17 +55,17 @@ parse_check(char *s)
 }
 
 static char *
-parse_status(struct active_processes *me, char *s)
+parse_status(struct active_process *me, char *s)
 {
 	char buf[4096];
 	char *mode = get_string(&s);
 	uppercase(mode);
 
 	if(!strcmp(mode, "PROCS")) {
-		struct active_processes *ap = procs;
-		struct Ports *port = PortList;
+		struct active_process *ap;
+		struct Port *port;
 
-		while(ap) {
+		LIST_FOREACH(ap, &procs, entries) {
 			if(ap->verbose == TRUE) {
 				long t = time(NULL);
 				sprintf(buf, "%d %s %s %d %d %ld %ld %s %s\n",
@@ -83,32 +82,29 @@ parse_status(struct active_processes *me, char *s)
 			}
 			if(write(me->fd, buf, strlen(buf)) < 0)
 				break;
-			NEXT(ap);
 		}
 
-		while(port) {
+		SLIST_FOREACH(port, &PortList, entries) {
 			if(port->lock)
 				sprintf(buf, "%s LOCK %s\n", port->name, port->reason);
 			else
 				sprintf(buf, "%s UNLOCK\n", port->name);
 			if(write(me->fd, buf, strlen(buf)) < 0)
 				break;
-			NEXT(port);
 		}
 
 		return ".\n";
 	}
 
 	if(!strcmp(mode, "LOCK")) {
-		struct Ports *port = PortList;
-		while(port) {
+		struct Port *port;
+		SLIST_FOREACH(port, &PortList, entries) {
 			if(port->lock)
 				sprintf(buf, "%s LOCK %s\n", port->name, port->reason);
 			else
 				sprintf(buf, "%s UNLOCK\n", port->name);
 			if(write(me->fd, buf, strlen(buf)) < 0)
 				break;
-			NEXT(port);
 		}
 
 		return ".\n";
@@ -178,7 +174,7 @@ set_parameters(char *s)
 }
 
 char *
-parse(struct active_processes *ap, char *s)
+parse(struct active_process *ap, char *s)
 {
 	char *result, buf[80], cmd[80];
 
@@ -206,7 +202,7 @@ parse(struct active_processes *ap, char *s)
 	while(bc->token != 0) {
 		if(!stricmp(bc->key, buf)) {
 			char *p, buf[256];
-			struct Ports *via;
+			struct Port *via;
 
 			switch(bc->token) {
 			case bCHAT:
