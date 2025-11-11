@@ -339,7 +339,7 @@ bbs_time(long *t)
 static void
 accept_callback(void *ctx, void *arg0, int arg1)
 {
-	struct active_processes *ap;
+	struct active_process *ap;
 	int fd, res;
 	intptr_t listen_sock;
 	char buf[80];
