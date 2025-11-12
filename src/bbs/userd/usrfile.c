@@ -651,8 +651,8 @@ usrfile_kill(char *call)
 				t->info.port = t->info.port->next;
 				free(port);
 			}
-			free_list(&(ul->info.Include));
-			free_list(&(ul->info.Exclude));
+			free_list(&(t->info.Include));
+			free_list(&(t->info.Exclude));
 			free(t);
 			return OK;
 		}
