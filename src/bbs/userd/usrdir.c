@@ -17,7 +17,7 @@
 void
 display_userdir()
 {
-	struct UserDirectory *dir = UsrDir;
+	struct UserDirectory *dir;
 
 	FILE *fp = fopen("userd.out", "w");
 	if(fp == NULL) {
@@ -25,23 +25,21 @@ display_userdir()
 		return;
 	}
 
-	while(dir != NULL) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 		fprintf(fp, "%4d %s [%d] %s (%d) %s", dir->number, dir->call,
 			dir->class, port_alias(port_name(dir->port)),
 			dir->connect_cnt, ctime(&dir->lastseen));
-		NEXT(dir);
 	}
 }
 
 void
 usrdir_lookup(char *s)
 {
-	struct UserDirectory *dir = UsrDir;
+	struct UserDirectory *dir;
 
-	while(dir) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 		if(!strcmp(s, dir->call))
 			return;
-		NEXT(dir);
 	}
 }
 #endif
@@ -50,7 +48,7 @@ void
 usrdir_allocate(char *call, char *s)
 {
 	struct UserDirectory *dir = malloc_struct(UserDirectory);
-	struct UserDirectory **tdir = &UsrDir;
+	struct UserDirectory *tdir, *last;
 
 	strncpy(dir->call, call, LenCALL);
 	dir->class = parse_callsign(call);
@@ -61,15 +59,18 @@ usrdir_allocate(char *call, char *s)
 	dir->port = get_number(&s);
 	dir->connect_cnt = get_number(&s);
 
-	while(*tdir != NULL) {
-		if((*tdir)->lastseen < dir->lastseen) {
-			dir->next = *tdir;
-			break;
+	if (LIST_EMPTY(&UsrDir)) {
+		LIST_INSERT_HEAD(&UsrDir, dir, entries);
+	} else {
+		LIST_FOREACH(tdir, &UsrDir, entries) {
+			if (tdir->lastseen < dir->lastseen) {
+				LIST_INSERT_BEFORE(tdir, dir, entries);
+				return;
+			}
+			last = tdir;
 		}
-		tdir = &((*tdir)->next);
+		LIST_INSERT_AFTER(last, dir, entries);
 	}
-
-	*tdir = dir;
 }
 
 static int
@@ -84,12 +85,11 @@ bad_char(char *s)
 int
 usrdir_unique_number(int num)
 {
-	struct UserDirectory *dir = UsrDir;
+	struct UserDirectory *dir;
 
-	while(dir) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 		if(dir->number == num)
 			return FALSE;
-		NEXT(dir);
 	}
 	return TRUE;
 }
@@ -97,26 +97,14 @@ usrdir_unique_number(int num)
 int
 usrdir_kill(char *s)
 {
-	struct UserDirectory *tmp, *dir = UsrDir;
+	struct UserDirectory *dir;
 
-	if(UsrDir == NULL)
-		return OK;
-
-	if(!strcmp(UsrDir->call, s)) {
-		tmp = UsrDir;
-		UsrDir = tmp->next;
-		free(tmp);
-		return OK;
-	}
-
-	while(dir->next) {
-		if(!strcmp(s, dir->next->call)) {
-			tmp = dir->next;
-			dir->next = tmp->next;
-			free(tmp);
+	LIST_FOREACH(dir, &UsrDir, entries) {
+		if(!strcmp(s, dir->call)) {
+			LIST_REMOVE(dir, entries);
+			free(dir);
 			return OK;
 		}
-		NEXT(dir);
 	}
 	return OK;
 }
@@ -169,57 +157,50 @@ usrdir_build(void)
 void
 usrdir_immune(char *call, int immune)
 {
-	struct UserDirectory *dir = UsrDir;
+	struct UserDirectory *dir;
 	
-	while(dir) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 		if(!strcmp(call, dir->call)) {
 			dir->immune = immune;
 			break;
 		}
-		NEXT(dir);
 	}
 }
 
 void
 usrdir_number(char *call, int number)
 {
-	struct UserDirectory *dir = UsrDir;
+	struct UserDirectory *dir;
 	
-	while(dir) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 		if(!strcmp(call, dir->call)) {
 			dir->number = number;
 			break;
 		}
-		NEXT(dir);
 	}
 }
 
 void
 usrdir_touch(char *call, int port, long now)
 {
-	struct UserDirectory *last = NULL, *dir = UsrDir;
+	struct UserDirectory *dir;
 	
-	while(dir) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 		if(!strcmp(call, dir->call)) {
 			dir->connect_cnt++;
 			dir->port = port;
 			dir->lastseen = now;
-			if(last != NULL) {
-				last->next = dir->next;
-				dir->next = UsrDir;
-				UsrDir = dir;
-			}
+			LIST_REMOVE(dir, entries);
+			LIST_INSERT_HEAD(&UsrDir, dir, entries);
 			return;
 		}
-		last = dir;
-		NEXT(dir);
 	}
 }
 
 char *
 find_user(char *s)
 {
-	struct UserDirectory *dir = UsrDir;
+	struct UserDirectory *dir;
 	long number;
 
 	if(*s == 0)
@@ -227,12 +208,11 @@ find_user(char *s)
 
 	number = get_number(&s);
 	
-	while(dir) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 		if(dir->number == number) {
 			sprintf(output, "%s\n", dir->call);
 			return output;
 		}
-		NEXT(dir);
 	}
 
 	return "NO, user by that number\n";
@@ -241,7 +221,7 @@ find_user(char *s)
 char *
 find_user_by_suffix(char *s)
 {
-	struct UserDirectory *dir = UsrDir;
+	struct UserDirectory *dir;
 	char pattern[80];
 	int found = FALSE;
 #if HAVE_REGCOMP
@@ -261,7 +241,7 @@ find_user_by_suffix(char *s)
 		return "NO, bad suffix\n";
 
 	output[0] = 0;
-	while(dir) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 #if HAVE_REGCOMP
 		if (regexec(&preg, dir->call, 0, NULL, 0) == 0) {
 #else
@@ -270,7 +250,6 @@ find_user_by_suffix(char *s)
 			sprintf(output, "%s %s", output, dir->call);
 			found = TRUE;
 		}
-		NEXT(dir);
 	}
 
 	if(!found)

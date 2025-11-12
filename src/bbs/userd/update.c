@@ -10,7 +10,7 @@
 int
 scan_users(FILE *fp, time_t seen, time_t changed)
 {
-	struct UserDirectory *dir = UsrDir;
+	struct UserDirectory *dir;
 	time_t t = Time(NULL);
 	struct tm *tm = localtime(&t);
 
@@ -19,7 +19,7 @@ scan_users(FILE *fp, time_t seen, time_t changed)
 		return ERROR;
 	}
 
-	while(dir) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 		char *p, buf[30];
 		int doit = FALSE;
 		sprintf(buf, "%s CHANGED", dir->call);
@@ -46,7 +46,6 @@ scan_users(FILE *fp, time_t seen, time_t changed)
 		
 		if(doit)
 			fprintf(fp, "%s\n", p);
-		NEXT(dir);
 	}
 
 	wpd_close();

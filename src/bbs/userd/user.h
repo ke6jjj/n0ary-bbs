@@ -28,7 +28,7 @@ extern char output[4096];
 #define Error(s)	"NO, "s"\n"
 
 struct UserDirectory {
-	struct UserDirectory *next, *prev;
+	LIST_ENTRY(UserDirectory) entries;
 	char call[LenCALL];
 	int class;
 	int number;
@@ -41,7 +41,8 @@ struct UserDirectory {
 
 #define SizeOfUserDir	sizeof(struct UserDirectory)
 
-extern struct UserDirectory *UsrDir;
+LIST_HEAD(user_directory, UserDirectory);
+extern struct user_directory UsrDir;
 
 struct IncludeList {
 	struct IncludeList *next;

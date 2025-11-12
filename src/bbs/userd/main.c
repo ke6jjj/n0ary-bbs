@@ -11,13 +11,14 @@
 #include <signal.h>
 #include <stdlib.h>
 
+#include "alib.h"
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
 #include "bbslib.h"
 #include "user.h"
 
-struct UserDirectory *UsrDir = NULL;
+struct user_directory UsrDir = LIST_HEAD_INITIALIZER(UsrDir);
 
 time_t
 	time_now = 0,

@@ -19,16 +19,15 @@ is_number(char *s)
 static char *
 disp_last(int num)
 {
-	struct UserDirectory *dir = UsrDir;
+	struct UserDirectory *dir;
 
 	output[0] = 0;
-	while(dir) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 		sprintf(output, "%s%.6s\t%5d\t%s\t%"PRTMd"\n", output, dir->call,
 			dir->connect_cnt, port_name(dir->port), dir->lastseen);
 
 		if(--num == 0 || strlen(output) > 4000)
 			break;
-		NEXT(dir);
 	}
 	strcat(output, ".\n");
 	return output;
@@ -37,7 +36,7 @@ disp_last(int num)
 char *
 disp_user(char *s)
 {
-	struct UserDirectory *dir = UsrDir;
+	struct UserDirectory *dir;
 	char call[LenCALL];
 
 	if(*s == 0)
@@ -52,13 +51,12 @@ disp_user(char *s)
 	if(strlen(call) > 6)
 		return Error("call too long");
 
-	while(dir) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 		if(!strcmp(dir->call, call)) {
 			sprintf(output, "%.6s\t%5d\t%s\t%"PRTMd"\n",
 				call, dir->connect_cnt, port_name(dir->port), dir->lastseen);
 			return output;
 		}
-		NEXT(dir);
 	}
 	return Error("no such user");
 }	

@@ -47,15 +47,13 @@ age_users(struct active_processes *ap)
 	if(dbug_level)
 		dfp = fopen("aging.out", "w");
 
-	dir = UsrDir;
 	wpd_open();
 	gated_open();
 
-	while(dir) {
+	LIST_FOREACH(dir, &UsrDir, entries) {
 		char call[10];
 
 		if(dir->immune) {
-			NEXT(dir);
 			continue;
 		}
 
@@ -110,7 +108,6 @@ age_users(struct active_processes *ap)
 				}
 
 		
-		NEXT(dir);
 		if(call[0]) {
 			char cmd[80];
 			sprintf(cmd, "USER %s", call);
