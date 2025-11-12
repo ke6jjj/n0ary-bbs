@@ -568,6 +568,9 @@ usrfile_close(struct active_processes *ap)
 			free(port);
 		}
 
+		free_list(&(ul->info.Include));
+		free_list(&(ul->info.Exclude));
+
 		if(t == NULL) {
 			UL = ul->next;
 			free(ul);
@@ -601,6 +604,9 @@ usrfile_close_all(struct active_processes *ap)
 				ul->info.port = ul->info.port->next;
 				free(port);
 			}
+
+			free_list(&(ul->info.Include));
+			free_list(&(ul->info.Exclude));
 
 			if(t == NULL) {
 				UL = ul->next;
