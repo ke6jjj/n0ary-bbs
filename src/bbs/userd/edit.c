@@ -125,7 +125,7 @@ edit_toggle(struct active_processes *ap, int token, char *s)
 char *
 edit_list(struct active_processes *ap, int token, char *s)
 {
-	struct IncludeList **list;
+	struct include_list *list;
 	char *string, buf[256];
 	int length, raise_case = FALSE;
 
@@ -147,17 +147,16 @@ edit_list(struct active_processes *ap, int token, char *s)
 
 	switch(operation) {
 	case uCLEAR:
-		*list = free_list(*list);
+		free_list(list);
 		break;
 	case uSET:
 		return Error("SET not valid to a list field");
 	default:
 		if(*s == 0) {
-			struct IncludeList *t = *list;
+			struct IncludeList *t;
 			output[0] = 0;
-			while(t) {
+			SLIST_FOREACH(t, list, entries) {
 				sprintf(output, "%s%s\n", output, t->str);
-				NEXT(t);
 			}
 			strcat(output, ".\n");
 			return output;
@@ -169,8 +168,9 @@ edit_list(struct active_processes *ap, int token, char *s)
 				*p = 0;
 		}
 
-		*list = add_2_list(*list, "");
-		string = (*list)->str;
+		struct IncludeList *t;
+		t = add_2_list(list, "");
+		string = &t->str[0];
 
 		strncpy(buf, s, length);
 		strcpy(string, buf);
@@ -369,20 +369,13 @@ show_user(struct active_processes *ap)
 		if(ap->ul->info.macro[i][0])
 			sprintf(output, "%sMACRO %d %s\n", output, i, ap->ul->info.macro[i]);
 
-	if(ap->ul->info.Include) {
-		struct IncludeList *list = ap->ul->info.Include;
-		while(list) {
-			sprintf(output, "%sINCLUDE %s\n", output, list->str);
-			NEXT(list);
-		}
+	struct IncludeList *list;
+	SLIST_FOREACH(list, &(ap->ul->info.Include), entries) {
+		sprintf(output, "%sINCLUDE %s\n", output, list->str);
 	}
 
-	if(ap->ul->info.Exclude) {
-		struct IncludeList *list = ap->ul->info.Exclude;
-		while(list) {
-			sprintf(output, "%sEXCLUDE %s\n", output, list->str);
-			NEXT(list);
-		}
+	SLIST_FOREACH(list, &(ap->ul->info.Exclude), entries) {
+		sprintf(output, "%sEXCLUDE %s\n", output, list->str);
 	}
 
 	port = ap->ul->info.port;

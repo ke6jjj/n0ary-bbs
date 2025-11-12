@@ -45,7 +45,7 @@ LIST_HEAD(user_directory, UserDirectory);
 extern struct user_directory UsrDir;
 
 struct IncludeList {
-	struct IncludeList *next;
+	SLIST_ENTRY(IncludeList) entries;
 	char	str[80];
 };
 
@@ -58,6 +58,7 @@ struct Ports {
 	long	count;
 };
 
+SLIST_HEAD(include_list, IncludeList);
 struct UserInformation {
 	long	sysop, approved, nonham, help, ascending;
 	long	newline, logging, immune, halfduplex;
@@ -73,8 +74,8 @@ struct UserInformation {
 	char	computer[LenEQUIP];
 	char	rig[LenEQUIP];
 	char	software[LenEQUIP];
-	struct IncludeList *Include;
-	struct IncludeList *Exclude;
+	struct include_list Include;
+	struct include_list Exclude;
 	char	macro[10][LenMACRO];
 
 	long	spare0;
@@ -146,7 +147,8 @@ struct UserList
 struct UserInformation
 	*usrfile_read(char *call, struct active_processes *ap);
 
-struct IncludeList
-	*free_list(struct IncludeList *list),
-	*add_2_list(struct IncludeList *list, char *str);
+void
+	free_list(struct include_list *list);
+struct IncludeList *
+	add_2_list(struct include_list *list, char *str);
 

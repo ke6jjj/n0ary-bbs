@@ -44,16 +44,12 @@ usrfile_put(struct UserInformation *u, FILE *fp)
 	if(u->lines) fprintf(fp, "LINES %ld\n", u->lines);
 	if(u->base) fprintf(fp, "BASE %ld\n", u->base);
 
-	list = u->Include;
-	while(list) {
+	SLIST_FOREACH(list, &u->Include, entries) {
 		fprintf(fp, "INCLUDE %s\n", list->str);
-		NEXT(list);
 	}
 
-	list = u->Exclude;
-	while(list) {
+	SLIST_FOREACH(list, &u->Exclude, entries) {
 		fprintf(fp, "EXCLUDE %s\n", list->str);
-		NEXT(list);
 	}
 	fprintf(fp, "MESSAGE %ld\n", u->message);
 	if(u->bbs) fprintf(fp, "BBS\n");
@@ -88,26 +84,23 @@ usrfile_put(struct UserInformation *u, FILE *fp)
 	return OK;
 }
 
-struct IncludeList *
-free_list(struct IncludeList *list)
+void
+free_list(struct include_list *list)
 {
-	struct IncludeList *t;
+	struct IncludeList *t, *temp;
 
-	while(list) {
-		t = list;
-		NEXT(list);
+	SLIST_FOREACH_SAFE(t, list, entries, temp) {
 		free(t);
 	}
-
-	return NULL;
+	SLIST_INIT(list);
 }
 
 struct IncludeList *
-add_2_list(struct IncludeList *List, char *txt)
+add_2_list(struct include_list *List, char *txt)
 {
 	struct IncludeList *t = malloc_struct(IncludeList);
-	t->next = List;
 	strcpy(t->str, txt);
+	SLIST_INSERT_HEAD(List, t, entries);
 	return t;
 }
 
@@ -118,6 +111,9 @@ usrfile_parse(struct UserInformation *u, FILE *fp)
 	struct Ports *port = u->port;
 
 	bzero(u, SizeOfUserInfo);
+	SLIST_INIT(&(u->Include));
+	SLIST_INIT(&(u->Exclude));
+
 	u->port = port;
 
 	while(port) {
@@ -182,11 +178,11 @@ usrfile_parse(struct UserInformation *u, FILE *fp)
 			continue;
 		}
 		if(!strcmp(p, "INCLUDE")) {
-			u->Include = add_2_list(u->Include, q);
+			add_2_list(&u->Include, q);
 			continue;
 		}
 		if(!strcmp(p, "EXCLUDE")) {
-			u->Exclude = add_2_list(u->Exclude, q);
+			add_2_list(&u->Exclude, q);
 			continue;
 		}
 		if(!strcmp(p, "MESSAGE")) {
@@ -300,6 +296,8 @@ usrfile_allocate(void)
 {
 	struct UserList **ul = &UL;
 	struct UserList *t = malloc_struct(UserList);
+	SLIST_INIT(&(t->info.Include));
+	SLIST_INIT(&(t->info.Exclude));
 	struct PortDefinition *pd = port_table();
 	struct Ports **port = &(t->info.port);
 
@@ -442,6 +440,8 @@ usrfile_create(char *call)
 		return TRUE;
 
 	bzero(&u, SizeOfUserInfo);
+	SLIST_INIT(&u.Include);
+	SLIST_INIT(&u.Exclude);
 
 	while(!usrdir_unique_number(u.number))
 		u.number++;
@@ -636,6 +636,8 @@ usrfile_kill(char *call)
 			free(port);
 		}
 
+		free_list(&(ul->info.Include));
+		free_list(&(ul->info.Exclude));
 		free(ul);
 		return OK;
 	}
@@ -649,6 +651,8 @@ usrfile_kill(char *call)
 				t->info.port = t->info.port->next;
 				free(port);
 			}
+			free_list(&(ul->info.Include));
+			free_list(&(ul->info.Exclude));
 			free(t);
 			return OK;
 		}
