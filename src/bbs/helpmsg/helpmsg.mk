@@ -3,6 +3,7 @@ HELPMSG_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 HELPMSG_APP_SRCDIR := $(HELPMSG_SRCDIR)
 HELPMSG_APP_OBJDIR := $(BBS_OBJDIR)/helpmsg
+BBS_LOCALDIR := $(HELPMSG_APP_SRCDIR)/../../include
 
 HELPMSG_APP_PROD := helpmsg
 
@@ -15,9 +16,13 @@ $(eval $(call create_bbs_app_rules,HELPMSG_APP))
 HELPMSG_DAT := $(HELPMSG_APP_OBJDIR)/helpmsg.dat
 HELPMSG_IDX := $(HELPMSG_APP_OBJDIR)/helpmsg.idx
 
-$(HELPMSG_DAT) $(HELPMSG_IDX): $(HELPMSG_APP) $(HELPMSG_SRCDIR)/helpmsg.txt
+HELPMSG_CORE := $(HELPMSG_APP_SRCDIR)/helpmsg.txt
+HELPMSG_LOCAL := $(BBS_LOCALDIR)/local-helpmsg.txt
+
+$(HELPMSG_DAT) $(HELPMSG_IDX): $(HELPMSG_APP) $(HELPMSG_CORE) $(HELPMSG_LOCAL)
 	$(HELPMSG_APP) \
-		$(HELPMSG_SRCDIR)/helpmsg.txt \
+		$(HELPMSG_CORE) \
+		$(HELPMSG_LOCAL) \
 		$(HELPMSG_DAT) \
 		$(HELPMSG_IDX)
 

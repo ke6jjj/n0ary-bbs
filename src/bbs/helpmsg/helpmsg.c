@@ -7,7 +7,7 @@
 #include "bbslib.h"
 #include "vars.h"
 
-FILE *txt, *dat, *idx;
+FILE *txt, *ltxt, *dat, *idx;
 long indx[MAXINDX];
 
 static void usage(const char *prog);
@@ -38,24 +38,30 @@ int
 main(int argc, char *argv[])
 {
 	int i, maxfound;
-	char buf[256], *msgs, *msgdat, *msgidx;
+	char buf[256], *msgs, *lmsgs, *msgdat, *msgidx;
 
 	msgs = "helpmsg.txt";
+	lmsgs = "local-helpmsg.txt";
 	msgdat = "helpmsg.dat";
 	msgidx = "helpmsg.idx";
 
 	if (argc > 1) {
-		if (argc != 4) {
+		if (argc != 5) {
 			usage(argv[0]);
 			exit(1);
 		}
 		msgs = argv[1];
-		msgdat = argv[2];
-		msgidx = argv[3];
+		lmsgs = argv[2];
+		msgdat = argv[3];
+		msgidx = argv[4];
 	}
 
 	if((txt = fopen(msgs, "r")) == NULL) {
 		printf("Failure opening messages.txt\n");
+		exit(1);
+	}
+	if((ltxt = fopen(lmsgs, "r")) == NULL) {
+		printf("Failure opening local-messages.txt\n");
 		exit(1);
 	}
 	if((dat = fopen(msgdat, "w")) == NULL) {
@@ -71,6 +77,19 @@ main(int argc, char *argv[])
 		indx[i] = 0;
 
 	while(fgets(buf,256,txt)) {
+		switch(buf[0]) {
+		case '!':
+			i = atoi(&buf[1]);
+			fprintf(dat, "======= %d =======\n", i);
+			indx[i] = ftell(dat);
+			break;
+		case '0':
+		case '1':
+			move_string(buf);
+		}
+	}
+
+	while(fgets(buf,256,ltxt)) {
 		switch(buf[0]) {
 		case '!':
 			i = atoi(&buf[1]);
@@ -103,9 +122,10 @@ main(int argc, char *argv[])
 static void
 usage(const char *prog)
 {
-	fprintf(stderr, "usage: %s [ <msgtxt> <msgdat> <msgidx> ]\n", prog);
+	fprintf(stderr, "usage: %s [ <core-msgtxt> <local-msgtxt> <msgdat> <msgidx> ]\n", prog);
 	fprintf(stderr, "Help text compiler.\n");
-	fprintf(stderr, "<msgtxt> - Source for help messages. (Default \"messages.txt\")\n");
+	fprintf(stderr, "<core-msgtxt> - Source for global help messages. (Default \"messages.txt\")\n");
+	fprintf(stderr, "<msgtxt> - Source for help messages that are specific for this BBS installation. (Default \"local-messages.txt\")\n");
 	fprintf(stderr, "<msgdat> - Name of .dat file to write (Default \"messages.dat\")\n");
 	fprintf(stderr, "<msgidx> - Name of .idx file to write (Default \"messages.idx\")\n");
 }

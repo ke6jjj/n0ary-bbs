@@ -9,11 +9,20 @@ To compile N0ARY in its current form you will need GNU Make (gmake) version
 
 # Configuration 
 
-Before compiling the BBS you will need to edit `src/include/site_config.mk`
-to specify two important options: the target operating system and the BBS
-install directory.
+Before compiling the BBS you will need to create customized copies of a
+few files:
 
-## Operating System
+1. Target OS and install directory: `src/include/site_config.mk`
+
+2. Customized informational message about your BBS: `src/include/local-helpmsg.txt`
+
+## site_config.mk
+
+Your site configuration file, `src/include/site_config.mk`, needs to be copied
+from the example file `src/include/site_config.mk.example` and then edited
+to effect two important items.
+
+### Operating System
 
 You must edit `src/include/site_config.mk` to tell the build system which
 operating system you are running. There are two choices: FreeBSD or SunOS.
@@ -37,7 +46,7 @@ operating system you are running. There are two choices: FreeBSD or SunOS.
 
     *Further cross-compilation instructions to be written*
 
-## BBS Installation Directory
+### BBS Installation Directory
 
 The BBS requires its own dedicated directory on the host filesystem and to
 correctly install it, the final "make install" rules need to know where this
@@ -47,6 +56,21 @@ directory is. To set it up, edit `src/include/site_config.mk` and set the
     BBS_DIR=<bbs-home-directory>
 
 One example would be `/usr/home/bbs`
+
+## local helpmsg.txt file
+
+The local helpmsg.txt file, `src/include/local-helpmsg.txt`, needs to be copied
+from one of the examples (such as `src/include/local-helpmsg.txt.n0ary`) and
+then edited so that it reflects your BBS. The edits required should be pretty
+obvious, but here's an example message in the file that will likely need to
+be changed:
+
+```
+!50 WELCOME
+1110
+1110 Hello %F,
+1100 Welcome to the Bernal Heights, San Francisco packet BBS
+```
 
 # Compilation
 

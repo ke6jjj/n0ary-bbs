@@ -1,2 +1,4 @@
 obj/
 obj-debug/
+include/local-helpmsg.txt
+include/site_config.mk
