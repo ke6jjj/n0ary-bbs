@@ -1,0 +1,80 @@
+#
+#  Local prompt and error message file
+#
+#  The messages you define here will OVERRIDE the default messages that
+#  come with the BBS source code.
+#
+##############################################################################
+#
+#  Comments begin with a '#' and are ignored from that
+#  point on. The structure of the file consists of:
+#     # MODULE:FUNCTION message description
+#     !MSGNUM
+#     XXXX MSG
+#
+#  XXXX is a vector that indicates which help levels get this command.
+#  This allows a statement to be display for only a single level or
+#  multiple levels.
+#     0001 - Help level 0 (BBS)
+#     0010 - Help level 1 (EXPERT)
+#     0100 - Help level 2 (FULL PROMPTING)
+#     1000 - Help level 3 (FULL EXPLAINATIONS)
+#
+#  Macro expansion is used to insert numbers and text into the static
+#  lines. These are indicated by a single '%'. The string "%%" prints
+#  a real '%' in the text. Current macros are:
+#     M - current_message_number
+#     B - bbs_callsign
+#     C - CurrentUser.call
+#     H - CurrentUser.home
+#     U - CurrentUser.number
+#     S - supplied string
+#     N - supplied number (decimal)
+#     L - CurrentUser.lname
+#     F - CurrentUser.fname
+#
+#  This file is passed thru a filter program that creates a compressed
+#  message file as well as an index file for quicker access of strings.
+#
+#  Ending a string in ">:?" will cause the message displayer to not append
+#  a [CR] to the string. This is used for prompting.
+#
+#========================================================================
+
+!50 WELCOME
+1110
+1110 Hello %F,
+1100 Welcome to the South Bay area packet BBS
+
+!943
+1110 WEATHER command ==========================================================
+1110    WX [INDOOR]
+1110    WX Temperature|Humidity|Barometer|Rain|Wind
+1110    WX Data
+1110    WX SET Temperature|Humidity|Barometer|Rain|Wind value
+1110
+1110 This bbs connects at various times with a weather station operated on
+1110 Mt. Umunhum by BAYCOM (WA6YCZ). The WX command will display a page of
+1110 of weather statistics and the time that it was downloaded. You can 
+1110 request a crude graph of historical data on any of the weather
+1110 parameters listed by supplying the individual parameter.
+1110 You can also use this command to set the weather. Please be aware that
+1110 the weather station is located atop Mt. Umunhum and it make take a
+1110 while before your changes can be felt in your area. Also keep in mind
+1110 that there are people living up there. The INDOOR keyword refers to the
+1110 shack on the hill that houses the weather station, not your home.
+1100    WX
+1100    WX TEMPERATURE                     [WX T]
+1100    WX SET RAIN 1.2 (inches implied)   [WX SET R 1.2]
+
+!986 INFO
+1110 CHOOSING A HOME BBS ======================================================
+1110 When choosing a home bbs you should find a bbs that is near your packet
+1110 station and has a reliable path. DXing to bbs is discouraged, all bbs's
+1110 carry the same bulletins. Also sending messages from a bbs that is not
+1110 your home bbs can corrupt your white pages entry. For those that have
+1110 tnc's with a personal mailbox don't put your tnc's call in this field.
+1110 Your home bbs has to be able to support bulletin and message forwarding.
+1110 If your are in the Sunnyvale area or this bbs is easy for you to connect
+1110 to your welcome to join us here, enter "HOME %B".
+
