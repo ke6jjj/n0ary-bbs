@@ -129,7 +129,8 @@ display_listing(struct list_criteria *lc, int to_pipe)
 				if(m->visible)
 					cnt--;
 			}
-		}
+		} else
+			m = TAILQ_FIRST(&MsgDirList);
 	} else {
 		if(lc->range_type == FIRST) {
 			TAILQ_FOREACH(m, &MsgDirList, entries) {
