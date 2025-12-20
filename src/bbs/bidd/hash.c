@@ -118,19 +118,22 @@ hash_delete_bid(char *s)
 	return ERROR;
 }
 
-char *
+int
 hash_write(FILE *fp)
 {
-	int i;
+	size_t i;
+	int res;
 
 	for(i=0; i<HASH_SIZE; i++) {
 		struct bid_entry *b = bid[i];
 		while(b) {
-			fprintf(fp, "+%s %"PRTMd"\n", b->str, b->seen);
+			res = fprintf(fp, "+%s %"PRTMd"\n", b->str, b->seen);
+			if (res < 0)
+				return res;
 			NEXT(b);
 		}
 	}
-	return "OK\n";
+	return 0;
 }
 
 char *

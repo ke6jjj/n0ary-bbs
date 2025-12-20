@@ -6,43 +6,89 @@
 #include "bbslib.h"
 #include "wp.h"
 
-static void
+static int
 write_comment(FILE *fp)
 {
- fprintf(fp, "# This is a machine created file. If you edit it manually\n");
- fprintf(fp, "# you need to kill the wpd process, edit the file, then\n");
- fprintf(fp, "# restart the wpd daemon.\n");
- fprintf(fp, "#\n");
+    return fputs(
+        "# This is a machine created file. If you edit it manually\n"
+        "# you need to kill the wpd process, edit the file, then\n"
+        "# restart the wpd daemon.\n"
+        "#\n"
 
- fprintf(fp, "# This file is automatically updated once an hour if changes\n");
- fprintf(fp, "# have been made to the runtime memory image.\n");
- fprintf(fp, "#\n");
+        "# This file is automatically updated once an hour if changes\n"
+        "# have been made to the runtime memory image.\n"
+        "#\n"
 
- fprintf(fp, "# The '+' character at the beginning of the line indicates\n");
- fprintf(fp, "# that the line has been preparsed so error detection can\n");
- fprintf(fp, "# be skipped. If you edit or add a line delete the '+'.\n");
- fprintf(fp, "#\n");
+        "# The '+' character at the beginning of the line indicates\n"
+        "# that the line has been preparsed so error detection can\n"
+        "# be skipped. If you edit or add a line delete the '+'.\n"
+        "#\n",
+        fp
+    );
+}
+
+static int
+write_users_help(FILE *fp)
+{
+    return fputs(
+        "# Entry format, non-parsed..\n"
+        "# CALL LEVEL FIRSTSEEN SEEN CHANGED UPDATED HOMEBBS FNAME ZIP QTH\n"
+        "#        |       |      |      |       |\n"
+        "#        |       +------+------+-------+- mo/da/yr  (02/28/93)\n"
+        "#        +- 0 = Sysop\n"
+        "#        +- 1 = User\n"
+        "#        +- 2 = Questionable\n"
+        "#\n"
+        "# N6ZFJ 1 12/14/91 02/01/93 01/15/93 01/01/85 N0ARY Connie 94086 Sunnyvale, CA\n"
+        "#\n",
+        fp
+    );
+}
+
+static int
+write_bbs_help(FILE *fp)
+{
+    return fputs(
+        "# Entry format, non-parsed..\n"
+        "# BBSCALL LEVEL HLOC\n"
+        "#           |\n"
+        "#           +- 0 = Sysop\n"
+        "#           +- 1 = User\n"
+        "#           +- 2 = Questionable\n"
+        "#\n"
+        "# N0ARY 1 #NOCAL.CA.USA.NA\n"
+        "#\n",
+        fp
+    );
 }
 
 static char *
 write_full_file()
 {
 	FILE *fp = spool_fopen(Wpd_Dump_File);
-	char *r;
+	int r;
 
 	if(fp == NULL)
 		return "Failed to open output file\n";
 
-	r = hash_write(fp, WriteALL);
-	spool_fclose(fp);
-	return r;
+	if (hash_write(fp, WriteALL) < 0)
+		goto WriteFailed;
+	if (spool_fclose(fp) < 0)
+		goto CloseError;
+
+	return "OK\n";
+
+WriteFailed:
+	spool_abort(fp);
+CloseError:
+	return "ERROR\n";
 }
 
 char *
 write_user_file(void)
 {
 	FILE *fp = spool_fopen(Wpd_User_File);
-	char *r;
+	int r;
 
 	time_t t0;
 	if(dbug_level & dbgVERBOSE)
@@ -51,25 +97,30 @@ write_user_file(void)
 	if(fp == NULL)
 		return "Failed to open output file\n";
 
-	fprintf(fp, "# v1 %s\n#\n", Wpd_User_File);
-	write_comment(fp);
-	fprintf(fp, "# Entry format, non-parsed..\n");
-	fprintf(fp, "# CALL LEVEL FIRSTSEEN SEEN CHANGED UPDATED HOMEBBS FNAME ZIP QTH\n");
-	fprintf(fp, "#        |       |      |      |       |\n");
-	fprintf(fp, "#        |       +------+------+-------+- mo/da/yr  (02/28/93)\n");
-	fprintf(fp, "#        +- 0 = Sysop\n");
-	fprintf(fp, "#        +- 1 = User\n");
-	fprintf(fp, "#        +- 2 = Questionable\n");
-	fprintf(fp, "#\n");
-	fprintf(fp, "# N6ZFJ 1 12/14/91 02/01/93 01/15/93 01/01/85 N0ARY Connie 94086 Sunnyvale, CA\n");
-	fprintf(fp, "#\n");
+	if (fprintf(fp, "# v1 %s\n#\n", Wpd_User_File) < 0)
+		goto WriteError;
 
-	r = hash_write(fp, WriteUSER);
-	spool_fclose(fp);
+	if (write_comment(fp) < 0)
+		goto WriteError;
+
+	if (write_users_help(fp) < 0)
+		goto WriteError;
+
+	if (hash_write(fp, WriteUSER) < 0)
+		goto WriteError;
+;
+	if (spool_fclose(fp) < 0)
+		goto CloseError;
+
 	user_image = CLEAN;
 	if(dbug_level & dbgVERBOSE)
 		printf("Writing user file took %"PRTMd" seconds\n", time(NULL) - t0);
-	return r;
+	return "OK\n";
+
+WriteError:
+	spool_abort(fp);
+CloseError:
+	return "ERROR\n";
 }
 
 char *
@@ -85,24 +136,26 @@ write_bbs_file(void)
 	if(fp == NULL)
 		return "Failed to open output file\n";
 
-	fprintf(fp, "# v1 %s\n#\n", Wpd_Bbs_File);
-	write_comment(fp);
-	fprintf(fp, "# Entry format, non-parsed..\n");
-	fprintf(fp, "# BBSCALL LEVEL HLOC\n");
-	fprintf(fp, "#           |\n");
-	fprintf(fp, "#           +- 0 = Sysop\n");
-	fprintf(fp, "#           +- 1 = User\n");
-	fprintf(fp, "#           +- 2 = Questionable\n");
-	fprintf(fp, "#\n");
-	fprintf(fp, "# N0ARY 1 #NOCAL.CA.USA.NA\n");
-	fprintf(fp, "#\n");
+	if (fprintf(fp, "# v1 %s\n#\n", Wpd_Bbs_File) < 0)
+		goto WriteError;
+	if (write_comment(fp) < 0)
+		goto WriteError;
+	if (write_bbs_help(fp) < 0)
+		goto WriteError;
+	if (hash_write(fp, WriteBBS) < 0)
+		goto WriteError;
+	if (spool_fclose(fp) < 0)
+		goto CloseError;
 
-	r = hash_write(fp, WriteBBS);
-	spool_fclose(fp);
 	bbs_image = CLEAN;
 	if(dbug_level & dbgVERBOSE)
 		printf("Writing bbs file took %"PRTMd" seconds\n", time(NULL) - t0);
-	return r;
+	return "OK\n";
+
+WriteError:
+	spool_abort(fp);
+CloseError:
+	return "ERROR\n";
 }
 
 /*

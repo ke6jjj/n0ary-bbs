@@ -29,7 +29,8 @@ extern char
 extern int
 	read_file(char *filename),
 	read_new_file(char *filename),
-	hash_delete_bid(char *s);
+	hash_delete_bid(char *s),
+	hash_write(FILE *fp);
 
 extern struct bid_entry
 	*hash_get_bid(char *s),
@@ -50,7 +51,6 @@ extern char
 	*write_file(void),
 	*parse(char *s),
 	*hash_cnt(void),
-	*hash_write(FILE *fp),
 	*add_bid(char *bid),
 	*chk_bid(char *bid),
 	*chk_mid(char *bid),
