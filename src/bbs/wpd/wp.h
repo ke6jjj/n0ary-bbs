@@ -130,7 +130,8 @@ int
 	hash_delete_user(char *s),
 	hash_delete_bbs(char *s),
 	hash_deleted_user(char *s),
-	hash_deleted_bbs(char *s);
+	hash_deleted_bbs(char *s),
+	hash_write(FILE *fp, int mode);
 
 char
 	*upload(char *cmd),
@@ -148,7 +149,6 @@ char
     *write_bbs_file(void),
 	*time2date(time_t t),
 	*time2udate(time_t t),
-	*hash_write(FILE *fp, int mode),
     *hash_bbs_cnt(void),
     *hash_user_cnt(void),
 	*report_entry(char *call),

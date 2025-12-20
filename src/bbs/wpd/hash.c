@@ -28,6 +28,10 @@ static int bbs_hash_in_use = FALSE;
 
 int user_image, bbs_image;
 
+static int hash_write_user(FILE *fp);
+static int hash_write_bbs(FILE *fp);
+static int dump_user_entry(FILE *fp, struct wp_user_entry *wp);
+
 void
 hash_user_init(void)
 {
@@ -230,45 +234,74 @@ hash_delete_bbs(char *s)
 	return ERROR;
 }
 
-char *
+int
 hash_write(FILE *fp, int mode)
 {
 	int i;
 
 	if(mode == WriteALL || mode == WriteUSER) {
-		for(i=0; i<USER_HASH_SIZE; i++) {
-			struct wp_user_entry *wp = user[i];
-			while(wp) {
-
-				if(dbug_level & dbgVERBOSE) {
-					char buf[256];
-					sprintf(buf, "+%s %ld %u %u %u %u %s %s %s %s\n",
-						wp->call, wp->level, (unsigned)wp->firstseen,
-						(unsigned)wp->seen, (unsigned)wp->changed,
-						(unsigned)wp->last_update_sent,
-						wp->home, wp->fname, wp->zip, wp->qth);
-					printf("%s", buf);
-				}
-
-				fprintf(fp, "+%s %ld %u %u %u %u %s %s %s %s\n",
-					wp->call, wp->level, (unsigned)wp->firstseen,
-					(unsigned)wp->seen, (unsigned)wp->changed,
-					(unsigned)wp->last_update_sent,
-					wp->home, wp->fname, wp->zip, wp->qth);
-
-				NEXT(wp);
-			}
-		}
+		return hash_write_user(fp);
 	} else {
-		for(i=0; i<BBS_HASH_SIZE; i++) {
-			struct wp_bbs_entry *wp = bbs[i];
-			while(wp) {
-				fprintf(fp, "+%s %ld %s\n", wp->call, wp->level, wp->hloc);
-				NEXT(wp);
-			}
+		return hash_write_bbs(fp);
+	}
+}
+
+static int
+hash_write_user(FILE *fp)
+{
+	size_t i;
+	int res;
+
+	for(i=0; i<USER_HASH_SIZE; i++) {
+		struct wp_user_entry *wp = user[i];
+		while(wp) {
+			res = dump_user_entry(fp, wp);
+			if (res < 0)
+				return res;
+			NEXT(wp);
 		}
 	}
-	return "OK\n";
+
+	return 0;
+}
+
+static int
+hash_write_bbs(FILE *fp)
+{
+	size_t i;
+	int res;
+
+	for(i=0; i<BBS_HASH_SIZE; i++) {
+		struct wp_bbs_entry *wp = bbs[i];
+		while(wp) {
+			res = fprintf(fp,
+				"+%s %ld %s\n",
+				wp->call, wp->level, wp->hloc);
+			if (res < 0)
+				return res;
+			NEXT(wp);
+		}
+	}
+
+	return 0;
+}
+
+static int
+dump_user_entry(FILE *fp, struct wp_user_entry *wp)
+{
+	if(dbug_level & dbgVERBOSE) {
+		printf("+%s %ld %u %u %u %u %s %s %s %s\n",
+			wp->call, wp->level, (unsigned)wp->firstseen,
+			(unsigned)wp->seen, (unsigned)wp->changed,
+			(unsigned)wp->last_update_sent,
+			wp->home, wp->fname, wp->zip, wp->qth);
+	}
+
+	return fprintf(fp, "+%s %ld %u %u %u %u %s %s %s %s\n",
+		wp->call, wp->level, (unsigned)wp->firstseen,
+		(unsigned)wp->seen, (unsigned)wp->changed,
+		(unsigned)wp->last_update_sent,
+		wp->home, wp->fname, wp->zip, wp->qth);
 }
 
 char *

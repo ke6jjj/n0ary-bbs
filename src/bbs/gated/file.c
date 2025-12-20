@@ -15,7 +15,7 @@
 
 static int iscall(char *s);
 static int hash_init(void);
-static void write_comment(FILE *fp);
+static int write_comment(FILE *fp);
 
 struct gate_entry
 	*GateList = NULL,
@@ -233,42 +233,61 @@ read_new_file(void)
 	read_file();
 }
 
-static void
+static int
 write_comment(FILE *fp)
 {
- fprintf(fp, "# This is a machine created file. If you edit it manually\n");
- fprintf(fp, "# you need to kill the gated process, edit the file, then\n");
- fprintf(fp, "# restart the gated daemon.\n");
- fprintf(fp, "#\n");
+    return fputs(
+        "# This is a machine created file. If you edit it manually\n"
+        "# you need to kill the gated process, edit the file, then\n"
+        "# restart the gated daemon.\n"
+        "#\n"
 
- fprintf(fp, "# This file is automatically updated once an hour if changes\n");
- fprintf(fp, "# have been made to the runtime memory image.\n");
- fprintf(fp, "#\n");
+        "# This file is automatically updated once an hour if changes\n"
+        "# have been made to the runtime memory image.\n"
+        "#\n",
+        fp
+    );
 }
+
 
 int
 write_file(void)
 {
 	FILE *fp;
 	struct gate_entry *g = GateList;
+	int res;
 
 	if((fp = spool_fopen(Gated_File)) == NULL)
 		return error_log("Couldn't create %s for writing", Gated_File);
 
-	fprintf(fp, "# v1 %s\n#\n", Gated_File);
-	write_comment(fp);
+	if (fprintf(fp, "# v1 %s\n#\n", Gated_File) < 0)
+		goto WriteFailed;
+	if (write_comment(fp) < 0)
+		goto WriteFailed;
 	while(g) {
 		struct gate_entry *a = g;
 		while(a) {
-			fprintf(fp, "%s\t%s\t%s\t", a->call, a->addr, time2date(a->seen));
-			fprintf(fp, "%s\n", time2date(a->warn_sent));
+			res = fprintf(fp,
+				"%s\t%s\t%s\t%s\n",
+				a->call, a->addr, time2date(a->seen),
+				time2date(a->warn_sent)
+			);
+			if (res < 0)
+				goto WriteFailed;
 			a = a->chain;
 		}
 		NEXT(g);
 	}
 		
-	spool_fclose(fp);
+	if (spool_fclose(fp) < 0)
+		goto CloseFailed;
+
 	return OK;
+
+WriteFailed:
+	spool_abort(fp);
+CloseFailed:
+	return ERROR;
 }
 
 int

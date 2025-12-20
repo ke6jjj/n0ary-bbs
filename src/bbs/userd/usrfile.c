@@ -9,10 +9,26 @@
 
 struct UserList *UL = NULL;
 
+#define FmtIfSet(item, fh, fmt, expr, fail_label) { \
+	if ((item)) { \
+		if (fprintf((fh), (fmt), (expr)) < 0) { \
+			goto fail_label; \
+		} \
+	} \
+}
+
+#define PutIfSet(item, fh, str, fail_label) { \
+	if ((item)) { \
+		if (fputs((str), (fh)) < 0) { \
+			goto fail_label; \
+		} \
+	} \
+}
+
 static int
 usrfile_put(struct UserInformation *u, FILE *fp)
 {
-	int i = 0;
+	int i = 0, res;
 	int lastseen = 0, cnt = 0, where = 0;
 	struct IncludeList *list;
 	struct Ports *port = u->port;
@@ -29,63 +45,80 @@ usrfile_put(struct UserInformation *u, FILE *fp)
 		i++;
 	}
 
-	fprintf(fp, "+%ld %d %d %d %d\n",
+	res = fprintf(fp, "+%ld %d %d %d %d\n",
 		u->number, (u->immune) ? 1:0, lastseen, where, cnt);
+	if (res < 0)
+		goto WFail;
 
-	fprintf(fp, "NUMBER %ld\n", u->number);
-	if(u->lname[0]) fprintf(fp, "LNAME %s\n", u->lname);
-	if(u->phone[0]) fprintf(fp, "PHONE %s\n", u->phone);
-	if(u->email_addr[0]) fprintf(fp, "ADDRESS %s\n", u->email_addr);
-	if(u->freq[0]) fprintf(fp, "FREQ %s\n", u->freq);
-	if(u->tnc[0]) fprintf(fp, "TNC %s\n", u->tnc);
-	if(u->software[0]) fprintf(fp, "SOFTWARE %s\n", u->software);
-	if(u->computer[0]) fprintf(fp, "COMPUTER %s\n", u->computer);
-	if(u->rig[0]) fprintf(fp, "RIG %s\n", u->rig);
-	if(u->lines) fprintf(fp, "LINES %ld\n", u->lines);
-	if(u->base) fprintf(fp, "BASE %ld\n", u->base);
+	if (fprintf(fp, "NUMBER %ld\n", u->number) < 0)
+		goto WFail;
+
+	FmtIfSet(u->lname[0], fp, "LNAME %s\n", u->lname, WFail);
+	FmtIfSet(u->phone[0], fp, "PHONE %s\n", u->phone, WFail);
+	FmtIfSet(u->email_addr[0], fp, "ADDRESS %s\n", u->email_addr, WFail);
+	FmtIfSet(u->freq[0], fp, "FREQ %s\n", u->freq, WFail);
+	FmtIfSet(u->tnc[0], fp, "TNC %s\n", u->tnc, WFail);
+	FmtIfSet(u->software[0], fp, "SOFTWARE %s\n", u->software, WFail);
+	FmtIfSet(u->computer[0], fp, "COMPUTER %s\n", u->computer, WFail);
+	FmtIfSet(u->rig[0],fp, "RIG %s\n", u->rig, WFail);
+	FmtIfSet(u->lines, fp, "LINES %ld\n", u->lines, WFail);
+	FmtIfSet(u->base, fp, "BASE %ld\n", u->base, WFail);
 
 	list = u->Include;
 	while(list) {
-		fprintf(fp, "INCLUDE %s\n", list->str);
+		if (fprintf(fp, "INCLUDE %s\n", list->str) < 0)
+			goto WFail;
 		NEXT(list);
 	}
 
 	list = u->Exclude;
 	while(list) {
-		fprintf(fp, "EXCLUDE %s\n", list->str);
+		if (fprintf(fp, "EXCLUDE %s\n", list->str) < 0)
+			goto WFail;
 		NEXT(list);
 	}
-	fprintf(fp, "MESSAGE %ld\n", u->message);
-	if(u->bbs) fprintf(fp, "BBS\n");
-	if(u->sysop) fprintf(fp, "SYSOP\n");
-	if(u->approved) fprintf(fp, "APPROVED\n");
-	if(u->nonham) fprintf(fp, "NONHAM\n");
-	if(u->email) fprintf(fp, "EMAIL\n");
-	if(u->emailall) fprintf(fp, "EMAILALL\n");
-	if(u->vacation) fprintf(fp, "VACATION\n");
-	if(u->signature) fprintf(fp, "SIGNATURE\n");
-	if(u->logging) fprintf(fp, "LOGGING\n");
-	if(u->immune) fprintf(fp, "IMMUNE\n");
-	if(u->regexp) fprintf(fp, "REGEXP\n");
-	if(u->halfduplex) fprintf(fp, "DUPLEX\n");
-	if(u->newline) fprintf(fp, "NEWLINE\n");
-	if(u->uppercase) fprintf(fp, "UPPERCASE\n");
-	if(u->ascending) fprintf(fp, "ASCEND\n");
-	fprintf(fp, "HELP %ld\n", u->help);
+	if (fprintf(fp, "MESSAGE %ld\n", u->message) < 0)
+		goto WFail;
 
-	for(i=0; i<10; i++)
-		if(u->macro[i][0])
-			fprintf(fp, "MACRO %d %s\n", i, u->macro[i]);
+	PutIfSet(u->bbs, fp, "BBS\n", WFail);
+	PutIfSet(u->sysop, fp, "SYSOP\n", WFail);
+	PutIfSet(u->approved, fp, "APPROVED\n", WFail);
+	PutIfSet(u->nonham, fp, "NONHAM\n", WFail);
+	PutIfSet(u->email, fp, "EMAIL\n", WFail);
+	PutIfSet(u->emailall, fp, "EMAILALL\n", WFail);
+	PutIfSet(u->vacation, fp, "VACATION\n", WFail);
+	PutIfSet(u->signature, fp, "SIGNATURE\n", WFail);
+	PutIfSet(u->logging, fp, "LOGGING\n", WFail);
+	PutIfSet(u->immune, fp, "IMMUNE\n", WFail);
+	PutIfSet(u->regexp, fp, "REGEXP\n", WFail);
+	PutIfSet(u->halfduplex, fp, "DUPLEX\n", WFail);
+	PutIfSet(u->newline, fp, "NEWLINE\n", WFail);
+	PutIfSet(u->uppercase, fp, "UPPERCASE\n", WFail);
+	PutIfSet(u->ascending, fp, "ASCEND\n", WFail);
+	if (fprintf(fp, "HELP %ld\n", u->help) < 0)
+		goto WFail;
+
+	for(i=0; i<10; i++) {
+		if(u->macro[i][0]) {
+			if (fprintf(fp, "MACRO %d %s\n", i, u->macro[i]) < 0)
+				goto WFail;
+		}
+	}
 
 	port = u->port;
 	while(port) {
-		fprintf(fp, "PORT %s %s %ld %ld %ld\n", port->name,
+		res = fprintf(fp, "PORT %s %s %ld %ld %ld\n", port->name,
 			port->allow ? "OK":"NO", port->count,
 			port->firstseen, port->lastseen);
+		if (res < 0)
+			goto WFail;
 		NEXT(port);
 	}
 
 	return OK;
+
+WFail:
+	return ERROR;
 }
 
 struct IncludeList *
@@ -502,11 +535,12 @@ usrfile_create(char *call)
 		return ERROR;
 
 	if(usrfile_put(&u, fp) != OK) {
-		spool_fclose(fp);
+		spool_abort(fp);
 		return ERROR;
 	}
 
-	spool_fclose(fp);
+	if (spool_fclose(fp) < 0)
+		return ERROR;
 
 	if((fp = fopen(fn, "r")) == NULL)
 		return ERROR;
@@ -533,12 +567,11 @@ usrfile_write(char *call)
 		return ERROR;
 
 	if(usrfile_put(&(ul->info), fp) != OK) {
-		spool_fclose(fp);
+		spool_abort(fp);
 		return ERROR;
 	}
 
-	spool_fclose(fp);
-	return OK;
+	return spool_fclose(fp);
 }
 
 

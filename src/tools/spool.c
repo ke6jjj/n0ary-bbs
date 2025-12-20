@@ -1,3 +1,4 @@
+#include <sys/queue.h>
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
@@ -7,66 +8,128 @@
 #include "c_cmmn.h"
 #include "tools.h"
 
-static 
-struct OpenFiles {
-	struct OpenFiles *next;
+struct OpenFile {
+	LIST_ENTRY(OpenFile) entries;
 	char *tmpname;
 	char *name;
 	FILE *fp;
-} *open_file = NULL;
+};
+
+LIST_HEAD(open_file_list, OpenFile);
+struct open_file_list open_files = LIST_HEAD_INITIALIZER(open_files);
+
+static struct OpenFile *spool_find_and_dequeue(FILE *fp);
+static void free_open_file(struct OpenFile *f);
 
 FILE *
 spool_fopen(char *fn)
 {
 	static int number = 0;
-	struct OpenFiles *f = malloc_struct(OpenFiles);
+	struct OpenFile *f = malloc_struct(OpenFile);
 
-	f->name = (char*)malloc(strlen(fn)+1);
-	f->tmpname = (char*)malloc(strlen(fn)+20);
-	strcpy(f->name, fn);
-	sprintf(f->tmpname, "%s.%d.%d", fn, getpid(), number++);
-
+	if (f == NULL) {
+		error_log("spool_fopen: out of mem");
+		goto MallocFailed;
+	}
+	if ((f->name = strdup(fn)) == NULL) {
+		error_log("spool_fopen: out of mem in f->name");
+		goto NameDupFailed;
+	}
+	if (asprintf(&f->tmpname, "%s.%d.%d", fn, getpid(), number++) == -1) {
+		error_log("spool_fopen: out of mem in f->tmpname");
+		goto TmpNameFailed;
+	}
 	if((f->fp = fopen(f->tmpname, "w")) == NULL) {
 		error_log("spool_fopen: Unable to open %s for writing: %s",
 			f->tmpname, sys_errlist[errno]);
-		free(f->name);
-		free(f->tmpname);
-		free(f);
-		return NULL;
+		goto FopenFailed;
 	}
-	f->next = open_file;
-	open_file = f;
+
+	LIST_INSERT_HEAD(&open_files, f, entries);
+
 	return f->fp;
+
+FopenFailed:
+	free(f->tmpname);
+TmpNameFailed:
+	free(f->name);
+NameDupFailed:
+	free(f);
+MallocFailed:
+	return NULL;
 }
 
 int
 spool_fclose(FILE *fp)
 {
-	struct OpenFiles **f = &open_file;
+	struct OpenFile *tmp = spool_find_and_dequeue(fp);
 
-	while(*f) {
-		if((*f)->fp == fp) {
-			struct OpenFiles *tmp = *f;
-			*f = tmp->next;
-
-			fclose(fp);
-			if(unlink(tmp->name) < 0)
-				error_log("spool_fclose: Unable to unlink original %s: %s",
-					tmp->name, sys_errlist[errno]);
-
-			if(link(tmp->tmpname, tmp->name) < 0) {
-				error_log("spool_fclose: Unable to link the spool file to %s: %s",
-					tmp->name, sys_errlist[errno]);
-			} else
-				unlink(tmp->tmpname);
-
-			free(tmp->name);
-			free(tmp->tmpname);
-			free(tmp);
-			return OK;
-		}
-
-		f = &((*f)->next);
+	if (tmp == NULL) {
+		error_log("spool_fclose: No open file found for supplied FILE*");
+		goto NotFound;
 	}
-	return error_log("spool_fclose: No open file found for supplied FILE*");
+
+	if (fclose(tmp->fp) != 0) {
+		error_log("spool_fclose: fclose of %s failed", tmp->name);
+		goto CloseFailed;
+	}
+
+	if (rename(tmp->tmpname, tmp->name) < 0) {
+		error_log("spool_fclose: Unable to rename %s -> %s: %s",
+			tmp->tmpname, tmp->name, sys_errlist[errno]);
+		goto RenameFailed;
+	}
+
+	free_open_file(tmp);
+
+	return OK;
+
+RenameFailed:
+CloseFailed:
+	unlink(tmp->tmpname);
+	free_open_file(tmp);
+NotFound:
+	return ERROR;
+}
+
+int
+spool_abort(FILE *fp)
+{
+	struct OpenFile *tmp = spool_find_and_dequeue(fp);
+
+	if (tmp == NULL) {
+		return error_log("spool_fclose: No open file found for supplied FILE*");
+	}
+
+	if(unlink(tmp->tmpname) < 0)
+		error_log("spool_fclose: Unable to unlink temp %s: %s",
+			tmp->tmpname, sys_errlist[errno]);
+
+	free_open_file(tmp);
+
+	return OK;
+}
+
+
+static struct OpenFile *
+spool_find_and_dequeue(FILE *fp)
+{
+	struct OpenFile *f;
+
+	LIST_FOREACH(f, &open_files, entries) {
+		if(f->fp == fp) {
+			LIST_REMOVE(f, entries);
+			return f;
+		}
+	}
+
+	return NULL;
+}
+
+static void
+free_open_file(struct OpenFile *f)
+{
+	free(f->name);
+	free(f->tmpname);
+	free(f);
 }

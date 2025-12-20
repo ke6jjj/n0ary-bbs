@@ -81,6 +81,7 @@ int
 	textline_count(struct text_line *tl),
 	textline_maxlength(struct text_line *tl),
 	spool_fclose(FILE *fp),					/* spool.c */
+	spool_abort(FILE *fp),					/* spool.c */
 	stricmp(char *s1, char *s2),			/* common.c */
 	read_sola(int *bv, int *iv, int *ov),	/* sola.c */
 	dectalk(char *str),						/* dectalk.c */
