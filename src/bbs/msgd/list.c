@@ -8,6 +8,7 @@
 #include "bbslib.h"
 #include "rfc822.h"
 #include "msgd.h"
+#include "bid.h"
 
 TAILQ_HEAD(MsgList, msg_dir_entry) MsgDir = TAILQ_HEAD_INITIALIZER(MsgDir);
 
@@ -691,9 +692,11 @@ send_message(struct active_processes *ap)
 			switch(rfc822_parse(msg, rfc)) {
 			case rBID:
 				if(!strcmp(msg->bid, "$\n")) {
-					snprintf(msg->bid, sizeof(msg->bid),
-						"%ld_%s", msg->number,
-						Bbs_Call);
+					if (format_bid(msg->bid,
+						sizeof(msg->bid),
+						(unsigned int) msg->number,
+						Bbs_Call) != 0)
+						return ERROR;
 					rfc822_gen(rBID, msg, buf, 80);
 					strlcat(buf, "\n", sizeof(buf));
 				}

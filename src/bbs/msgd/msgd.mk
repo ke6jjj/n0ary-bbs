@@ -5,7 +5,7 @@ MSGD_APP_OBJDIR := $(BBS_OBJDIR)/msgd
 MSGD_APP_PROD := b_msgd
 
 MSGD_APP_SRCS := \
-	main.c read.c rfc822.c list.c parse.c edit.c fwd.c
+	main.c read.c rfc822.c list.c parse.c edit.c fwd.c bid.c
 
 $(eval $(call create_bbs_app_rules,MSGD_APP))
 
