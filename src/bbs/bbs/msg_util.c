@@ -486,13 +486,14 @@ msg_parse(struct msg_dir_entry *m, char *s, int read_by_me)
 }
 
 static int
-msg_insert(struct msg_dir_entry *m, int num)
+msg_insert(struct msg_dir_entry *m, int new_num)
 {
-	struct msg_dir_entry *msg;
+	struct msg_dir_entry *cur;
+	int found_greater;
 
-	TAILQ_FOREACH_REVERSE(msg, &MsgDirList, msg_dir_list, entries) {
-		if (num < msg->number) {
-			TAILQ_INSERT_BEFORE(msg, m, entries);
+	TAILQ_FOREACH_REVERSE(cur, &MsgDirList, msg_dir_list, entries) {
+		if (cur->number < new_num) {
+			TAILQ_INSERT_AFTER(&MsgDirList, cur, m, entries);
 			return OK;
 		}
 	}
