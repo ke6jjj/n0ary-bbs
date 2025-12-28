@@ -6,7 +6,7 @@ BBSLIB_OBJDIR := $(BBS_OBJDIR)/bbslib
 
 BBSLIB_SRCS :=	bbsd.c common.c rfc822.c wpd.c userd.c\
 		gated.c logd.c tnc.c msgd.c log.c msg.c\
-		bidd.c option.c remoteaddr.c
+		bidd.c option.c remoteaddr.c asyncline.c
 
 BBSLIB_CFLAGS := -I$(BBSLIB_SRCDIR) -I$(TOOLS_SRCDIR) $(BBS_CFLAGS)
 

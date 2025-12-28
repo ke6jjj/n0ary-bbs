@@ -801,3 +801,46 @@ struct PhoneDefinition *phone_table(void);
 int parse_remote_addr(const char *addrspec, struct RemoteAddr *addr);
 int print_remote_addr(const struct RemoteAddr *addr, char *str, size_t len);
 int get_remote_addr(int sock, struct RemoteAddr *addr);
+
+struct AsyncLineBuffer {
+    char *buf;
+    size_t alloc;
+    size_t read;
+    size_t cur;
+    int filter_cr;
+};
+
+enum {
+    ASYNC_READ_FULL = -2,
+    ASYNC_READ_ERROR = -1,
+    ASYNC_OK = 0,
+    ASYNC_MORE = 1,
+};
+
+/*
+ * Allocate a new AsyncLineBuffer of a given size.
+ *
+ * If `filter_cr` is non-zero, carriage returns that preceed
+ * line feeds will be filtered out.
+ */
+struct AsyncLineBuffer *async_line_new(size_t capacity, int filter_cr);
+
+/*
+ * Free a previously allocated AsyncLineBuffer.
+ */
+void async_line_free(struct AsyncLineBuffer *b);
+
+/*
+ * Read the next available newline terminated string from a
+ * non-blocking file descriptor, filtering out the newline itself,
+ * and optionally, any carriage return that preceeds it.
+ *
+ * Returns:
+ *   ASYNC_OK - The string in ret is ready.
+ * Errors:
+ *   ASYNC_MORE - More data must be read, but the file descriptor is
+ *                blocked. Call again when data is available.
+ *   ASYNC_READ_ERROR - An error occured when reading from the file descriptor.
+ *   ASYNC_READ_FULL - Buffer is full and no newline has been found.
+ */
+int async_line_get(struct AsyncLineBuffer *b, int fd, char **ret);
