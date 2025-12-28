@@ -61,38 +61,16 @@ static void notify_callback(void *ctx, void *arg0, int arg1);
 static int
 service_port(struct active_process *ap)
 {
-	char *c, *s, *buf;
-	int have_line;
+	char *buf, *c, *s;
+	int res;
 
-	for (have_line = 0; ap->sz < sizeof(ap->buf);) {
-		c = &ap->buf[ap->sz];
-		if (read(ap->fd, c, 1) <= 0) {
-			if (errno == EAGAIN) {
-				/* No more data available right now */
-				return OK;
-			}
-			return ERROR;
-		}
-		if(*c == '\r')
-			continue;
+	res = async_line_get(ap->buf, ap->fd, &buf);
+	if (res == ASYNC_MORE)
+		return OK;
 
-		if(*c == '\n') {
-			*c = 0;
-			have_line = 1;
-			break;
-		}
-
-		ap->sz++;
-	}
-
-	if (have_line != 1) {
-		/* peer has spewed too much garbage */
+	if (res != ASYNC_OK)
 		return ERROR;
-	}
 
-	ap->sz = 0;
-
-	buf = ap->buf;
 	if(VERBOSE)
 		printf("R: %s\n", buf);
 
@@ -123,13 +101,19 @@ add_proc()
 	char buf[256];
 	struct active_process *ap = malloc_struct(active_process);
 
+	if (ap == NULL)
+		goto AllocFailed;
+
+	ap->buf = async_line_new(1024, 1 /*Filter CR*/);
+	if (ap->buf == NULL)
+		goto AsyncAllocFailed;
+
 	ap->via = NULL;
 	ap->t0 = ap->idle = bbs_time(NULL);
 	ap->fd = ERROR;
 	ap->proc_num = proc_num++;
 	ap->pid = ERROR;
 	ap->verbose = FALSE;
-	ap->sz = 0;
 	ap->ev = NULL;
 	LIST_INSERT_HEAD(&procs, ap, entries);
 
@@ -139,7 +123,12 @@ add_proc()
 		"LOGIN %d UnKwn STATUS %ld", ap->proc_num, ap->t0);
 	notify(buf);
 
-	return ap;	
+	return ap;
+
+AsyncAllocFailed:
+	free(ap);
+AllocFailed:
+	return NULL;
 }
 
 static void
@@ -159,6 +148,7 @@ remove_proc(struct active_process *ap)
 	}
 
 	close(ap->fd);
+	async_line_free(ap->buf);
 	free(ap);
 }
 
@@ -365,6 +355,8 @@ accept_callback(void *ctx, void *arg0, int arg1)
 	if(write(fd, buf, strlen(buf)) < 0) {
 		fprintf(stderr, "couldn't write second hello banner.\n");
 		remove_proc(ap);
+		close(fd);
+		return;
 	}
 
 	AL_CALLBACK(&cb, ap, service_callback);

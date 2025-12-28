@@ -33,8 +33,7 @@ struct active_process {
 	int verbose;
 	char *text;
 	char call[10];
-	char buf[1024];
-	size_t sz;
+	struct AsyncLineBuffer *buf;
 	alEventHandle ev;
 };
 
