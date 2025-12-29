@@ -22,16 +22,14 @@ append(char *t, char *v)
 {
 	struct configuration_list *cl = malloc_struct(configuration_list);
 
-	cl->token = (char *)malloc(strlen(t)+1);
-	cl->value = (char *)malloc(strlen(v)+1);
+	cl->token = strdup(t);
+	cl->value = strdup(v);
 
 	if(CLend == NULL)
 		CList = cl;
 	else
 		CLend->next = cl;
 
-	strcpy(cl->token, t);
-	strcpy(cl->value, v);
 	CLend = cl;
 }
 
@@ -168,8 +166,7 @@ config_override(char *token, char *value)
 		if(!strcmp(cl->token, token)) {
 			if(cl->newvalue != NULL)
 				free(cl->newvalue);
-			cl->newvalue = (char *)malloc(strlen(value)+1);
-			strcpy(cl->newvalue, value);
+			cl->newvalue = strdup(value);
 			return OK;
 		}
 		NEXT(cl);

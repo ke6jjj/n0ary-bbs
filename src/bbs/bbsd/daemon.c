@@ -63,9 +63,8 @@ build_daemon_list(void)
 		value = get_string(&s);
 		if(*s) {
 			FILE *fp;
-			dmn->name = (char*)malloc(strlen(value)+1);
-			strcpy(dmn->name, value);
-			dmn->cmd = (char*)malloc(strlen(s)+1);
+			dmn->name = strdup(value);
+			dmn->cmd = strdup(s);
 			strcpy(dmn->cmd, s);
 
 			if(!strcmp(dmn->name, "IGNORE"))

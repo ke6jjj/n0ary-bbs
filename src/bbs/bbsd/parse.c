@@ -59,6 +59,9 @@ parse_status(struct active_process *me, char *s)
 {
 	char buf[4096];
 	char *mode = get_string(&s);
+	if (mode == NULL)
+		return Error("need mode");
+
 	uppercase(mode);
 
 	if(!strcmp(mode, "PROCS")) {
@@ -145,8 +148,12 @@ help_disp(void)
 char *
 set_parameters(char *s)
 {
-	char opt[40];
-	strcpy(opt, get_string(&s));
+	char opt[40], *p;
+	p = get_string(&s);
+	if (p == NULL)
+		return Error("need option");
+
+	strcpy(opt, p);
 	uppercase(opt);
 
 	if(!strcmp(opt, "LOG")) {
@@ -219,23 +226,34 @@ parse(struct active_process *ap, char *s)
 				return parse_check(s);
 
 			case bLOCK:
-				via = locate_port(get_string(&s));
+				p = get_string(&s);
+				if (p == NULL)
+					return Error("need port");
+				via = locate_port(p);
+				if (via == NULL)
+					return Error("invalid port");
 				via->lock = TRUE;
 				if(via->reason)
 					free(via->reason);
-				via->reason = (char*)malloc(strlen(s)+1);
-				strcpy(via->reason, s);
+				via->reason = strdup(s);
 				return JustOk;
 
 			case bLOGIN:
 				if(ap->call[0] != 0) {
 					sprintf(buf, "LOGOUT %d", ap->proc_num);
 					textline_append(&Notify, buf);
+					ap->call[0] = 0;
 				}
 
-				strcpy(ap->call, get_string(&s));
+				p = get_string(&s);
+				if (p == NULL)
+					return Error("need callsign");
+				strcpy(ap->call, p);
 				uppercase(ap->call);
-				if((ap->via = locate_port(get_string(&s))) == NULL)
+				p = get_string(&s);
+				if (p == NULL)
+					return Error("need port");
+				if((ap->via = locate_port(p)) == NULL)
 					return Error("invalid port");
 						
 				sprintf(buf, "LOGIN %d %s %s %ld",
@@ -254,8 +272,7 @@ parse(struct active_process *ap, char *s)
 				if(ap->text)
 					free(ap->text);
 
-				ap->text = (char*)malloc(strlen(s)+1);
-				strcpy(ap->text, s);
+				ap->text = strdup(s);
 				sprintf(buf, "MSG %d %s", ap->proc_num, ap->text);
 				textline_append(&Notify, buf);
 				return JustOk;
@@ -267,8 +284,7 @@ parse(struct active_process *ap, char *s)
 				if(ap->text)
 					free(ap->text);
 
-				ap->text = (char*)malloc(strlen(s)+1);
-				strcpy(ap->text, s);
+				ap->text = strdup(s);
 				sprintf(buf, "MSG %d %s", ap->proc_num, ap->text);
 				textline_append(&Notify, buf);
 				return JustOk;
@@ -304,18 +320,26 @@ parse(struct active_process *ap, char *s)
 
 			case bSET:
 				p = get_string(&s);
+				if (p == NULL)
+					return Error("need variable");
 				if(config_override(p, s) == ERROR)
 					return Error("not a valid variable");
 				return JustOk;
 				
 			case bSHOW:
-				if((result = config_fetch(get_string(&s))) == NULL)
+				p = get_string(&s);
+				if (p == NULL)
+					return Error("need variable");
+				if((result = config_fetch(p)) == NULL)
 					return Error("Variable not found");
 				sprintf(output, "%s\n", result);
 				return output;
 
 			case bSHOWLIST:
-				if(config_fetch_list(get_string(&s)) == 0)
+				p = get_string(&s);
+				if (p == NULL)
+					return Error("need variable");
+				if(config_fetch_list(p) == 0)
 					return Error("Variable not found");
 				return output;
 
@@ -323,7 +347,10 @@ parse(struct active_process *ap, char *s)
 				return convert_time();
 
 			case bSHOWORIG:
-				if((result = config_fetch_orig(get_string(&s))) == NULL)
+				p = get_string(&s);
+				if (p == NULL)
+					return Error("need variable");
+				if((result = config_fetch_orig(p)) == NULL)
 					return Error("Variable not found");
 				sprintf(output, "%s\n", result);
 				return output;
@@ -332,7 +359,12 @@ parse(struct active_process *ap, char *s)
 				return parse_status(ap, s);
 
 			case bUNLOCK:
-				via = locate_port(get_string(&s));
+				p = get_string(&s);
+				if (p == NULL)
+					return Error("need port");
+				via = locate_port(p);
+				if (via == NULL)
+					return Error("invalid port");
 				via->lock = FALSE;
 				if(via->reason)
 					free(via->reason);
