@@ -15,9 +15,8 @@ extern int
 #define CLEAN	0
 #define DIRTY	1
 
-extern time_t
-	time_now,
-	Bidd_Age;
+extern time_t time_now;
+extern int Bidd_Age;
 
 extern int
 	Bidd_Port;

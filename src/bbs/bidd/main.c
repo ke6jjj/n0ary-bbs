@@ -1,16 +1,18 @@
+#include <sys/queue.h>
 #include <stdio.h>
 #include <time.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/time.h>
 #include <fcntl.h>
-#include <termios.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <unistd.h>
 
+#include "alib.h"
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
@@ -18,12 +20,16 @@
 #include "bid.h"
 
 time_t
-	time_now = 0,
+	time_now = 0;
+
+int
 	Bidd_Age,
 	Bidd_Flush;
 
 int
 	Bidd_Port;
+
+static const int Log_Clear_Interval_s = 60;
 
 char
     *Bbs_Call,
@@ -33,10 +39,19 @@ char
 char output[4096];
 int shutdown_daemon = FALSE;
 
-struct active_processes {
-	struct active_processes *next;
+struct active_process {
+	LIST_ENTRY(active_process) entries;
+	struct AsyncLineBuffer *buf;
 	int fd;
-} *procs = NULL;
+	alEventHandle ev;
+};
+
+struct flush_context {
+	int flush_interval;
+};
+
+LIST_HEAD(proc_list, active_process);
+struct proc_list procs = LIST_HEAD_INITIALIZER(procs);
 
 struct ConfigurationList ConfigList[] = {
 	{ "", 					tCOMMENT,	NULL},
@@ -48,9 +63,19 @@ struct ConfigurationList ConfigList[] = {
 	{ "BIDD_BIND_ADDR",		tSTRING,	(int*)&Bidd_Bind_Addr },
 	{ "", 					tCOMMENT,	NULL},
 	{ "BIDD_FILE",			tFILE,		(int*)&Bidd_File },
-	{ "BIDD_FLUSH",			tTIME,		(int*)&Bidd_Flush},
-	{ "BIDD_AGE",			tTIME,		(int*)&Bidd_Age },
+	{ "BIDD_FLUSH",			tTIME,		&Bidd_Flush},
+	{ "BIDD_AGE",			tTIME,		&Bidd_Age },
 	{ NULL, 				tEND,		NULL}};
+
+static void accept_callback(void *ctx, void *arg0, int arg1);
+static void service_callback(void *ctx, void *arg0, int arg1);
+static void bbsd_activity_callback(void *ctx, void *arg0, int arg1);
+static void flush_callback(void *ctx, void *arg0, int arg1);
+static void log_clear_callback(void *ctx, void *arg0, int arg1);
+static int  handle_line(struct active_process *ap, char *buf);
+static struct active_process *add_proc();
+static void remove_proc(struct active_process *ap);
+static int service_port(struct active_process *ap);
 
 static void
 display_config(void)
@@ -62,19 +87,88 @@ display_config(void)
 		? Bidd_Bind_Addr
 		: "(none)");
 	printf("     Bidd_File = %s\n", Bidd_File);
-	printf("    Bidd_Flush = %"PRTMd"\n", Bidd_Flush);
-	printf("      Bidd_Age = %"PRTMd"\n", Bidd_Age);
+	printf("    Bidd_Flush = %d\n", Bidd_Flush);
+	printf("      Bidd_Age = %d\n", Bidd_Age);
 	fflush(stdout);
 	exit(0);
 }
 
-int
-service_port(struct active_processes *ap)
+static void
+accept_callback(void *ctx, void *arg0, int arg1)
 {
-    char *c, buf[256];
+	struct active_process *ap;
+	int fd, res;
+	intptr_t listen_sock;
+	char buf[80];
+	alCallback cb;
 
-	if(socket_read_line(ap->fd, buf, 256, 10) == ERROR)
-		return ERROR;
+	listen_sock = (intptr_t) ctx;
+	fd = socket_accept_nonblock_unmanaged(listen_sock);
+	if (fd < 0) {
+		fprintf(stderr, "accept failed on new connection.\n");
+		return;
+	}
+
+	if (socket_write(fd, daemon_version("bidd", Bbs_Call)) != sockOK) {
+		fprintf(stderr, "couldn't write hello banner.\n");
+		close(fd);
+		return;
+	}
+
+        if ((ap = add_proc()) == NULL) {
+		fprintf(stderr, "couldn't allocate process.\n");
+		close(fd);
+		return;
+	}
+        ap->fd = fd;
+
+        AL_CALLBACK(&cb, ap, service_callback);
+        res = alEvent_registerFd(fd, ALFD_READ, cb, &ap->ev);
+        if (res != 0) {
+                fprintf(stderr, "couldn't register new process\n");
+                remove_proc(ap);
+        }
+}
+
+static void
+service_callback(void *ctx, void *arg0, int arg1)
+{
+	struct active_process *ap = (struct active_process *) ctx;
+
+	if (service_port(ap) == ERROR) {
+		remove_proc(ap);
+	}
+}
+
+static void
+bbsd_activity_callback(void *ctx, void *arg0, int arg1)
+{
+	shutdown_daemon = TRUE;
+}
+
+static int
+service_port(struct active_process *ap)
+{
+	int res;
+	char *buf;
+
+	for (;;) {
+		res = async_line_get(ap->buf, ap->fd, &buf);
+		if (res == ASYNC_MORE)
+			return OK;
+
+		if (res != ASYNC_OK)
+			return ERROR;
+
+		if (handle_line(ap, buf) != OK)
+			return ERROR;
+	}
+}
+
+static int
+handle_line(struct active_process *ap, char *buf)
+{
+	char *c;
 
 	log_f("bidd", "R:", buf);
 	if((c = parse(buf)) == NULL)
@@ -87,57 +181,50 @@ service_port(struct active_processes *ap)
 	return OK;
 }
 
-struct active_processes *
+static struct active_process *
 add_proc()
 {
-    struct active_processes
-        *tap = procs,
-        *ap = malloc_struct(active_processes);
+	struct active_process *ap = malloc_struct(active_process);
+	if (ap == NULL)
+		goto AllocFailed;
 
-    if(tap == NULL)
-        procs = ap;
-    else {
-        while(tap->next)
-            NEXT(tap);
-        tap->next = ap;
-    }
+	ap->buf = async_line_new(1024, 1 /* filter CR */);
+	if (ap->buf == NULL)
+		goto AsyncAllocFailed;
 
-    ap->fd = ERROR;
-    return ap;
+	ap->fd = -1;
+
+	LIST_INSERT_HEAD(&procs, ap, entries);
+
+	return ap;
+
+AsyncAllocFailed:
+	free(ap);
+AllocFailed:
+	return NULL;
 }
 
-struct active_processes *
-remove_proc(struct active_processes *ap)
+static void
+remove_proc(struct active_process *ap)
 {
-    struct active_processes *tap = procs;
+	LIST_REMOVE(ap, entries);
 
-    if((long)procs == (long)ap) {
-        NEXT(procs);
-		tap = procs;
-    } else {
-        while(tap) {
-            if((long)tap->next == (long)ap) {
-                tap->next = tap->next->next;
-				NEXT(tap);
-                break;
-            }
-            NEXT(tap);
-        }
-    }    
+	if (ap->ev != NULL) {
+		alEvent_deregister(ap->ev);
+	}
 
-    socket_close(ap->fd);
-    free(ap);
-    return tap;
+	close(ap->fd);
+	async_line_free(ap->buf);
+	free(ap);
 }
 
 int
 main(int argc, char *argv[])
 {
-	int listen_sock;
-	int bbsd_sock;
-	struct timeval t;
-	struct active_processes *ap;
-	time_t flush_time = Time(NULL) + Bidd_Flush;
+	intptr_t listen_sock;
+	int bbsd_sock, res;
+	alEventHandle listen_ev, bbsd_ev;
+	alCallback cb;
 
 	parse_options(argc, argv, ConfigList, "BIDD - Bid Daemon");
 
@@ -146,12 +233,12 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);
 
-    if(bbsd_open(Bbs_Host, Bbsd_Port, "bidd", "DAEMON") == ERROR)
+	if(bbsd_open(Bbs_Host, Bbsd_Port, "bidd", "DAEMON") == ERROR)
 		error_print_exit(0);
 	error_clear();
 
 	bbsd_get_configuration(ConfigList);
-    bbsd_msg("Startup");
+	bbsd_msg("Startup");
 	bbsd_sock = bbsd_socket();
 	time_now = bbsd_get_time();
 
@@ -166,89 +253,87 @@ main(int argc, char *argv[])
 	if((listen_sock = socket_listen(Bidd_Bind_Addr, &Bidd_Port)) == ERROR)
 		return 1;
 
-    bbsd_port(Bidd_Port);
+	bbsd_port(Bidd_Port);
 	if(!(dbug_level & dbgNODAEMONS))
 		bbsd_msg("");
 
-	signal(SIGPIPE, SIG_IGN);
-
-	while(TRUE) {
-		int cnt;
-		fd_set ready;
-		int fdlimit;
-
-		error_print();
-
-		if(shutdown_daemon) {
-			if(bid_image == DIRTY)
-				write_file();
-			return 0;
-		}
-
-		ap = procs;
-		FD_ZERO(&ready);
-		FD_SET(listen_sock, &ready);
-		fdlimit = listen_sock;
-
-		FD_SET(bbsd_sock, &ready);
-		if(bbsd_sock > fdlimit)
-			fdlimit = bbsd_sock;
-
-		while(ap) {
-			if(ap->fd != ERROR) {
-				FD_SET(ap->fd, &ready);
-				if(ap->fd > fdlimit)
-					fdlimit = ap->fd;
-			}
-			NEXT(ap);
-		}
-		fdlimit += 1;
-
-		t.tv_sec = 60;
-		t.tv_usec = 0;
-
-		if((cnt = select(fdlimit, (void*)&ready, NULL, NULL, &t)) < 0)
-			continue;
-		
-		if(cnt == 0) {
-			time_t now = Time(NULL);
-			log_clear("bidd");
-			if(now > flush_time) {
-				flush_time = now + Bidd_Flush;
-
-				age();
-
-				if(bid_image == DIRTY)
-					write_file();
-			}
-			continue;
-		}
-
-		if(FD_ISSET(bbsd_sock, &ready))
-			shutdown_daemon = TRUE;
-
-        if(FD_ISSET(listen_sock, &ready)) {
-            ap = add_proc();
-            if((ap->fd = socket_accept(listen_sock)) < 0)
-                ap = remove_proc(ap);
-			else
-				if(socket_write(ap->fd,	daemon_version("bidd", Bbs_Call)) == ERROR)
-					ap = remove_proc(ap);
-        }
-
-        ap = procs;
-        while(ap) {
-            if(FD_ISSET(ap->fd, &ready)) {
-                if(service_port(ap) == ERROR) {
-                    ap = remove_proc(ap);
-					continue;
-				}
-            }
-            NEXT(ap);
-        }
+	if (alEvent_init() != 0) {
+		fprintf(stderr, "Unable to initialize event system\n");
+		return 1;
 	}
 
+	AL_CALLBACK(&cb, NULL, log_clear_callback);
+	res = alEvent_addTimer(Log_Clear_Interval_s * 1000, 0, cb);
+	if (res < 0) {
+		fprintf(stderr, "can't register log clear timer\n");
+		return 1;
+	}
+
+	AL_CALLBACK(&cb, NULL, flush_callback);
+	res = alEvent_addTimer(Bidd_Flush * 1000, 0, cb);
+	if (res < 0) {
+		fprintf(stderr, "can't register flush timer\n");
+		return 1;
+	}
+
+	AL_CALLBACK(&cb, (void *)listen_sock, accept_callback);
+	if (alEvent_registerFd(listen_sock, ALFD_READ, cb, &listen_ev) != 0) {
+		fprintf(stderr, "Unable to register listen socket\n");
+		return 1;
+	}
+
+	AL_CALLBACK(&cb, NULL, bbsd_activity_callback);
+	if (alEvent_registerFd(bbsd_sock, ALFD_READ, cb, &bbsd_ev) != 0) {
+		fprintf(stderr, "Unable to register bbsd socket\n");
+		return 1;
+	}
+
+	signal(SIGPIPE, SIG_IGN);
+
+	while (!shutdown_daemon && alEvent_pending()) {
+		alEvent_poll();
+		error_print();
+	}
+
+	if(bid_image == DIRTY)
+		write_file();
+
 	return 0;
+}
+
+static void
+flush_callback(void *ctx, void *arg0, int arg1)
+{
+	int res;
+	alCallback cb;
+
+	age();
+
+	if(bid_image == DIRTY)
+		write_file();
+
+	AL_CALLBACK(&cb, ctx, flush_callback);
+	res = alEvent_addTimer(Log_Clear_Interval_s * 1000, 0, cb);
+	if (res < 0) {
+		fprintf(stderr, "can't register flush timer\n");
+		shutdown_daemon = TRUE;
+	}
+}
+
+static void
+log_clear_callback(void *ctx, void *arg0, int arg1)
+{
+	int res;
+	alCallback cb;
+
+	log_clear("bidd");
+
+	AL_CALLBACK(&cb, ctx, log_clear_callback);
+	res = alEvent_addTimer(Log_Clear_Interval_s * 1000, 0, cb);
+	if (res < 0) {
+		fprintf(stderr, "can't register log clear timer\n");
+		shutdown_daemon = TRUE;
+	}
 }
 
 time_t
