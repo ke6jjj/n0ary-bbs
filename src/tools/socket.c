@@ -152,16 +152,66 @@ int
 socket_accept(int sock)
 {
 	int fd;
+#ifdef HAVE_LINGER_STRUCT
+	struct linger linger;
+	linger.l_onoff = 0;
+	linger.l_linger = 0;
+#else
 	int linger = 0;
+#endif
 
 	if((fd = accept(sock, 0, 0)) < 0)
 		return error_log("socket_accept.accept: %s",
 			sys_errlist[errno]);
 
-	setsockopt(fd, SOL_SOCKET, SO_LINGER, (char*)&linger, sizeof(linger));
+	setsockopt(fd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger));
 	fcntl(fd, F_SETFL, O_NDELAY);
 	link_fd(fd);
 	return fd;
+}
+
+
+int
+socket_accept_nonblock_unmanaged(int sock)
+{
+#       define _SAN "socket_accept_nonblock_unmanaged"
+	int fd, res, flags;
+#ifdef HAVE_LINGER_STRUCT
+	struct linger linger;
+	linger.l_onoff = 0;
+	linger.l_linger = 0;
+#else
+	int linger = 0;
+#endif
+
+	if((fd = accept(sock, 0, 0)) < 0)
+		return error_log(_SAN ": %s", sys_errlist[errno]);
+
+	res = setsockopt(fd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger));
+	if (res < 0) {
+		error_log(_SAN ": can't set linger");
+		goto CantSockOpt;
+	}
+
+	if ((flags = fcntl(fd, F_GETFL, 0)) < 0) {
+		error_log(_SAN ": couldn't get socket flags.");
+		goto GetFlagsFailed;
+	}
+
+	if (fcntl(fd, F_SETFL, flags|O_NONBLOCK|O_NDELAY) < 0) {
+		error_log(_SAN ": couldn't make socket non-blocking.");
+		goto SetFlagsFailed;
+	}
+
+	return fd;
+
+SetFlagsFailed:
+GetFlagsFailed:
+CantSockOpt:
+	close(fd);
+AcceptFailed:
+	return -1;
+#       undef _SAN
 }
 
 int

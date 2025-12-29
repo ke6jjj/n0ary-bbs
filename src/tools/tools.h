@@ -119,6 +119,7 @@ int
 	socket_read_raw_line(int fd, char *line, int len, int timeout),
 	socket_read_line(int fd, char *line, int len, int timeout),
 	socket_accept(int sock),
+	socket_accept_nonblock_unmanaged(int sock),
 	socket_open(char *host, int port),
 	socket_listen(const char *bind_addr, int *port),
 	socket_read_pending(int fd),

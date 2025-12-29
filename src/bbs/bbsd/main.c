@@ -1,11 +1,13 @@
-#include <stdio.h>
-#include <signal.h>
 #include <sys/types.h>
 #include <sys/time.h>
+#include <sys/socket.h>
+#include <stdio.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <errno.h>
 #include <stdint.h>
+#include <fcntl.h>
 
 #include "alib.h"
 #include "c_cmmn.h"
@@ -57,19 +59,31 @@ static void daemon_check_callback(void *ctx, void *arg0, int arg1);
 static int next_check_delay_s(int ping_interval, int starting_up);
 static void notify(char *msg);
 static void notify_callback(void *ctx, void *arg0, int arg1);
+static int handle_line(struct active_process *ap, char *buf);
 
 static int
 service_port(struct active_process *ap)
 {
-	char *buf, *c, *s;
+	char *buf;
 	int res;
 
-	res = async_line_get(ap->buf, ap->fd, &buf);
-	if (res == ASYNC_MORE)
-		return OK;
+	for (;;) {
+		res = async_line_get(ap->buf, ap->fd, &buf);
+		if (res == ASYNC_MORE)
+			return OK;
 
-	if (res != ASYNC_OK)
-		return ERROR;
+		if (res != ASYNC_OK)
+			return ERROR;
+
+		if (handle_line(ap, buf) != OK)
+			return ERROR;
+	}
+}
+
+static int
+handle_line(struct active_process *ap, char *buf)
+{
+	char *c, *s;
 
 	if(VERBOSE)
 		printf("R: %s\n", buf);
@@ -330,22 +344,21 @@ static void
 accept_callback(void *ctx, void *arg0, int arg1)
 {
 	struct active_process *ap;
-	int fd, res;
+	int fd, res, flags;
 	intptr_t listen_sock;
 	char buf[80];
 	alCallback cb;
 
 	listen_sock = (intptr_t) ctx;
-	fd = socket_accept(listen_sock);
+	fd = socket_accept_nonblock_unmanaged(listen_sock);
 	if (fd < 0) {
 		fprintf(stderr, "accept failed on new connection.\n");
-		return;
+		goto AcceptFailed;
 	}
 
 	if (socket_write(fd, daemon_version("bbsd", Bbs_Call)) != sockOK) {
 		fprintf(stderr, "couldn't write hello banner.\n");
-		close(fd);
-		return;
+		goto BannerFailed;
 	}
 
 	ap = add_proc();
@@ -354,17 +367,26 @@ accept_callback(void *ctx, void *arg0, int arg1)
 	snprintf(buf, sizeof(buf), "# %d\n", ap->proc_num);
 	if(write(fd, buf, strlen(buf)) < 0) {
 		fprintf(stderr, "couldn't write second hello banner.\n");
-		remove_proc(ap);
-		close(fd);
-		return;
+		goto SecondBannerFailed;
 	}
 
 	AL_CALLBACK(&cb, ap, service_callback);
 	res = alEvent_registerFd(fd, ALFD_READ, cb, &ap->ev);
 	if (res != 0) {
 		fprintf(stderr, "couldn't register new process\n");
-		remove_proc(ap);
+		goto RegisterFailed;
 	}
+
+	return;
+
+RegisterFailed:
+SecondBannerFailed:
+	remove_proc(ap);
+	return;
+BannerFailed:
+	close(fd);
+AcceptFailed:
+	return;
 }
 
 static void
