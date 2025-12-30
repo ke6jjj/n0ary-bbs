@@ -17,8 +17,10 @@ main(int argc, char **argv)
 
 	salen = sizeof(sa);
 	res = getpeername(STDIN_FILENO, &sa, &salen);
-	if (res != 0)
+	if (res != 0) {
+		fprintf(stderr, "stdin is not a socket. aborting.\n");
 		return 1;
+	}
 
 	switch (sa.sa_family) {
 	case AF_INET:
