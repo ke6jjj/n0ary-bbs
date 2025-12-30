@@ -1266,7 +1266,7 @@
 1110       Held    - messages awaiting sysop action
 1110       Mine    - messages addressed to you
 1110       Clubs   - where your CLUBS list matches the To,From or @ field
-1110       LOCal   - messages left on this bbs for it's users
+1110       LOCal   - messages left on this bbs for its users
 1110
 1110    You may specify as many options as you like. The intersection of the 
 1110    request is displayed. For instance, LIST PER CLUBS READ KILLED,
