@@ -592,6 +592,28 @@ MSGD_AGE_B_KILLED	1 days
 MSGD_AGE_T_ACTIVE	21 days
 MSGD_AGE_T_KILLED	1 days
 
+; When called upon to generate a bulletin for wide distribution,
+; msgd is responsible for generating a unique bulletin identifier
+; when asked. Ideally, this identifier should be unique across all
+; time and space; practically, however, it used to revert to some
+; combination of the BBS name and the number assigned to the
+; bulletin message in the local system.
+;
+; If you so desire, msgd can be configured to allocate bulletin ids
+; from a persistent store which can last for the entire lifetime
+; of the BBS.
+;
+; To enable this feature, define the variable MSGD_GLOBAL_BID_FILE
+; and assign it the name of a file which will retain the last allocated
+; bulletin id for the BBS, and which will be updated whenever a new
+; bulletin identifier is requested.
+;
+; If the file does not exist, msgd will create it and synthesize
+; a bulletin id from the highest message number currently found
+; on the system, and use that thereafter.
+;
+; MSGD_GLOBAL_BID_FILE		message/global_bid.db
+
 ;###
 ;#  USERD - User Daemon
 ;###

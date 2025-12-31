@@ -692,9 +692,12 @@ send_message(struct active_processes *ap)
 			switch(rfc822_parse(msg, rfc)) {
 			case rBID:
 				if(!strcmp(msg->bid, "$\n")) {
+					int new_bid = allocate_bid(msg->number);
+					if (new_bid < 0)
+						return ERROR;
 					if (format_bid(msg->bid,
 						sizeof(msg->bid),
-						(unsigned int) msg->number,
+						(unsigned int) new_bid,
 						Bbs_Call) != 0)
 						return ERROR;
 					rfc822_gen(rBID, msg, buf, 80);
@@ -781,3 +784,14 @@ clean_users(void)
 	}
 }
 
+int
+get_max_message_id(void)
+{
+	struct msg_dir_entry *msg;
+
+	if (TAILQ_EMPTY(&MsgDir))
+		return 0;
+
+	msg = TAILQ_LAST(&MsgDir, MsgList);
+	return msg->number;
+}

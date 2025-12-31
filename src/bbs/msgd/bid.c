@@ -2,8 +2,109 @@
 #include <string.h>
 
 #include "bid.h"
+#include "tools.h"
+#include "c_cmmn.h"
 
+static int global_bid_bootstrap(int initial_bid);
+static int global_bid_update(int bid);
 static int itob36(char *buf, size_t len, unsigned int i);
+
+static char *Global_Bid_Db_Path;
+static int Use_Global_Bids;
+static int Last_Global_Bid;
+
+int
+initialize_bids(const char *global_bid_db_path, int max_message_id)
+{
+	FILE *gb;
+	int res;
+	
+	if (global_bid_db_path == NULL) {
+		/* System doesn't use a global bid file. */
+		Global_Bid_Db_Path = NULL;
+		Use_Global_Bids = 0;
+		return 0;
+	}
+
+	Global_Bid_Db_Path = strdup(global_bid_db_path);
+	if (Global_Bid_Db_Path == NULL)
+		return -1;
+
+	Use_Global_Bids = 1;
+
+	gb = fopen(Global_Bid_Db_Path, "r");
+	if (gb == NULL) {
+		/*
+		 * We will assume that this system is being brought
+		 * into using a global bid file for the first time.
+		 */
+		return global_bid_bootstrap(max_message_id);
+	}
+
+	res = fscanf(gb, "%d", &Last_Global_Bid);
+	fclose(gb);
+
+	if (res < 0)
+		return -1;
+
+	return 0;
+}
+
+int
+allocate_bid(int message_number)
+{
+	int next_bid;
+
+	if (Use_Global_Bids == 0) {
+		return message_number;
+	}
+
+	next_bid = Last_Global_Bid + 1;
+
+	if (global_bid_update(next_bid) != 0)
+		return -1;
+
+	return Last_Global_Bid;
+}
+
+
+static int
+global_bid_bootstrap(int last_id)
+{
+	if (last_id < 0) {
+		return -1;
+	}
+
+	return global_bid_update(last_id);
+}
+
+static int
+global_bid_update(int bid)
+{
+	FILE *gb;
+	if ((gb = spool_fopen(Global_Bid_Db_Path)) == NULL) {
+		goto SpoolFopenFailed;
+	}
+
+	if (fprintf(gb, "%d\n", bid) < 0) {
+		goto IdWriteFailed;
+	}
+
+	if (spool_fclose(gb) != OK) {
+		goto SpoolFcloseFailed;
+	}
+
+	Last_Global_Bid = bid;
+
+	return 0;
+
+SpoolFcloseFailed:
+	return -1;
+IdWriteFailed:
+	spool_abort(gb);
+SpoolFopenFailed:
+	return -1;
+}
 
 /*
  * Message numbers 1-99999        : nnnnn_CALL (decimal)

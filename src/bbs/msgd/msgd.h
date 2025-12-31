@@ -15,6 +15,7 @@ extern char
 	*Msgd_Fwd_Dir,
 	*Msgd_Route_File,
 	*Msgd_Group_File,
+	*Msgd_Global_Bid_File,
 	*Msgd_System_File;
 
 extern int dbug_level;
@@ -142,6 +143,7 @@ extern char
 	*parse(struct active_processes *ap, char *s);
 
 extern int
+	get_max_message_id(void),
 	compress_messages(struct active_processes *ap),
 	fwddir_rename(int orig, int new),
 	msg_body_rename(int orig, int new),

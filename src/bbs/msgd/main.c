@@ -16,6 +16,7 @@
 #include "tools.h"
 #include "bbslib.h"
 #include "msgd.h"
+#include "bid.h"
 
 struct active_processes *procs = NULL;
 
@@ -40,6 +41,7 @@ char
 	*Msgd_Fwd_Dir,
 	*Msgd_Route_File,
 	*Msgd_Group_File,
+	*Msgd_Global_Bid_File,
 	*Msgd_System_File;
 
 struct ConfigurationList ConfigList[] = {
@@ -56,6 +58,7 @@ struct ConfigurationList ConfigList[] = {
 	{ "MSGD_ROUTE_FILE",	tFILE,		(int*)&Msgd_Route_File },
 	{ "MSGD_SYSTEM_FILE",	tFILE,		(int*)&Msgd_System_File },
 	{ "MSGD_GROUP_FILE",	tFILE,		(int*)&Msgd_Group_File },
+	{ "MSGD_GLOBAL_BID_FILE",	tFILE,	(int*)&Msgd_Global_Bid_File },
 	{ "",					tCOMMENT,	NULL },
 	{ "MSGD_AGE_INTERVAL",	tTIME,		(int*)&Msgd_Age_Interval },
 	{ "MSGD_AGE_OLD",		tTIME,		(int*)&Msgd_Age_Old },
@@ -191,6 +194,12 @@ main(int argc, char *argv[])
 	if (build_msgdir()) {
 		Logging = logON;
 		log_f("msgd", "Can't build_msgdir()", "");
+		exit(1);
+	}
+
+	if (initialize_bids(Msgd_Global_Bid_File, get_max_message_id()) != 0) {
+		Logging = logON;
+		log_f("msgd", "Can't initialize_bids()", "");
 		exit(1);
 	}
 
