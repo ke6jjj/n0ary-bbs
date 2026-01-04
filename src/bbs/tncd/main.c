@@ -100,6 +100,7 @@ struct ConfigurationList DynamicConfigList[] = {
   { "",                                                       tCOMMENT, NULL },
   { "KISS_MUX_BIND_ADDR",         tSTRING,    (int*)&Tncd_KISS_Mux_Bind_Addr },
   { "KISS_MUX_PORT",              tINT,       (int*)&Tncd_KISS_Mux_Port },
+  { "KISS_MUX_SEE_OTHERS",        tINT,       (int*)&Tncd_KISS_Mux_See_Others },
   { "T1INIT",                     tTIME,      (int*)&Tncd_T1init },
   { "T2INIT",                     tTIME,      (int*)&Tncd_T2init },
   { "T3INIT",                     tTIME,      (int*)&Tncd_T3init },
@@ -108,11 +109,13 @@ struct ConfigurationList DynamicConfigList[] = {
   { "PACLEN",                     tINT,       (int*)&Tncd_Paclen },
   { "PTHRESH",                    tINT,       (int*)&Tncd_Pthresh },
   { "FLAGS",                      tINT,       (int*)&Tncd_SLIP_Flags },
+  { "",                                                       tCOMMENT, NULL },
+  { "  Beacon parameters",                                    tCOMMENT, NULL },
+  { "",                                                       tCOMMENT, NULL },
   { "BEACON_INTERVAL",            tTIME,      (int*)&Tncd_Beacon_Interval },
   { "BEACON_CALL",                tSTRING,    (int*)&Tncd_Beacon_Call },
   { "BEACON_DEST",                tSTRING,    (int*)&Tncd_Beacon_Dest },
   { "BEACON_MESSAGE",             tSTRING,    (int*)&Tncd_Beacon_Message },
-  { "KISS_MUX_SEE_OTHERS",        tINT,       (int*)&Tncd_KISS_Mux_See_Others },
   { NULL,                         tEND,       NULL}
 };
 
