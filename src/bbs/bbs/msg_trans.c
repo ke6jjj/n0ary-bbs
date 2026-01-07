@@ -363,12 +363,10 @@ execute_replacement(char *replace, struct msg_dir_entry *m)
 			return FALSE;
 		}
 	}
-	if(!(m->flags & MsgBid))
-		if((m->flags & MsgBulletin) || !isCall(m->to.name.str) ||
-			!isCall(m->from.name.str)) {
-			strcpy(m->bid, "$");
-			m->flags |= MsgBid;
-		}
+	if((m->flags & MsgBulletin) && !(m->flags & MsgBid)) {
+		strcpy(m->bid, "$");
+		m->flags |= MsgBid;
+	}
 	return done;
 }
 
