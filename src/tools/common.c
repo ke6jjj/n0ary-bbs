@@ -172,6 +172,12 @@ get_number(char **str)
 	return get_number_and_advance(str, 1);
 }
 
+time_t
+get_time_t(char **str)
+{
+	return (time_t) get_number_and_advance(str, 1);
+}
+
 int
 get_time_interval(char **str, int default_unit, int parse_two, long *result)
 {

@@ -1,4 +1,5 @@
 #include <inttypes.h>
+#include <time.h>
 
 #ifndef TIME_T_FORMAT_SET
 #  ifdef __LP64__
@@ -91,6 +92,9 @@ int
 long
 	get_hexnum(char **str),					/* common.c */
 	get_number(char **str);					/* common.c */
+
+time_t
+	get_time_t(char **str);					/* common.c */
 
 int
 	get_time_interval(char **str, int default_unit, int parse_two_words,
