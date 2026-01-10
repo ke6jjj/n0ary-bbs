@@ -6,7 +6,7 @@ WPD_APP_PROD := b_wpd
 
 WPD_APP_SRCS := \
 	main.c read.c hash.c date.c parse.c report.c write.c\
-		edit.c mail.c update.c search.c upload.c
+		edit.c mail.c update.c search.c upload.c safe.c
 
 $(eval $(call create_bbs_app_rules,WPD_APP))
 

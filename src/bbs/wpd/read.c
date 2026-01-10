@@ -3,10 +3,12 @@
 #include <stdlib.h>
 
 #include "c_cmmn.h"
-#include "config.h"
 #include "tools.h"
-#include "bbslib.h"
 #include "wp.h"
+
+static int parse_preparsed_entry(struct wp_user_entry *wp, int version,
+	char **p, time_t now);
+static int parse_freehand_entry(struct wp_user_entry *wp, char **p);
 
 int
 iscall(char *s)
@@ -98,8 +100,9 @@ read_user_file(char *filename, int depth)
 		get_number(&p);		/*last seen*/
 		get_number(&p);		/*changed*/
 
-			/* at this point we will either have a number or a homebbs */
-		if(iscall(get_string(&p))) {
+		/* at this point we will either have a number or a homebbs */
+		char *call = get_string(&p);
+		if(call != NULL && iscall(call)) {
 			if(dbug_level & dbgVERBOSE)
 				printf("Old database detected\n");
 			version = 0;
@@ -111,11 +114,20 @@ read_user_file(char *filename, int depth)
 		rewind(fp);
 	}
 
+	if (version > 1) {
+		fprintf(stderr,
+			"User database version %d is newer than I am!\n",
+			version
+		);
+		fclose(fp);
+		return ERROR;
+	}
+
 	while(fgets(s, sizeof(s), fp)) {
 		char buf[80];
 		char *p = s;
-		struct wp_user_entry *wp;
-		int preparsed;
+		struct wp_user_entry wp;
+		int preparsed, ok;
 
 		if(*s == '#' || *s == '\n')
 			continue;
@@ -132,97 +144,112 @@ read_user_file(char *filename, int depth)
 			break;
 		}
 
-		strlcpy(buf, get_string(&p), sizeof(buf));
+		if (safe_get_string(buf, &p, sizeof(buf)) != 0)
+			continue;
 
-		if(!preparsed)
-			if(iscall(buf) == FALSE)
-				continue;
+		if(!preparsed && !iscall(buf))
+			continue;
 
-		if((wp = hash_get_user(buf)) == NULL)
-			wp = hash_create_user(buf);
-
-		strlcpy(wp->call, buf, sizeof(wp->call));
-		wp->level = get_number(&p);
-
+		strlcpy(wp.call, buf, sizeof(wp.call));
 
 		if(preparsed) {
-			char qth[80];
-			wp->firstseen = get_number(&p);
-			wp->seen = get_number(&p);
-			wp->changed = get_number(&p);
-
-			if(version == 1)
-				wp->last_update_sent = get_number(&p);
-			else
-				wp->last_update_sent = 0;
-
-			if((unsigned)wp->firstseen > (unsigned)now)
-				wp->firstseen = now - (3 * tMonth);
-			if((unsigned)wp->seen > (unsigned)now)
-				wp->seen = now - (3 * tMonth);
-			if((unsigned)wp->changed > (unsigned)now)
-				wp->changed = now - (3 * tMonth);
-			if((unsigned)wp->last_update_sent > (unsigned)now)
-				wp->last_update_sent = now - (3 * tMonth);
-
-			strlcpy(wp->home, get_string(&p), sizeof(wp->home));
-			strlcpy(wp->fname, get_string(&p), sizeof(wp->fname));
-			strlcpy(wp->zip, get_string(&p), sizeof(wp->zip));
-			qth[0] = 0;
-			if(*p == 0)
-				strlcat(qth, "?", sizeof(qth));
-			else {
-				while(TRUE) {
-					strlcat(qth, get_string(&p),
-						sizeof(qth));
-					if(*p == 0)
-						break;
-					strlcat(qth, " ", sizeof(qth));
-				}
-			}
-			strlcpy(wp->qth, qth, sizeof(wp->qth));
-			cnt++;
-			continue;
+			ok = parse_preparsed_entry(&wp, version, &p, now);
 		} else {
-			wp->firstseen = date2time(get_string(&p));
-			wp->seen = date2time(get_string(&p));
-			wp->changed = date2time(get_string(&p));
-			wp->last_update_sent = date2time(get_string(&p));
-
-			if(*p) {
-				strlcpy(wp->home, get_string(&p),
-					sizeof(wp->home));
-				if(wp->home[0] == '?') {
-					hash_delete_user(wp->call);
-					continue;
-				}
-	
-				if(*p) {
-					strlcpy(wp->fname, get_string(&p),
-						sizeof(wp->fname));
-	
-					if(*p) {
-						strlcpy(wp->zip,
-							get_string(&p),
-							sizeof(wp->zip));
-				
-						if(*p) {
-							strlcpy(wp->qth, p,
-								sizeof(wp->qth)
-							);
-							continue;
-						}
-					}
-				}
-			}
+			ok = parse_freehand_entry(&wp, &p);
 		}
-		hash_delete_user(wp->call);
+
+		if (ok != 0)
+			continue;
+
+		if (hash_insert_or_update_user(&wp) != 0)
+			continue;
+
+		cnt++;
 	}
 
 	if(dbug_level & dbgVERBOSE)
 		printf("Loaded %d users in %"PRTMd" seconds\n", cnt, time(NULL) - t0);
 	fclose(fp);
 	return OK;
+}
+
+static int
+parse_preparsed_entry(struct wp_user_entry *wp, int version, char **p,
+	time_t now)
+{
+	char qth[80];
+
+	wp->level = get_number(p);
+
+	wp->firstseen = get_time_t(p);
+	wp->seen = get_time_t(p);
+	wp->changed = get_time_t(p);
+
+	if(version == 1) {
+		wp->last_update_sent = get_time_t(p);
+	} else
+		wp->last_update_sent = 0;
+
+	if(wp->firstseen > now)
+		wp->firstseen = now - (3 * tMonth);
+	if(wp->seen > (unsigned)now)
+		wp->seen = now - (3 * tMonth);
+	if(wp->changed > (unsigned)now)
+		wp->changed = now - (3 * tMonth);
+	if(wp->last_update_sent > (unsigned)now)
+		wp->last_update_sent = now - (3 * tMonth);
+
+	if (safe_get_string(wp->home, p, sizeof(wp->home)) != 0)
+		return -1;
+	if (safe_get_string(wp->fname, p, sizeof(wp->fname)) != 0)
+		return -1;
+	if (safe_get_string(wp->zip, p, sizeof(wp->zip)) != 0)
+		return -1;
+	qth[0] = 0;
+	if(**p == 0)
+		strlcat(qth, "?", sizeof(qth));
+	else {
+		while(TRUE) {
+			if (safe_cat_string(qth, p, sizeof(qth)) != 0) {
+				return -1;
+			}
+			if(**p == 0)
+				break;
+			strlcat(qth, " ", sizeof(qth));
+		}
+	}
+	strlcpy(wp->qth, qth, sizeof(wp->qth));
+
+	return 0;
+}
+
+static int
+parse_freehand_entry(struct wp_user_entry *wp, char **p)
+{
+	wp->level = get_number(p);
+
+	if (safe_udate2time(&wp->firstseen, p) != 0)
+		return -1;
+	if (safe_udate2time(&wp->seen, p) != 0)
+		return -1;
+	if (safe_udate2time(&wp->changed, p) != 0)
+		return -1;
+	if (safe_udate2time(&wp->last_update_sent, p) != 0)
+		return -1;
+
+	if (safe_get_string(wp->home, p, sizeof(wp->home)) != 0)
+		return -1;
+	if(wp->home[0] == '?')
+		return -1;
+
+	if (safe_get_string(wp->fname, p, sizeof(wp->fname)) != 0)
+		return -1;
+	if (safe_get_string(wp->zip, p, sizeof(wp->zip)) != 0)
+		return -1;
+	if (safe_get_string(wp->qth, p, sizeof(wp->qth)) != 0)
+		return -1;
+
+	return 0;
 }
 
 int

@@ -3,7 +3,6 @@
 #include "c_cmmn.h"
 #include "config.h"
 #include "tools.h"
-#include "bbslib.h"
 #include "wp.h"
 
 static int

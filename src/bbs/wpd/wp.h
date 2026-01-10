@@ -1,5 +1,8 @@
 #include <time.h>
+#include "bbslib.h"
 #include "smtp.h"
+#include "safe.h"
+#include "date.h"
 
 #define Error(s)	"NO, "s"\n"
 #define Ok(s)		"OK, "s"\n"
@@ -61,6 +64,17 @@ struct wp_user_entry {
 	char	qth[LenQTH];
 };
 
+struct wp_user_upload_entry {
+	time_t	changed;
+	int     level;
+	char	call[LenCALL];
+	char	home[LenCALL];
+	char	hloc[LenHLOC];
+	char	zip[LenZIP];
+	char	fname[LenFNAME];
+	char	qth[LenQTH];
+};
+
 struct wp_bbs_entry {
 	struct wp_bbs_entry *next;
 	long	level;
@@ -108,7 +122,7 @@ void
 
 struct wp_user_entry
 	*make_user(char *call),
-	*hash_create_user(char *s),
+	*new_user_entry(void),
 	*hash_get_user(char *s);
 
 struct wp_bbs_entry
@@ -127,6 +141,8 @@ int
 	read_new_bbs_file(char *filename),
 	read_bbs_file(char *filename),
 	hash_gen_update(FILE *gfp, int *gcnt, FILE *lfp, int *lcnt),
+	hash_insert_user(char *call, struct wp_user_entry *wp),
+	hash_insert_or_update_user(struct wp_user_entry *wp),
 	hash_delete_user(char *s),
 	hash_delete_bbs(char *s),
 	hash_deleted_user(char *s),
@@ -147,13 +163,7 @@ char
 	*write_file(char *cmd),
     *write_user_file(void),
     *write_bbs_file(void),
-	*time2date(time_t t),
-	*time2udate(time_t t),
     *hash_bbs_cnt(void),
     *hash_user_cnt(void),
 	*report_entry(char *call),
 	*parse(struct active_processes *ap, char *s);
-
-time_t
-	date2time(char *s),
-	udate2time(char *s);

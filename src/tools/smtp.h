@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #define SMTP_HELO	1
 #define SMTP_MAIL	2
 #define SMTP_RCPT	3

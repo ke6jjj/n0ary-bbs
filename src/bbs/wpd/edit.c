@@ -3,9 +3,7 @@
 #include <time.h>
 
 #include "c_cmmn.h"
-#include "config.h"
 #include "tools.h"
-#include "bbslib.h"
 #include "wp.h"
 
 long new_level = WP_Init;
@@ -141,7 +139,7 @@ edit_number(struct active_processes *ap, int token, char *s)
 struct wp_user_entry *
 make_user(char *call)
 {
-	struct wp_user_entry *wpu = hash_create_user(call);
+	struct wp_user_entry *wpu = malloc_struct(wp_user_entry);
 	if(wpu != NULL) {
 		strcpy(wpu->call, call);
 		strcpy(wpu->fname, "?");
@@ -154,6 +152,7 @@ make_user(char *call)
 		wpu->last_update_sent = 0;
 		wpu->level = WP_Init;
 		user_image = DIRTY;
+		hash_insert_user(call, wpu);
 	}
 	return wpu;
 }

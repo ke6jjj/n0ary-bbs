@@ -6,9 +6,7 @@
 #include <unistd.h>
 
 #include "c_cmmn.h"
-#include "config.h"
 #include "tools.h"
-#include "bbslib.h"
 #include "wp.h"
 
 #define USER_HASH_SIZE	0x10000
@@ -159,19 +157,56 @@ hash_get_bbs(char *s)
 }
 
 struct wp_user_entry *
-hash_create_user(char *s)
+new_user_entry(void)
 {
-	unsigned key = hash_user_key(s);
 	struct wp_user_entry *wp = malloc_struct(wp_user_entry);
-	
-	if(wp == NULL) {
+	if (wp == NULL) {
 		printf("memory allocation failure\n");
 		exit(1);
 	}
+
+	return wp;
+}
+
+int
+hash_insert_user(char *call, struct wp_user_entry *wp)
+{
+	unsigned key = hash_user_key(call);
+	if (user[key] != NULL && strcmp(user[key]->call, call) == 0) {
+		/* Duplicate entry! */
+		return -1;
+	}
+
 	wp->next = user[key];
 	user[key] = wp;
 
-	return wp;
+	return 0;
+}
+
+int
+hash_insert_or_update_user(struct wp_user_entry *src)
+{
+	int existing = 1;
+	struct wp_user_entry *wp, *next;
+
+	if ((wp = hash_get_user(src->call)) == NULL) {
+		existing = 0;
+		wp = new_user_entry();
+	} else {
+		next = wp->next;
+	}
+
+	memcpy(wp, src, sizeof(*src));
+	wp->next = next;
+
+	if (!existing) {
+		if (hash_insert_user(wp->call, wp) != 0) {
+			free(wp);
+			return -1;
+		}
+	}
+
+	return 0;
 }
 
 struct wp_bbs_entry *
@@ -289,19 +324,34 @@ hash_write_bbs(FILE *fp)
 static int
 dump_user_entry(FILE *fp, struct wp_user_entry *wp)
 {
+	char buf[1024];
+	int res;
+
+	res = snprintf(buf, sizeof(buf),
+		"+%s "
+		"%ld "
+		"%"PRTMd" %"PRTMd" %"PRTMd" %"PRTMd" "
+		"%s %s %s %s\n",
+		wp->call,
+		wp->level,
+		wp->firstseen,
+		wp->seen,
+		wp->changed,
+		wp->last_update_sent,
+		wp->home,
+		wp->fname,
+		wp->zip,
+		wp->qth
+	);
+	if (res < 0)
+		return res;
+
 	if(dbug_level & dbgVERBOSE) {
-		printf("+%s %ld %u %u %u %u %s %s %s %s\n",
-			wp->call, wp->level, (unsigned)wp->firstseen,
-			(unsigned)wp->seen, (unsigned)wp->changed,
-			(unsigned)wp->last_update_sent,
-			wp->home, wp->fname, wp->zip, wp->qth);
+		fputs(buf, stdout);
+		fflush(stdout);
 	}
 
-	return fprintf(fp, "+%s %ld %u %u %u %u %s %s %s %s\n",
-		wp->call, wp->level, (unsigned)wp->firstseen,
-		(unsigned)wp->seen, (unsigned)wp->changed,
-		(unsigned)wp->last_update_sent,
-		wp->home, wp->fname, wp->zip, wp->qth);
+	return fputs(buf, fp);
 }
 
 char *
