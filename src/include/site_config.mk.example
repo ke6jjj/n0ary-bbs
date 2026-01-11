@@ -11,6 +11,10 @@
 #MACOSX=1
 #OPENBSD=1
 
+# This sets changes the syslog facility used by the bbs
+# If not set, will default to LOG_LOCAL1
+#BBS_SYSLOG_FACILITY=LOG_LOCAL1
+
 # Unless you really want these old tools, leave these lines unedited.
 # Note: they likely won't compile under a modern OS.
 ENABLE_BBSTOOL=0

@@ -7,6 +7,8 @@
 
 static int xlate_bbs_level(int level, int *res);
 
+static int g_bbs_log_level;
+
 void
 bbs_log_init(const char *prog, int also_stderr)
 {
@@ -15,18 +17,24 @@ bbs_log_init(const char *prog, int also_stderr)
 	if (also_stderr)
 		flags |= LOG_PERROR;
 
-	openlog(prog, flags, LOG_USER);
+	openlog(prog, flags, BBS_SYSLOG_FACILITY);
+	g_bbs_log_level = BBS_LOG_INFO;
+	bbs_log_level(g_bbs_log_level);
 }
 
-void
+int
 bbs_log_level(int level)
 {
-	int syslog_level;
+	int syslog_level, old_level;
 
 	if (xlate_bbs_level(level, &syslog_level) != 0)
 		return;
 
 	setlogmask(LOG_UPTO(syslog_level));
+	old_level = g_bbs_log_level;
+	g_bbs_log_level = level;
+
+	return old_level;
 }
 
 void

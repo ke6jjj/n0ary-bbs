@@ -9,7 +9,7 @@ TOOLS_SRCS :=	alEvent.c bugs.c daemon.c dectalk.c socket.c sola.c tty.c\
 		common.c error.c host.c spool.c display.c modem.c log.c\
 		safegets.c
 
-TOOLS_CFLAGS := -I$(TOOLS_SRCDIR) $(BBS_CFLAGS)
+TOOLS_CFLAGS := -I$(TOOLS_SRCDIR) $(BBS_CFLAGS) $(TOOLS_CFLAGS)
 
 TOOLS_LIB := $(TOOLS_OBJDIR)/libtools.a
 

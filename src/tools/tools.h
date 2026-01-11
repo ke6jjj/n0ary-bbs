@@ -145,7 +145,7 @@ int
 #define BBS_LOG_ERROR   4
 
 void bbs_log_init(const char *prog, int also_stderr);
-void bbs_log_level(int level);
+int  bbs_log_level(int level);
 void log_debug(const char *message, ...);
 void log_info(const char *message, ...);
 void log_warning(const char *message, ...);
