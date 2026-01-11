@@ -209,11 +209,20 @@ notify_monitors(void)
 static int
 check_for_bbsd(void)
 {
-	if(bbsd_open(Bbs_Host, Bbsd_Port, "BBSD", "STATUS") == ERROR) {
-		return OK;
-	}
+	int res;
+	int old_level;
 
-	return ERROR;
+	/*
+	 * Testing for an existing bbsd does cause internal logging noise
+	 * that is needlessly panic-inducing when we're expecting it to
+	 * fail. So temporarily shut down logging while performing this
+	 * test.
+	 */
+	old_level = bbs_log_level(BBS_LOG_CRITICAL);
+	res = bbsd_open(Bbs_Host, Bbsd_Port, "BBSD", "STATUS");
+	bbs_log_level(old_level);
+
+	return res == ERROR ? OK : ERROR;
 }
 
 static int
@@ -255,7 +264,7 @@ main(int argc, char *argv[])
 	extern char *config_fn;
 	extern int optind;
 
-	bbs_log_init("b_bbsd", 1 /* Also log to stderr */);
+	bbs_log_init("b_bbsd", 0 /* Don't also log to stderr */);
 
 	parse_options(argc, argv, ConfigList, "BBSD - BBS Super Daemon");
 

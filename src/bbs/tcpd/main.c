@@ -225,7 +225,7 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);
 
-	log_debug("UP");
+	log_info("UP");
 
 	if(bbsd_open(Bbs_Host, Bbsd_Port, "tcpd", "DAEMON") == ERROR)
 		exit(1);

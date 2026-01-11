@@ -59,7 +59,7 @@ service_port(struct active_processes *ap)
 	if(socket_read_line(ap->fd, buf, 256, 10) == ERROR)
 		return ERROR;
 
-	log_f("gated", "R:", buf);
+	log_debug("R:%s", buf);
 	s = buf;
 	NextChar(s);
 	if(*s) {
@@ -68,7 +68,7 @@ service_port(struct active_processes *ap)
 	} else
 		c = Error("invalid command");
 
-	log_f("gated", "S:", c);
+	log_debug("S:%s", c);
 	if(socket_raw_write(ap->fd, c) == ERROR)
 		return ERROR;
 

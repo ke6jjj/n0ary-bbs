@@ -158,7 +158,7 @@ main(int argc, char *argv[])
 
 	usrdir_build();
 
-	log_debug("UP");
+	log_info("UP");
 
 	listen_port = Userd_Port;
 	bind_addr = Userd_Bind_Addr;

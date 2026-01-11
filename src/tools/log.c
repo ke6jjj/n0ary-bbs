@@ -28,7 +28,7 @@ bbs_log_level(int level)
 	int syslog_level, old_level;
 
 	if (xlate_bbs_level(level, &syslog_level) != 0)
-		return;
+		return -1;
 
 	setlogmask(LOG_UPTO(syslog_level));
 	old_level = g_bbs_log_level;
@@ -101,6 +101,7 @@ xlate_bbs_level(int bbs_level, int *syslog_level)
 	case BBS_LOG_INFO:    level = LOG_INFO; break;
 	case BBS_LOG_WARNING: level = LOG_WARNING; break;
 	case BBS_LOG_ERROR:   level = LOG_ERR; break;
+	case BBS_LOG_CRITICAL:level = LOG_CRIT; break;
 	default:
 		return -1;
 	}

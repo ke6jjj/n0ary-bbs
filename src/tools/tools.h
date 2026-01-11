@@ -143,6 +143,7 @@ int
 #define BBS_LOG_INFO    2
 #define BBS_LOG_WARNING 3
 #define BBS_LOG_ERROR   4
+#define BBS_LOG_CRITICAL 5
 
 void bbs_log_init(const char *prog, int also_stderr);
 int  bbs_log_level(int level);

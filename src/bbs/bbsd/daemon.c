@@ -125,7 +125,7 @@ start_daemon(char *cmd)
 		sprintf(cmdline, "%s -p%d", cmdline, Bbsd_Port);
 	if(strcmp(Bbs_Host, BBS_HOST))
 		sprintf(cmdline, "%s -h%s", cmdline, Bbs_Host);
-	strcat(cmdline, " &");
+	strcat(cmdline, " 2>/dev/null &");
 	if(dbug_level & 0x10)
 		printf("starting: %s\n", cmdline);
 	system(cmdline);
