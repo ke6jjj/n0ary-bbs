@@ -396,7 +396,7 @@ age_messages(void)
 	bbsd_msg("Validate");
 	check_msgdir();
 	bbsd_msg("");
-	log_debug("AGING:End");
+	log_info("AGING:End");
 }
 
 int
