@@ -79,9 +79,9 @@ kiss_mux_init(kiss *kiss, slip *slip, int others, char *m_bindaddr, int m_port)
 		return OK;
 
 	if((kiss_socket = socket_listen(m_bindaddr, &m_port)) < 0) {
-		fprintf(stderr,
+		log_error(
 			"kiss_mux_init: Problem opening mux socket "
-			"... aborting\n");
+			"... aborting");
 		return ERROR;
 	}
 
@@ -91,7 +91,7 @@ kiss_mux_init(kiss *kiss, slip *slip, int others, char *m_bindaddr, int m_port)
 	{
 		close(kiss_socket);
 		kiss_socket = ERROR;
-		fprintf(stderr, "problem registering kiss mux socket\n");
+		log_error("problem registering kiss mux socket");
 		return ERROR;
 	}
 
@@ -144,24 +144,24 @@ kiss_mux_accept(void *obj, void *arg0, int arg1)
 	struct kiss_session *ks;
 
 	if((fd = accept_socket(kiss_socket)) == ERROR) {
-		fprintf(stderr, "kiss mux accept() error\n");
+		log_error("kiss mux accept() error");
 		goto AcceptError;
 	}
 
 	if ((ks = malloc_struct(kiss_session)) == NULL) {
-		fprintf(stderr, "kiss mux session alloc error\n");
+		log_error("kiss mux session alloc error");
 		goto AllocError;
 	}
 
 	ks->ks_fd = fd;
 
 	if ((ks->ks_asy = asy_init_from_fd(ks->ks_fd)) == NULL) {
-		fprintf(stderr, "kiss mux async alloc failed\n");
+		log_error("kiss mux async alloc failed");
 		goto AsyncAllocError;
 	}
 
 	if ((ks->ks_slip = slip_init(0)) == NULL) {
-		fprintf(stderr, "kiss mux slip alloc failed\n");
+		log_error("kiss mux slip alloc failed");
 		goto SlipAllocError;
 	}
 

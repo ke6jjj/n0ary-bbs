@@ -75,9 +75,10 @@ main(int argc, char *argv[])
 	char call[80], *p;
 	int bad;
 
-    if(bbsd_open(Bbs_Host, Bbsd_Port, "DialIn", "STATUS") == ERROR)
-		error_print_exit(0);
-	error_clear();
+	bbs_log_init(argv[0], 0 /* Don't log to stderr */);
+
+	if(bbsd_open(Bbs_Host, Bbsd_Port, "DialIn", "STATUS") == ERROR)
+		exit(1);
 
 	bbsd_get_configuration(ConfigList);
     bbsd_msg("Prompt for call");

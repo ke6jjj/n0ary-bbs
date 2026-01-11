@@ -138,17 +138,17 @@ modem_open(char *device)
 	int fd = open(device, O_RDWR|O_NOCTTY);
 
 	if(fd < 0)
-		return error_log("Failure opening modem at %s", device);
+		return log_error("Failure opening modem at %s: %m", device);
 
 	modem_debug_write("X: Open modem");
 
 #ifdef HAVE_TERMIOS
  	if(tcgetattr(fd,&tt))
- 		return error_log("tcgetattr(fd,&tt): %s", sys_errlist[errno]);
+		return log_error("tcgetattr(fd,&tt): %m");
 #else
 #ifdef TCGETS
 	if(ioctl(fd, TCGETS, &tt))
-		return error_log("ioctl(fd,TCGETS): %s", sys_errlist[errno]);
+		return log_error("ioctl(fd,TCGETS): %m");
 #else
 #error "Need termios"
 #endif
@@ -161,21 +161,21 @@ modem_open(char *device)
 
 #ifdef HAVE_TERMIOS
  	if(tcsetattr(fd, 0, &tt))
- 		return error_log("tcsets(fd,&tt): %s", sys_errlist[errno]);
+		return log_error("tcsets(fd,&tt): %m");
 #else
 #ifdef TCGETS
 	if(ioctl(fd, TCSETS, &tt))
-		return error_log("ioctl(fd,TCSETS): %s", sys_errlist[errno]);
+		return log_error("ioctl(fd,TCSETS): %m");
 #else
 #error "Need termios"
 #endif
 #endif
 
 	if(fcntl(fd, F_SETOWN, getpid()) < 0)
-		return error_log("fcntl(fd,F_SETOWN): %s", sys_errlist[errno]);
+		return log_error("fcntl(fd,F_SETOWN): %m");
 
 	if(fcntl(fd, F_SETFL, FNDELAY) < 0)
-			error_log("fcntl(fd,F_SETFL,FNDELAY): %s", sys_errlist[errno]);
+		log_error("fcntl(fd,F_SETFL,FNDELAY): %s", sys_errlist[errno]);
 
 	return fd;
 }
@@ -190,10 +190,10 @@ modem_dial(char *device, char *phone_number, char *init)
 		return ERROR;
 
 	if((p = modem_read(fd, 60)) == NULL)
-		return error_log("timeout waiting for response to ATDT");
+		return log_error("timeout waiting for response to ATDT");
 
 	if(strcmp(p, "1"))
-		return error_log("expected 1 but got %s instead", p);
+		return log_error("expected 1 but got %s instead", p);
 	return fd;
 }
 
@@ -216,13 +216,13 @@ modem_blind_dial(char *device, char *phone_number, char *init)
 		case sRECOVER:
 			modem_debug_write("X: RECOVER");
 			if(recover-- == 0)
-				return error_log("Too many attempt to recover");
+				return log_error("Too many attempt to recover");
 		case sSTART:
 			modem_debug_write("X: START");
 			modem_flush(fd);
 			modem_write(fd, "AT");
 			if((p = modem_read(fd, 10)) == NULL)
-				return error_log("timeout waiting for response to AT");
+				return log_error("timeout waiting for response to AT");
 
 			if(!strncmp(p, "AT", 2))
 				state = sECHO;
@@ -233,7 +233,7 @@ modem_blind_dial(char *device, char *phone_number, char *init)
 			else if(!strncmp(p, "3", 1))
 				state = sRECOVER;
 			else
-				return error_log("expected AT/OK/0 but got %s instead", p);
+				return log_error("expected AT/OK/0 but got %s instead", p);
 			break;
 
 		case sECHO:
@@ -242,12 +242,12 @@ modem_blind_dial(char *device, char *phone_number, char *init)
 			modem_flush(fd);
 			modem_write(fd, "ATV0E0X0");
 			if((p = modem_read(fd, 10)) == NULL)
-				return error_log("timeout waiting for echo of ATV0E0X0");
+				return log_error("timeout waiting for echo of ATV0E0X0");
 			if((p = modem_read(fd, 10)) == NULL)
-				return error_log("timeout waiting for response to ATV0E0X0");
+				return log_error("timeout waiting for response to ATV0E0X0");
 
 			if(strncmp(p, "0", 1))
-				return error_log("expected 0 but got %s instead", p);
+				return log_error("expected 0 but got %s instead", p);
 			state = (init) ? sINIT:sDIAL;
 			break;
 			
@@ -257,10 +257,10 @@ modem_blind_dial(char *device, char *phone_number, char *init)
 			modem_flush(fd);
 			modem_write(fd, "ATV0X0");
 			if((p = modem_read(fd, 10)) == NULL)
-				return error_log("timeout waiting for response to ATV0X0");
+				return log_error("timeout waiting for response to ATV0X0");
 
 			if(strncmp(p, "0", 1))
-				return error_log("expected 0 but got %s instead", p);
+				return log_error("expected 0 but got %s instead", p);
 
 			state = (init) ? sINIT:sDIAL;
 			break;
@@ -269,11 +269,11 @@ modem_blind_dial(char *device, char *phone_number, char *init)
 			modem_debug_write("X: INIT");
 			modem_write(fd, init);
 			if((p = modem_read(fd, 10)) == NULL)
-				return error_log("timeout waiting for response to INIT %s", 
+				return log_error("timeout waiting for response to INIT %s",
 								 init);
 
 			if(strncmp(p, "0", 1))
-				return error_log("expected 0 but got %s instead", p);
+				return log_error("expected 0 but got %s instead", p);
 			state = sDIAL;
 			break;
 

@@ -1,5 +1,6 @@
 #include <inttypes.h>
 #include <time.h>
+#include <stdio.h>
 
 #ifndef TIME_T_FORMAT_SET
 #  ifdef __LP64__
@@ -37,15 +38,6 @@ struct tty {
 	int oflag, lflag, cflag, iflag;
 	int fndelay;
 };
-
-struct active_procs {
-	struct active_procs *next;
-	int fd;
-};
-
-struct active_procs
-	*proc_add(void),
-	*proc_remove(struct active_procs *ap);
 
 struct text_line
 	*textline_allocate(char *s),			/* textline.c */
@@ -142,7 +134,20 @@ void safegets(char *buf, size_t sz);
 
 int
 #ifndef SABER
-	error_log(char *fmt, ...);
+	eerror_log(char *fmt, ...);
 #else
-	error_log();
+	eerror_log();
 #endif
+
+#define BBS_LOG_DEBUG   1
+#define BBS_LOG_INFO    2
+#define BBS_LOG_WARNING 3
+#define BBS_LOG_ERROR   4
+
+void bbs_log_init(const char *prog, int also_stderr);
+void bbs_log_level(int level);
+void log_debug(const char *message, ...);
+void log_info(const char *message, ...);
+void log_warning(const char *message, ...);
+int log_error(const char *message, ...);
+void log_error_exit(int code, const char *message, ...);

@@ -61,7 +61,7 @@ logout_user(void)
 			lockf(fd, F_ULOCK, 0);
 			result = OK;
 		} else
-			error_log("logout_user.lockf(): %s", sys_errlist[errno]);
+			log_error("logout_user.lockf(): %m");
 		close(fd);
 #else
 		if(flock(fd, LOCK_EX) == 0) {
@@ -70,12 +70,11 @@ logout_user(void)
 			flock(fd, LOCK_UN);
 			result = OK;
 		} else
-			error_log("logout_user.flock(): %s", sys_errlist[errno]);
+			log_error("logout_user.flock(): %m");
 		close(fd);
 #endif
 	} else
-		error_log("logout_user.open(%s): %s",
-			Bbs_History_File, sys_errlist[errno]);
+		log_error("logout_user.open(%s): %m", Bbs_History_File);
 	return result;
 }
 

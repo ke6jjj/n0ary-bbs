@@ -128,12 +128,12 @@ main()
 
 			sprintf(fn, "%s/%s", USRPATH, dp->d_name);
 			if((fp = fopen(fn, "r")) == NULL) {
-				printf("problem opening %s\n", dp->d_name);
+				log_warning("problem opening %s", dp->d_name);
 				continue;
 			}
 
 			if(fread(&ou, SizeofOldUser, 1, fp) == 0) {
-				printf("kill %s, incomplete file or couldn't read\n", dp->d_name);
+				log_warning("kill %s, incomplete file or couldn't read", dp->d_name);
 				fclose(fp);
 				continue;
 			}
@@ -224,7 +224,7 @@ main()
 
 			sprintf(fn, "%s/%s", NEWUSRPATH, dp->d_name);
 			if((fp = fopen(fn, "w")) == NULL) {
-				printf("problem opening %s\n", fn);
+				log_warning("problem opening %s", fn);
 				continue;
 			}
 

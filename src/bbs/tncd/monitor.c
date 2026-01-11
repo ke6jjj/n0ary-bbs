@@ -66,9 +66,9 @@ monitor_init(char *m_bindaddr, int m_port)
 	alCallback cb;
 
 	if((monitor_socket = socket_listen(m_bindaddr, &m_port)) < 0) {
-		fprintf(stderr,
+		log_error(
 			"init_ax_control: Problem opening monitor socket "
-			"... aborting\n");
+			"... aborting");
 		return ERROR;
 	}
 
@@ -76,7 +76,7 @@ monitor_init(char *m_bindaddr, int m_port)
 	if (alEvent_registerFd(monitor_socket, ALFD_READ, cb,
 		&monitor_event_handle) != 0)
 	{
-		fprintf(stderr, "problem registering monitor socket\n");
+		log_error("problem registering monitor socket");
 		return ERROR;
 	}
 
@@ -150,7 +150,7 @@ monitor_control_accept(void *obj, void *arg0, int arg1)
 	alCallback cb;
 
 	if((fd = accept_socket(monitor_socket)) == ERROR) {
-		fprintf(stderr, "monitor accept() error\n");
+		log_error("monitor accept() error");
 		exit(1);
 	}
 
@@ -162,7 +162,7 @@ monitor_control_accept(void *obj, void *arg0, int arg1)
 	AL_CALLBACK(&cb, mp, monitor_read_callback);
 	res = alEvent_registerFd(mp->fd, ALFD_READ, cb, &mp->ev);
 	if (res != 0) {
-		fprintf(stderr, "monitor register error\n");
+		log_error("monitor register error");
 		exit(1);
 	}
 
@@ -205,7 +205,7 @@ monitor_read_callback(void *obj, void *arg0, int arg1)
 		 * Let's shut down  the process.
 		 */
 #ifdef TRACE_DBG
-		fprintf(stderr, "monitor_chk: broken pipe\n"); fflush(stderr);
+		log_debug("monitor_chk: broken pipe");
 #endif
 		monitor_disc(mp);
 		return;

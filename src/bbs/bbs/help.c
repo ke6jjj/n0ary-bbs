@@ -83,20 +83,20 @@ initialize_help_message(void)
 	strcpy(hlpmsg_string, "DEFAULT STRING");
 
 	if(stat(Bbs_HelpMsg_Index, &sbuf)) {
-		error_log("initialize_help_message.stat(): %s", sys_errlist[errno]);
+		log_error("initialize_help_message.stat(): %m");
 		return ERROR;
 	}
 
 	if((fp = fopen(Bbs_HelpMsg_Index, "r")) == NULL) {
-		error_log("initialize_help_message.fopen(%s): %s",
-			Bbs_HelpMsg_Index, sys_errlist[errno]);
+		log_error("initialize_help_message.fopen(%s): %m",
+			Bbs_HelpMsg_Index);
 		return ERROR;
 	}
 
 	hlpmsg_cnt = sbuf.st_size / sizeof(long);
 	
 	if((hlpmsg_indx = (long*)malloc(sbuf.st_size)) == NULL) {
-		error_log("initialize_help_message.malloc(): %s", sys_errlist[errno]);
+		log_error("initialize_help_message.malloc(): %m");
 		fclose(fp);
 		return ERROR;
 	}
@@ -105,16 +105,15 @@ initialize_help_message(void)
 		fclose(fp);
 		free(hlpmsg_indx);
 		hlpmsg_indx = NULL;
-		error_log("initialize_help_message.fread(indx): %s",
-			sys_errlist[errno]);
+		log_error("initialize_help_message.fread(indx): %m");
 		return ERROR;
 	}
 
 	fclose(fp);
 
 	if((hlpmsg_fp = fopen(Bbs_HelpMsg_Data, "r")) == NULL) {
-		error_log("initialize_help_message.fopen(%s): %s",
-			Bbs_HelpMsg_Data, sys_errlist[errno]);
+		log_error("initialize_help_message.fopen(%s): %m",
+			Bbs_HelpMsg_Data);
 		free(hlpmsg_indx);
 		hlpmsg_indx = NULL;
 		return ERROR;

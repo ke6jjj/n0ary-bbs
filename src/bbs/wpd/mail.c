@@ -37,7 +37,7 @@ wait_for_line(int fd, char *match)
 		case sockTIMEOUT:
 			return TRUE;
 		case sockOK:
-			log_f("wpd", "r:", buf);
+			log_debug("r:%s", buf);
 #if HAVE_REGCOMP
 			ret = regexec(&preg, buf, 0, NULL, 0);
 			if (ret == 0) {
@@ -62,15 +62,15 @@ match(int fd, char *s)
 
 	switch(socket_read_line(fd, buf, 1024, 60)) {
 	case sockERROR:
-		printf("Error reading while waiting for %s\n", s);
+		log_error("Error reading while waiting for %s", s);
 		exit(1);
 	case sockTIMEOUT:
-		printf("Timeout in match waiting for %s\n", s);
+		log_error("Timeout in match waiting for %s", s);
 		exit(1);
 	case sockOK:
 		if(!strncmp(buf, s, strlen(s)))
 			break;
-		printf("Got: %s\n", buf);
+		log_debug("Got: %s", buf);
 		return ERROR;
 	}
 	
@@ -118,9 +118,9 @@ msg_generate(struct smtp_message *msg, int type)
 	while(body) {
 		int csize;
 
-		log_f("wpd", "M:", "waiting on prompt >");
+		log_debug("M:waiting on prompt >");
     		if(wait_for_line(to_gate[0], ".*>$") != OK) {
-			printf("expected >\n");
+			log_debug("expected >");
 			res = ERROR;
 			goto Failure;
 		}
@@ -128,11 +128,11 @@ msg_generate(struct smtp_message *msg, int type)
 		sprintf(buf, "S%c %s < %s\n",
 			type == sendPRIVATE ? 'P' : 'B',
 			msg->rcpt->s, msg->from->s);
-		log_f("wpd", "M:", buf);
+		log_debug("M:%s", buf);
 		write(to_bbs[1], buf, strlen(buf));
 
 		if(match(to_gate[0], "OK") == ERROR) {
-			printf("expected OK\n");
+			log_debug("expected OK");
 			res = ERROR;
 			goto Failure;
 		}
@@ -180,7 +180,7 @@ msg_generate(struct smtp_message *msg, int type)
 	}
 
     	if(wait_for_line(to_gate[0], ".*>$") != OK) {
-		printf("expected >\n");
+		log_debug("expected >");
 		res = ERROR;
 		goto Failure;
 	}

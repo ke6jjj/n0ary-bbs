@@ -295,8 +295,7 @@ read_options(int argc, char **argv)
 	if(socket_number) {
 		sock = socket_open(Bbs_Host, socket_number);
 		if(sock < 0) {
-			error_report(PRINT, TRUE);
-			PRINT("Please report this to the sysop .... N0ARY/BBS\n");
+			PRINT("Socket error. Please report this to the sysop ....\n");
 			exit(1);
 		}
 	}
@@ -367,14 +366,13 @@ read_options(int argc, char **argv)
 	}
 
 	if(bbsd_open(Bbs_Host, Bbsd_Port, usercall, Via) != OK) {
-		error_report(PRINT, TRUE);
 		PRINTF("%s@%s, Please try again later\n", usercall, Via);
 		exit(1);
 	}
 	bbsd_pid();
 
 	if(bbsd_get_configuration(ConfigList)) {
-		error_report(PRINT, TRUE);
+		PRINT("bbsd configuration error\n");
 		PRINT("Please report this to the sysop and try again later\n");
 		exit(1);
 	}
@@ -539,8 +537,6 @@ main(int argc, char **argv)
 	}
 
 	while(TRUE) {
-		error_report(PRINT, TRUE);
-
 		if(prompt_string[0])
 			PRINTF("**\n** %s\n**", prompt_string);
 
@@ -634,8 +630,6 @@ exit_bbs(void)
 
 	logout_user();
 	msgd_close();
-
-	error_print();
 
 	if(wait_to_die && sock != ERROR) {
 		bbsd_msg("~B sent to tncd");

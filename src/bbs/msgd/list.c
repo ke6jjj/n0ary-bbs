@@ -216,23 +216,23 @@ check_msgdir(void)
 		if(oops != NULL) {
 			char buf[256];
 	
-			log_f("msgd", "TERMINAL:", oops);
+			log_debug("TERMINAL:%s", oops);
 			snprintf(buf, sizeof(buf), "msg #%ld [0x%p]",
 				msg->number, msg);
-			log_f("msgd", "TERMINAL:", buf);
+			log_debug("TERMINAL:%s", buf);
 			if(next != NULL) {
 				snprintf(buf, sizeof(buf),
 					"next: 0x%p, next->last: 0x%p",
 					next, TAILQ_PREV(next, MsgList, entries));
-				log_f("msgd", "TERMINAL:", buf);
+				log_debug("TERMINAL:%s", buf);
 			}
 			if(prev != NULL) {
 				snprintf(buf, sizeof(buf),
 					"last: 0x%p, last->next: 0x%p",
 					prev, TAILQ_NEXT(prev, entries));
-				log_f("msgd", "TERMINAL:", buf);
+				log_debug("TERMINAL:%s", buf);
 			}
-			log_f("msgd", "ABORTING", "bye");
+			log_error("ABORTING bye");
 			exit(1);
 		}
 	}
@@ -248,7 +248,7 @@ compress_messages(struct active_processes *ap)
 	fwddir_open();
 
 	bbsd_msg("Begin Compress");
-	log_f("msgd", "AGING:", "Start");
+	log_info("AGING: Start");
 
 	TAILQ_FOREACH(msg, &MsgDir, entries) {
 		fwddir_rename(msg->number, number);
@@ -329,7 +329,7 @@ age_messages(void)
 	fwddir_open();
 
 	bbsd_msg("Begin Aging");
-	log_f("msgd", "AGING:", "Start");
+	log_info("AGING Start");
 
 	msg = TAILQ_FIRST(&MsgDir);
 	while (msg != NULL) {
@@ -352,14 +352,14 @@ age_messages(void)
 		}
 
 		if(IsMsgImmune(msg) || fwddir_check(msg->number)) {
-			log_f("msgd", "IMMUNE:", log_buf);
+			log_debug("IMMUNE:%s", log_buf);
 			msg = TAILQ_NEXT(msg, entries);
 			continue;
 		}
 
 		if(IsMsgKilled(msg)) {
 			if((now - msg->kdate) > Msgd_Age_Killed[type]) {
-				log_f("msgd", "DELETE:", log_buf);
+				log_debug("DELETE:%s", log_buf);
 				msg_body_kill(msg->number);
 				msg = unlink_msg_list(msg);
 				if(msg == NULL) {
@@ -367,7 +367,7 @@ age_messages(void)
 					continue;
 				}
 			} else
-				log_f("msgd", "killed:", log_buf);
+				log_debug("killed:%s", log_buf);
 				
 		} else
 			if(IsMsgActive(msg)) {
@@ -376,27 +376,27 @@ age_messages(void)
 					msg->time2live ? msg->time2live : Msgd_Age_Active[type];
 
 				if(delta > live) {
-					log_f("msgd", "KILL:", log_buf);
+					log_debug("KILL:%s", log_buf);
 					SetMsgKilled(msg);
 					build_list_text(msg);
 				} else
 					if(delta > (live - Msgd_Age_Old)) {
-						log_f("msgd", "old:", log_buf);
+						log_debug("old:%s", log_buf);
 						if(!IsMsgOld(msg)) {
 							SetMsgOld(msg);
 							build_list_text(msg);
 						}
 					} else
-						log_f("msgd", "active:", log_buf);
+						log_debug("active:%s", log_buf);
 
 			} else
-				log_f("msgd", "not_active:", log_buf);
+				log_debug("not_active:%s", log_buf);
 		msg = TAILQ_NEXT(msg, entries);
 	}
 	bbsd_msg("Validate");
 	check_msgdir();
 	bbsd_msg("");
-	log_f("msgd", "AGING:", "End");
+	log_debug("AGING:End");
 }
 
 int
@@ -574,7 +574,7 @@ show_message(struct active_processes *ap, struct msg_dir_entry *msg)
 		{
 			char buf[256];
 			strlcpy(buf, msg->list_text, sizeof(buf));
-			log_f("msgd", "L:", buf);
+			log_debug("L:%s", buf);
 		}
 	} else {
 		char *buf = build_display(ap, msg);
@@ -582,7 +582,7 @@ show_message(struct active_processes *ap, struct msg_dir_entry *msg)
 
 		if (buf[0] != '\0')
 			buf[strlen(buf)-1] = 0;
-		log_f("msgd", "L:", buf);
+		log_debug("L:%s", buf);
 	}
 }
 
@@ -675,7 +675,7 @@ send_message(struct active_processes *ap)
 			return ERROR;
 		}
 
-		log_f("msgd", "r:", buf);
+		log_debug("r:%s", buf);
 
 		if(nl && !strcmp(buf, ".\n"))
 			break;

@@ -125,9 +125,9 @@ read_file(void)
 	int version = 0;
 
 	if(fp == NULL) {
-		error_log("Couldn't open %s: %s", Gated_File, sys_errlist[errno]);
+		log_error("Couldn't open %s: %m", Gated_File);
 		if(write_file() == ERROR)
-			return error_log("Couldn't create %s", Gated_File);
+			return log_error("Couldn't create %s", Gated_File);
 		return read_file(); /* Could be better written -JSC */
 	}
 
@@ -136,7 +136,7 @@ read_file(void)
 
     if(fgets(s, 256, fp) == 0) {
 		fclose(fp);
-		return error_log("%s is empty", Gated_File);
+		return log_error("%s is empty", Gated_File);
 	}
 
 	if(s[2] == 'v')
@@ -258,7 +258,7 @@ write_file(void)
 	int res;
 
 	if((fp = spool_fopen(Gated_File)) == NULL)
-		return error_log("Couldn't create %s for writing", Gated_File);
+		return log_error("Couldn't create %s for writing", Gated_File);
 
 	if (fprintf(fp, "# v1 %s\n#\n", Gated_File) < 0)
 		goto WriteFailed;

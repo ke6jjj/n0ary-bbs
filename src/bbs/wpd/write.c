@@ -90,8 +90,7 @@ write_user_file(void)
 	int r;
 
 	time_t t0;
-	if(dbug_level & dbgVERBOSE)
-		t0 = time(NULL);
+	t0 = time(NULL);
 
 	if(fp == NULL)
 		return "Failed to open output file\n";
@@ -112,8 +111,7 @@ write_user_file(void)
 		goto CloseError;
 
 	user_image = CLEAN;
-	if(dbug_level & dbgVERBOSE)
-		printf("Writing user file took %"PRTMd" seconds\n", time(NULL) - t0);
+	log_debug("Writing user file took %"PRTMd" seconds", time(NULL) - t0);
 	return "OK\n";
 
 WriteError:
@@ -129,8 +127,7 @@ write_bbs_file(void)
 	char *r;
 
 	time_t t0;
-	if(dbug_level & dbgVERBOSE)
-		t0 = time(NULL);
+	t0 = time(NULL);
 
 	if(fp == NULL)
 		return "Failed to open output file\n";
@@ -147,8 +144,7 @@ write_bbs_file(void)
 		goto CloseError;
 
 	bbs_image = CLEAN;
-	if(dbug_level & dbgVERBOSE)
-		printf("Writing bbs file took %"PRTMd" seconds\n", time(NULL) - t0);
+	log_debug("Writing bbs file took %"PRTMd" seconds", time(NULL) - t0);
 	return "OK\n";
 
 WriteError:

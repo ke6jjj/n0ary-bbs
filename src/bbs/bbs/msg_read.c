@@ -519,7 +519,6 @@ msg_forward(
 			char cmd[80], buf[4096];
 
 			if(msg_ReadBodyBy(m, usercall) == ERROR) {
-				error_print();
 				exit(1);
 			}
 			if(msg_ReadRfc(m) == ERROR)

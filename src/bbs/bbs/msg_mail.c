@@ -101,8 +101,8 @@ msg_mail(int msgnum, char *name)
 	smtp_set_subject(smtpmsg, m->sub);
 	smtp_log_enable();
 	if((result = smtp_send_message(smtpmsg)) == ERROR) {
-		error_log("msg_mail: smtp_send_message failed");
-		error_print();
+		log_error("msg_mail: smtp_send_message failed");
+		printf("msg_mail: smtp_send_message failed\n");
 		smtp_print_message(smtpmsg);
 	}
 	smtp_log_disable();
@@ -174,8 +174,8 @@ msg_fwd_by_smtp(struct System *sys)
 			smtp_set_subject(smtpmsg, buf);
 			smtp_log_enable();
 			if(smtp_send_message(smtpmsg) == ERROR) {
-				error_log("msg_fwd_by_smtp: smtp_send_message failed");
-				error_print();
+				log_error("msg_fwd_by_smtp: smtp_send_message failed");
+				printf("msg_fwd_by_smtp: smtp_send_message failed\n");
 				smtp_print_message(smtpmsg);
 			}
 			smtp_log_disable();

@@ -210,7 +210,6 @@ static int
 check_for_bbsd(void)
 {
 	if(bbsd_open(Bbs_Host, Bbsd_Port, "BBSD", "STATUS") == ERROR) {
-		error_clear();
 		return OK;
 	}
 
@@ -256,19 +255,24 @@ main(int argc, char *argv[])
 	extern char *config_fn;
 	extern int optind;
 
+	bbs_log_init("b_bbsd", 1 /* Also log to stderr */);
+
 	parse_options(argc, argv, ConfigList, "BBSD - BBS Super Daemon");
 
+	if (dbug_level & dbgVERBOSE)
+		bbs_log_level(BBS_LOG_DEBUG);
+
 	if(read_config_file(argv[optind]) == ERROR) {
-		printf("Couldn't read configuration file %s\n", argv[optind]);
+		log_error("Couldn't read configuration file %s", argv[optind]);
 		return 1;
 	}
 	if(fetch_configuration() != OK) {
-		printf("Critical failures occured with configuration, aborting..\n");
+		log_error("Critical failures occured with configuration, aborting..");
 		return 1;
 	}
 
 	if(check_for_bbsd()) {
-		printf("Already a bbsd process running\n");
+		log_warning("Already a bbsd process running");
 		return 0;
 	}
 
@@ -284,20 +288,20 @@ main(int argc, char *argv[])
 	listen_port = Bbsd_Port;
 	listen_addr = Bbsd_Bind_Addr;
 	if((listen_sock = socket_listen(listen_addr, &listen_port)) == ERROR) {
-		printf("Unabled to listen on bbsd port.\n");
+		log_error("Unable to listen on bbsd port.");
 		return 1;
 	}
 
 	build_daemon_list();
 
 	if (alEvent_init() != 0) {
-		fprintf(stderr, "Unable to initialize event system\n");
+		log_error("Unable to initialize event system");
 		return 1;
 	}
 
 	AL_CALLBACK(&cb, (void *)listen_sock, accept_callback);
 	if (alEvent_registerFd(listen_sock, ALFD_READ, cb, &listen_ev) != 0) {
-		fprintf(stderr, "Unable to register listen socket\n");
+		log_error("Unable to register listen socket");
 		return 1;
 	}
 
@@ -306,7 +310,7 @@ main(int argc, char *argv[])
 	delay_s = next_check_delay_s(PING_INTERVAL, TRUE);
 	AL_CALLBACK(&cb, &check_ctx, daemon_check_callback);
 	if (alEvent_addTimer(delay_s * 1000, 0, cb) < 0) {
-		fprintf(stderr, "Unable to set up daemon timer\n");
+		log_error("Unable to set up daemon timer");
 		return 1;
 	}
 
@@ -352,12 +356,12 @@ accept_callback(void *ctx, void *arg0, int arg1)
 	listen_sock = (intptr_t) ctx;
 	fd = socket_accept_nonblock_unmanaged(listen_sock);
 	if (fd < 0) {
-		fprintf(stderr, "accept failed on new connection.\n");
+		log_error("accept failed on new connection.");
 		goto AcceptFailed;
 	}
 
 	if (socket_write(fd, daemon_version("bbsd", Bbs_Call)) != sockOK) {
-		fprintf(stderr, "couldn't write hello banner.\n");
+		log_error("couldn't write hello banner.");
 		goto BannerFailed;
 	}
 
@@ -366,14 +370,14 @@ accept_callback(void *ctx, void *arg0, int arg1)
 
 	snprintf(buf, sizeof(buf), "# %d\n", ap->proc_num);
 	if(write(fd, buf, strlen(buf)) < 0) {
-		fprintf(stderr, "couldn't write second hello banner.\n");
+		log_error("couldn't write second hello banner.");
 		goto SecondBannerFailed;
 	}
 
 	AL_CALLBACK(&cb, ap, service_callback);
 	res = alEvent_registerFd(fd, ALFD_READ, cb, &ap->ev);
 	if (res != 0) {
-		fprintf(stderr, "couldn't register new process\n");
+		log_error("couldn't register new process");
 		goto RegisterFailed;
 	}
 
@@ -427,8 +431,7 @@ daemon_check_callback(void *_ctx, void *arg0, int arg1)
 	AL_CALLBACK(&cb, ctx, daemon_check_callback);
 	res = alEvent_addTimer(delay_s * 1000, 0, cb);
 	if (res < 0) {
-		fprintf(stderr, "can't register daemon check timer\n");
-		exit(1);
+		log_error_exit(1, "can't register daemon check timer");
 	}
 }
 
@@ -440,8 +443,7 @@ notify(char *msg)
 	textline_append(&Notify, msg);
 	AL_CALLBACK(&cb, NULL, notify_callback);
 	if (alEvent_queueCallback(cb, ALCB_UNIQUE,  NULL, 0) != 0) {
-		fprintf(stderr, "unable to queue notify callback\n");
-		exit(1);
+		log_error_exit(1, "unable to queue notify callback");
 	}
 }
 

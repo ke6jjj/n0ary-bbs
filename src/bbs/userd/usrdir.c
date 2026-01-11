@@ -21,7 +21,7 @@ display_userdir()
 
 	FILE *fp = fopen("userd.out", "w");
 	if(fp == NULL) {
-		printf("couldn't open userd.out for writing\n");
+		log_error("couldn't open userd.out for writing");
 		return;
 	}
 
@@ -142,7 +142,7 @@ usrdir_build(void)
 
 			sprintf(fn, "%s/%s", Userd_Acc_Path, dp->d_name);
 			if((fp = fopen(fn, "r")) == NULL) {
-				printf("problem opening %s\n", dp->d_name);
+				log_warning("problem opening %s", dp->d_name);
 				continue;
 			}
 

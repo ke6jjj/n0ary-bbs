@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "c_cmmn.h"
 #include "config.h"
@@ -24,7 +25,6 @@ int
 wp_open(void)
 {
 	if(wpd_open() == ERROR) {
-		error_print_exit(1);
 		PRINTF("Error connecting to wpd\n");
 		return ERROR;
 	}

@@ -83,9 +83,9 @@ ax_control_init(kiss *interface, char *c_bindaddr, int c_port)
 
 	int port = c_port;
 	if((cntrl_socket = socket_listen(c_bindaddr, &port)) < 0) {
-		fprintf(stderr,
+		log_error(
 			"ax_control_init: Problem opening control socket "
-			"... aborting\n");
+			"... aborting");
 		return ERROR;
 	}
 	assert(port == c_port);
@@ -94,7 +94,7 @@ ax_control_init(kiss *interface, char *c_bindaddr, int c_port)
 	if (alEvent_registerFd(cntrl_socket, ALFD_READ, cb,
 		&al_cntrl_handle) != 0)
 	{
-		fprintf(stderr, "problem registering control socket\n");
+		log_error("problem registering control socket");
 		return ERROR;
 	}
 
@@ -133,21 +133,20 @@ ax_control_accept(void *obj, void *arg0, int arg1)
 		struct mboxsess *mbp = newmbox();
 		initmbox(mbp);
 
-		if(dbug_level & dbgVERBOSE)
-			printf("ax_control(), accepted socket %d\n", fd);
+		log_debug("ax_control(), accepted socket %d", fd);
 		mbp->fd = fd;
 
 		AL_CALLBACK(&cb, mbp, mbx_handle_network);
 		int res = alEvent_registerFd(fd, ALFD_READ, cb,
 			&mbp->al_fd_handle);
 		if (res != 0) {
-			fprintf(stderr, "mbx control register failure\n");
+			log_error("mbx control register failure");
 			exit(1);
 		}
 		
 		socket_write(fd, versionc);
 	} else {
-		fprintf(stderr, "new control connection accept error\n");
+		log_error("new control connection accept error");
 		exit(1);
 	}
 }
@@ -249,8 +248,7 @@ command(struct mboxsess *mbp)
 	for(i=0; i<mbp->cmd_cnt; i++) {
 		char call[10], *q, *p = mbp->command[i];
 
-		if(dbug_level & dbgVERBOSE)
-			printf("Command: %s\n", p);
+		log_debug("Command: %s", p);
 
 		switch(*p++) {
 		case 'B':
@@ -322,8 +320,7 @@ mbx_handle_network(void *obj, void *arg0, int arg1)
 		size_t readamt = min(available, (sizeof(buf)-1));
 		cnt = read(mbp->fd, buf, readamt);
 		if (cnt <= 0) {
-			if(dbug_level & dbgVERBOSE)
-				printf("axchk: %s broken pipe\n", mbp->call);
+			log_debug("axchk: %s broken pipe", mbp->call);
 			shutdown_process(mbp, TRUE);
 			return;
 		}
@@ -332,8 +329,7 @@ mbx_handle_network(void *obj, void *arg0, int arg1)
 		char *q = &mbp->buf[mbp->byte_cnt];
 
 		buf[cnt] = 0;
-		if(dbug_level & dbgVERBOSE)
-			printf("%s<{%s}\n", mbp->call, buf);
+		log_debug("%s<{%s}", mbp->call, buf);
 
 		while(cnt--) {
 			if(*p == '\r') {
@@ -430,8 +426,7 @@ mbx_process_tx_queue(struct mboxsess *mbp)
 		 * We've got enough data to send now, cancel the
 		 * timer.
 		 */
-		if(dbug_level & dbgVERBOSE)
-			printf("axsend: %s lifting Nagle gate due to size\n",
+		log_debug("axsend: %s lifting Nagle gate due to size",
 				mbp->call);
 		alEvent_cancelTimer(mbp->nagle_timer_id);
 		mbp->nagle_timer_id = -1;
@@ -443,9 +438,7 @@ mbx_process_tx_queue(struct mboxsess *mbp)
 		 * We should wait a little bit until sending any
 		 * data.
 		 */
-		if(dbug_level & dbgVERBOSE)
-			printf("axsend: %s starting Nagle timer\n",
-				mbp->call);
+		log_debug("axsend: %s starting Nagle timer", mbp->call);
 		alCallback cb;
 		AL_CALLBACK(&cb, mbp, mbx_nagle_timer);
 		mbp->nagle_timer_id = alEvent_addTimer(MBOX_NAGLE_TIMER,
@@ -454,9 +447,7 @@ mbx_process_tx_queue(struct mboxsess *mbp)
 	}
 
 	while (mbp->byte_cnt && mbp->sendable_count) {
-		if(dbug_level & dbgVERBOSE)
-			printf("axsend: %s byte_cnt = %d\n", mbp->call,
-				mbp->byte_cnt);
+		log_debug("axsend: %s byte_cnt = %d", mbp->call, mbp->byte_cnt);
 		testsize = min(mbp->sendable_count, mbp->axbbscb->paclen+1);
 		size = min(testsize, mbp->byte_cnt) + 1;
 		bp = alloc_mbuf(size);			 
@@ -473,17 +464,14 @@ mbx_process_tx_queue(struct mboxsess *mbp)
 		if (mbp->byte_cnt > 0)
 			memmove(mbp->buf, &mbp->buf[size], mbp->byte_cnt);
 
-		if(dbug_level & dbgVERBOSE)
-			printf("[%s]\n", &(bp->data[1]));
+		log_debug("[%s]", &(bp->data[1]));
 
 		convrt2cr(bp->data, bp->cnt);
 		send_ax25(mbp->axbbscb, bp);
 	}
 
 	if (mbp->byte_cnt == 0) {
-		if(dbug_level & dbgVERBOSE)
-			printf("axsend: %s re-enabling Nagle gate\n",
-				mbp->call);
+		log_debug("axsend: %s re-enabling Nagle gate", mbp->call);
 		mbp->nagle_gate_down = 1;
 	}
 
@@ -501,12 +489,10 @@ mbx_process_tx_queue(struct mboxsess *mbp)
 static void
 shutdown_process(struct mboxsess *mbp, int issue_disc)
 {
-	if(dbug_level & dbgVERBOSE)
-		printf("Shutdown session %p..\n", mbp);
+	log_debug("Shutdown session %p..", mbp);
 
 	if(mbp->fd != ERROR) {
-		if(dbug_level & dbgVERBOSE)
-			printf("closing fd %x..\n", mbp->fd);
+		log_debug("closing fd %x..", mbp->fd);
 		if (mbp->al_fd_handle != NULL)
 			alEvent_deregister(mbp->al_fd_handle);
 		close(mbp->fd);
@@ -514,8 +500,7 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 	}
 	if(mbp->axbbscb != NULL) {
 		if(issue_disc) {
-			if(dbug_level & dbgVERBOSE)
-				printf("Issue disconnect\n");
+			log_debug("Issue disconnect");
 			disc_ax25(mbp->axbbscb);
 		}
 		mbp->axbbscb->user = NULL;
@@ -533,8 +518,7 @@ shutdown_process(struct mboxsess *mbp, int issue_disc)
 	assert(mbp->al_proc_handle == NULL);
 
 	freembox(mbp);
-	if(dbug_level & dbgVERBOSE)
-		printf("Shutdown complete\n");
+	log_debug("Shutdown complete");
 }
 
 void
@@ -542,22 +526,18 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 {
 	struct mboxsess *mbp;
 
-	if(dbug_level & dbgVERBOSE)
-		printf("mbx_state(%d, %d)\n", old, new);
+	log_debug("mbx_state(%d, %d)", old, new);
 	switch(new){
 	case DISCONNECTED:
-		if(dbug_level & dbgVERBOSE)
-			printf("mbx_state(DISCONNECTED)\n");
+		log_debug("mbx_state(DISCONNECTED)");
 		if((old == DISCONNECTED) || (old == DISCPENDING))
 		   return;
 		mbp = (struct mboxsess *)axp->user;
 		if(mbp == NULLMBS)
 			break;
-		if(dbug_level & dbgVERBOSE)
-			printf("mbx_state(isDISCONNECTED)\n");
+		log_debug("mbx_state(isDISCONNECTED)");
 		assert(axp == mbp->axbbscb);
-		if(dbug_level & dbgVERBOSE)
-			printf("mbx_state:Killing BBS, disconnect recv\n");
+		log_debug("mbx_state:Killing BBS, disconnect recv");
 		shutdown_process(mbp, FALSE);
 		break;
 					
@@ -572,8 +552,7 @@ mbx_state(struct ax25_cb *axp, int old, int new)
 			 */
 			mbp = (struct mboxsess *)axp->user;
 			if(mbp == NULLMBS) {
-				if(dbug_level & dbgVERBOSE)
-					printf("couldn't find the process\n");
+				log_error("couldn't find the process");
 				exit(1);
 			}
 			write(mbp->fd, "~C\n", 3);
@@ -607,8 +586,7 @@ mbx_bbs_connect(struct ax25_cb *axp)
 	alCallback cb;
 	struct mboxsess *mbp;
 
-	if(dbug_level & dbgVERBOSE)
-		printf("mbx_bbs_connect()\n");
+	log_debug("mbx_bbs_connect()");
 
 	mbp = newmbox();
 	mbp->axbbscb = axp;
@@ -631,7 +609,7 @@ mbx_bbs_connect(struct ax25_cb *axp)
 
 	/* Create a socket pair for the BBS to talk to us */
 	if (socketpair(AF_LOCAL, SOCK_STREAM, 0, sockpair) == -1) {
-		fprintf(stderr, "bbs socket pair spawn error\n");
+		log_error("bbs socket pair spawn error");
 		exit(1);
 	}
 
@@ -639,11 +617,8 @@ mbx_bbs_connect(struct ax25_cb *axp)
 	snprintf(addr, sizeof(addr), "ax25:%s-%d", call,
 		(mbp->axbbscb->addr.dest.ssid >> 1) & 0xf);
 
-	if(dbug_level & dbgVERBOSE) {
-		printf("Starting bbs process [1]:\n");
-		printf("\t%s/b_bbs -v %s -e -a %s %s\n",
-			Bin_Dir, Tncd_Name, addr, call);
-	}
+	log_debug("Starting bbs process [1]:\t%s/b_bbs -v %s -e -a %s %s",
+		Bin_Dir, Tncd_Name, addr, call);
 
 	/*now, fork and exec the bbs*/
 	if((pid=fork()) == 0){			/*if we are the child*/
@@ -673,7 +648,7 @@ mbx_bbs_connect(struct ax25_cb *axp)
 	int res = alEvent_registerFd(mbp->fd, ALFD_READ, cb,
 		&mbp->al_fd_handle);
 	if (res != 0) {
-		fprintf(stderr, "mbx process i/o register problem\n");
+		log_error("mbx process i/o register problem");
 		exit(1);
 	}
 
@@ -685,7 +660,7 @@ mbx_bbs_connect(struct ax25_cb *axp)
 	res = alEvent_registerProc(mbp->pid, ALPROC_EXIT, cb,
 				&mbp->al_proc_handle);
 	if (res != 0) {
-		fprintf(stderr, "bbs wait register error\n");
+		log_error("bbs wait register error");
 		exit(1);
 	}
 }	
@@ -702,16 +677,14 @@ mbx_rx(struct ax25_cb *axp, int cnt)
 		return;
 	assert(mbp->axbbscb == axp);
 
-	if(dbug_level & dbgVERBOSE)
-		printf("mbx_rx()\n");
+	log_debug("mbx_rx()");
 
 	if ((bp = recv_ax25(axp)) == NULLBUF)  /*nothing there*/
 		return;
 
 	while(bp != NULLBUF){
 		convrt2nl(bp->data, bp->cnt);
-		if(dbug_level & dbgVERBOSE)
-			write(2, bp->data, bp->cnt);
+		log_debug("writing %u bytes", bp->cnt);
 		write(mbp->fd, bp->data, bp->cnt);
 		bp = free_mbuf(bp);   /*free the mbuf and get the next */
 	}
@@ -727,8 +700,7 @@ mbx_tx(struct ax25_cb *axp, int cnt)
 		return;
 	assert(mbp->axbbscb == axp);
 
-	if(dbug_level & dbgVERBOSE)
-		printf("mbx_tx()\n");
+	log_debug("mbx_tx()");
 
 	mbx_notify_sendable(mbp, cnt, 1);
 }
@@ -822,9 +794,7 @@ mbx_nagle_timer(void *obj, void *arg0, int arg1)
 	mbp->nagle_timer_id = -1;
 	mbp->nagle_gate_down = 0;
 
-	if(dbug_level & dbgVERBOSE)
-		printf("axsend: %s lifting Nagle gate due to timeout\n",
-			mbp->call);
+	log_debug("axsend: %s lifting Nagle gate due to timeout", mbp->call);
 
 	mbx_process_tx_queue(mbp);
 }

@@ -318,7 +318,7 @@ fwd_check_name(struct active_processes *ap, struct msg_dir_entry *m,
 
 	if(check == TRUE) {
 		snprintf(output, sizeof(output), "%s\n", bbs);
-		log_f("msgd", "F:", output);
+		log_debug("F:%s", output);
 		socket_raw_write(ap->fd, output);
 	} else {
 		while(tl) {
@@ -469,7 +469,7 @@ set_forwarding(struct active_processes *ap, struct msg_dir_entry *m, int check)
 			if(check == TRUE) {
 				snprintf(output, sizeof(output), "FwdOn: %s\n",
 					buf);
-				log_f("msgd", "F:", output);
+				log_debug("F:%s", output);
 				socket_raw_write(ap->fd, output);
 			}
 			forward_message_to(ap, m, list, check);
@@ -508,7 +508,7 @@ pending_fwd_num(struct active_processes *ap, int num)
 		char buf[80];
 		if(fwddir->number == num) {
 			snprintf(buf, sizeof(buf), "%s\n", fwddir->alias);
-			log_f("msgd", "F:", buf);
+			log_debug("F:%s", buf);
 			socket_raw_write(ap->fd, buf);
 		}
 		NEXT(fwddir);
@@ -532,14 +532,14 @@ pending_fwd(struct active_processes *ap, char *call, char msgtype)
 		if(call == NULL) {
 			snprintf(buf, sizeof(buf), "%c.%05d.%s\n",
 				fwddir->type, fwddir->number, fwddir->alias);
-			log_f("msgd", "F:", buf);
+			log_debug("F:%s", buf);
 			socket_raw_write(ap->fd, buf);
 		} else
 			if(!strcmp(call, fwddir->alias)) {
 				if(msgtype == 0 || msgtype == fwddir->type) {
 					snprintf(buf, sizeof(buf), "%05d\n",
 						fwddir->number);
-					log_f("msgd", "F:", buf);
+					log_debug("F:%s", buf);
 					socket_raw_write(ap->fd, buf);
 				}
 			}

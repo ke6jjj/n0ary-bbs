@@ -716,13 +716,6 @@ char
 struct text_line
 	*msg_WhyHeld(int number);
 
-int
-#ifndef SABER
-	error_log(char *fmt, ...);
-#else
-	error_log();
-#endif
-
 long msg_ListMode(void);
 #if 0
 	get_time(long *t),

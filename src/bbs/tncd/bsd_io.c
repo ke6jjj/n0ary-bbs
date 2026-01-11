@@ -213,37 +213,31 @@ asy_init_serial(struct asy *asy, char *ttydev)
 	struct termios tt;
 
 	if((asy->fd = open(ttydev, (O_RDWR), 0)) < 0) {
-		if(dbug_level & dbgVERBOSE)
-			perror("asy_init: Could not open device tnc_fd");
-		logd_stamp("tncd", "asy_init: bad open");
+		log_error("asy_init: Could not open device tnc_fd: %m");
 		exit(1);
 	}
  	/* get the stty structure and save it */
 
 #ifdef HAVE_TERMIOS
 	if (tcgetattr(asy->fd, &tt) < 0) {
-		if(dbug_level & dbgVERBOSE)
-			perror ("asy_init: tcgetattr failed on device");
+		log_error("asy_init: tcgetattr failed on device: %m");
 		return ERROR;
 	}
 #else
 #ifdef SUNOS
 	if(ioctl(asy->fd, TCGETS, &tt) < 0) {
-		if(dbug_level & dbgVERBOSE)
-			perror ("asy_init: ioctl failed on device");
+		log_error("asy_init: ioctl failed on device: %m");
 		return ERROR;
 	}
 #else
 #ifdef TCGETATTR
 	if(ioctl(asy->fd, TCGETATTR, &tt) < 0) {
-		if(dbug_level & dbgVERBOSE)
-			perror ("asy_init: ioctl failed on device");
+		log_error("asy_init: ioctl failed on device: %m");
 		return ERROR;
 	}
 #else
 	if(ioctl(asy->fd, TCGETA, &tt) < 0) {
-		if(dbug_level & dbgVERBOSE)
-			perror ("asy_init: ioctl failed on device");
+		log_error("asy_init: ioctl failed on device: %m");
 		return ERROR;
 	}
 #endif
@@ -265,32 +259,24 @@ asy_init_serial(struct asy *asy, char *ttydev)
 
 #ifdef HAVE_TERMIOS
 	if (tcsetattr(asy->fd, TCSANOW, &tt) < 0) {
-		if(dbug_level & dbgVERBOSE)
-			perror("asy_init: could not set serial parameters");
-		logd_stamp("tncd", "asy_init: bad tcsetattr");
+		log_error("asy_init: could not set serial parameters: %m");
 		exit(1);
 	}
 #else
 #  ifdef SUNOS
 	if(ioctl(asy->fd, TCSETS, &tt)) {
-		if(dbug_level & dbgVERBOSE)
-			perror("asy_init: could not set serial parameters");
-		logd_stamp("tncd", "asy_init: bad ioctl (TCSETA)");
+		log_error("asy_init: could not set serial parameters: %m");
 		exit(1);
 	}
 #  else
 #    ifdef TCSETATTR
 	if(ioctl(asy->fd, TCSETATTR, &tt)) {
-		if(dbug_level & dbgVERBOSE)
-			perror("asy_init: could not set serial parameters");
-		logd_stamp("tncd", "asy_init: bad ioctl (TCSETATTR)");
+		log_error("asy_init: could not set serial parameters: %m");
 		exit(1);
 	}
 #    else
 	if(ioctl(asy->fd, TCSETA, &tt)) {
-		if(dbug_level & dbgVERBOSE)
-			perror("asy_init: could not set serial parameters");
-		logd_stamp("tncd", "asy_init: bad ioctl (TCSETA)");
+		log_error("asy_init: could not set serial parameters: %m");
 		exit(1);
 	}
 #    endif
@@ -378,16 +364,14 @@ default_notify(void *ctx, asy *asy, int is_read, int error)
 					   "Error on read, exiting");
 			exit(1);
 		} else {
-			logd_stamp("tncd", "asy_: End-of-file");
+			log_error("asy_: End-of-file");
 			bug_report(Bbs_Call, BBS_VERSION, __FILE__, __LINE__,
 				   	"asy_recv", versionc,
 				   	"End-of-file reading TNC, exiting");
 			exit(1);
 		}
 	} else {
-		if(dbug_level & dbgVERBOSE)
-			perror("asy_output");
-		logd_stamp("tncd", "asy_output: bad write, wrong count");
+		log_error("asy_output: bad write, wrong count");
 		exit(1);
 	}
 }

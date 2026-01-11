@@ -64,7 +64,7 @@ service_port(struct active_processes *ap)
 	if(socket_read_line(ap->fd, buf, 256, 10) == ERROR)
 		return ERROR;
 
-	log_f("userd", "R:", buf);
+	log_debug("R:%s", buf);
 
 	s = buf;
 	NextChar(s);
@@ -78,7 +78,7 @@ service_port(struct active_processes *ap)
 	if(socket_raw_write(ap->fd, c) == ERROR)
 		return ERROR;
 
-	log_f("userd", "S:", c);
+	log_debug("S:%s", c);
 	return OK;
 }
 
@@ -139,24 +139,26 @@ main(int argc, char *argv[])
 
 	parse_options(argc, argv, ConfigList, "USERD - User Daemon");
 
+	bbs_log_init("b_userd", 1 /* Also log to stderr */);
+
+	if (dbug_level & dbgVERBOSE)
+		bbs_log_level(BBS_LOG_DEBUG);
 	if(dbug_level & dbgTESTHOST)
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);
 
-    if(bbsd_open(Bbs_Host, Bbsd_Port, "userd", "DAEMON") == ERROR)
-		error_print_exit(0);
-	error_clear();
+	if(bbsd_open(Bbs_Host, Bbsd_Port, "userd", "DAEMON") == ERROR)
+		exit(1);
 
 	bbsd_get_configuration(ConfigList);
-    bbsd_msg("Startup");
+	bbsd_msg("Startup");
 	bbsd_sock = bbsd_socket();
 	time_now = bbsd_get_time();
 
 	usrdir_build();
 
-	if(dbug_level & dbgVERBOSE)
-		printf("UP\n");
+	log_debug("UP");
 
 	listen_port = Userd_Port;
 	bind_addr = Userd_Bind_Addr;
@@ -207,7 +209,7 @@ main(int argc, char *argv[])
 			time_t now = Time(NULL);
 			log_clear("userd");
 			if(now > age_time) {
-				log_f("userd", "X:", "Start aging");
+				log_debug("X:Start aging");
 				if(!(dbug_level & dbgNODAEMONS))
 					bbsd_msg("Aging users");
 				age_users(NULL);

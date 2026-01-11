@@ -161,7 +161,7 @@ new_user_entry(void)
 {
 	struct wp_user_entry *wp = malloc_struct(wp_user_entry);
 	if (wp == NULL) {
-		printf("memory allocation failure\n");
+		log_error("memory allocation failure");
 		exit(1);
 	}
 
@@ -216,7 +216,7 @@ hash_create_bbs(char *s)
 	struct wp_bbs_entry *wp = malloc_struct(wp_bbs_entry);
 	
 	if(wp == NULL) {
-		printf("memory allocation failure\n");
+		log_error("memory allocation failure");
 		exit(1);
 	}
 	wp->next = bbs[key];
@@ -400,10 +400,8 @@ hash_gen_update(FILE *gfp, int *gcnt, FILE *lfp, int *lcnt)
 	time_t refresh = t - Wpd_Refresh;
 	time_t threshold = t - Wpd_Age;
 
-	if(dbug_level & dbgVERBOSE) {
-		printf("current time = %"PRTMd"\n", t);
-		printf("refresh threshold = %"PRTMd"\n\n", refresh);
-	}
+	log_debug("current time = %"PRTMd, t);
+	log_debug("refresh threshold = %"PRTMd, refresh);
 
 	*gcnt = *lcnt = 0;
 
@@ -414,16 +412,14 @@ hash_gen_update(FILE *gfp, int *gcnt, FILE *lfp, int *lcnt)
 
 			if(wp->level < WP_Init && strcmp(wp->home, Bbs_Call) == 0) {
 				if(wp->changed > wp->last_update_sent) {
-					if(dbug_level & dbgVERBOSE)
-						printf("%s changed since update %"PRTMd" > %"PRTMd"\n",
-							wp->call, wp->changed, wp->last_update_sent);
+					log_debug("%s changed since update %"PRTMd" > %"PRTMd"",
+						wp->call, wp->changed, wp->last_update_sent);
 					update = TRUE;
 				} else
 				if((wp->seen > wp->last_update_sent) &&
 					(wp->last_update_sent < refresh)) {
-					if(dbug_level & dbgVERBOSE)
-						printf("%s seen in last two weeks %"PRTMd" > %"PRTMd"\n",
-							wp->call, wp->seen, wp->last_update_sent);
+					log_debug("%s seen in last two weeks %"PRTMd" > %"PRTMd,
+						wp->call, wp->seen, wp->last_update_sent);
 					update = TRUE;
 				}
 			}
@@ -469,8 +465,7 @@ hash_gen_update(FILE *gfp, int *gcnt, FILE *lfp, int *lcnt)
 			NEXT(wp);
 		}
 	}
-	if(dbug_level & dbgVERBOSE)
-		printf("%d %d entries match request\n", *gcnt, *lcnt);
+	log_debug("%d %d entries match request", *gcnt, *lcnt);
 	return OK;
 }
 

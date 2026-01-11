@@ -166,16 +166,19 @@ main(int argc, char *argv[])
 	struct active_processes *ap;
 	time_t flush_time = Time(NULL) + Gated_Flush;
 
+	bbs_log_init("b_gated", 1 /* Also log to stderr */);
+
 	parse_options(argc, argv, ConfigList, "GATED - Gateway Daemon");
 
+	if(dbug_level & dbgVERBOSE)
+		bbs_log_level(BBS_LOG_DEBUG);
 	if(dbug_level & dbgTESTHOST)
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);
 
 	if(bbsd_open(Bbs_Host, Bbsd_Port, "gated", "DAEMON") == ERROR)
-		error_print_exit(0);
-	error_clear();
+		exit(1);
 
 	bbsd_get_configuration(ConfigList);
 	bbsd_msg("Startup");
@@ -183,7 +186,7 @@ main(int argc, char *argv[])
 	time_now = bbsd_get_time();
 
 	if(read_file() == ERROR)
-		error_print_exit(1);
+		exit(1);
 
 	bbsd_msg(" ");
 	listen_port = Gated_Port;

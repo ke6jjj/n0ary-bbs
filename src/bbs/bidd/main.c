@@ -105,18 +105,18 @@ accept_callback(void *ctx, void *arg0, int arg1)
 	listen_sock = (intptr_t) ctx;
 	fd = socket_accept_nonblock_unmanaged(listen_sock);
 	if (fd < 0) {
-		fprintf(stderr, "accept failed on new connection.\n");
+		log_error("accept failed on new connection.");
 		return;
 	}
 
 	if (socket_write(fd, daemon_version("bidd", Bbs_Call)) != sockOK) {
-		fprintf(stderr, "couldn't write hello banner.\n");
+		log_warning("couldn't write hello banner.");
 		close(fd);
 		return;
 	}
 
         if ((ap = add_proc()) == NULL) {
-		fprintf(stderr, "couldn't allocate process.\n");
+		log_error("couldn't allocate process.");
 		close(fd);
 		return;
 	}
@@ -125,7 +125,7 @@ accept_callback(void *ctx, void *arg0, int arg1)
         AL_CALLBACK(&cb, ap, service_callback);
         res = alEvent_registerFd(fd, ALFD_READ, cb, &ap->ev);
         if (res != 0) {
-                fprintf(stderr, "couldn't register new process\n");
+                log_error("couldn't register new process");
                 remove_proc(ap);
         }
 }
@@ -226,16 +226,19 @@ main(int argc, char *argv[])
 	alEventHandle listen_ev, bbsd_ev;
 	alCallback cb;
 
+	bbs_log_init("b_bidd", 1 /* Also log to stderr */);
+
 	parse_options(argc, argv, ConfigList, "BIDD - Bid Daemon");
 
+	if (dbug_level & dbgVERBOSE)
+		bbs_log_level(BBS_LOG_DEBUG);
 	if(dbug_level & dbgTESTHOST)
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);
 
 	if(bbsd_open(Bbs_Host, Bbsd_Port, "bidd", "DAEMON") == ERROR)
-		error_print_exit(0);
-	error_clear();
+		exit(1);
 
 	bbsd_get_configuration(ConfigList);
 	bbsd_msg("Startup");
@@ -246,7 +249,7 @@ main(int argc, char *argv[])
 		display_config();
 
 	if(read_new_file(Bidd_File) == ERROR) {
-		printf("Error opening %s\n", Bidd_File);
+		log_error("Error opening %s", Bidd_File);
 		return 1;
 	}
 
@@ -258,33 +261,33 @@ main(int argc, char *argv[])
 		bbsd_msg("");
 
 	if (alEvent_init() != 0) {
-		fprintf(stderr, "Unable to initialize event system\n");
+		log_error("Unable to initialize event system");
 		return 1;
 	}
 
 	AL_CALLBACK(&cb, NULL, log_clear_callback);
 	res = alEvent_addTimer(Log_Clear_Interval_s * 1000, 0, cb);
 	if (res < 0) {
-		fprintf(stderr, "can't register log clear timer\n");
+		log_error("can't register log clear timer");
 		return 1;
 	}
 
 	AL_CALLBACK(&cb, NULL, flush_callback);
 	res = alEvent_addTimer(Bidd_Flush * 1000, 0, cb);
 	if (res < 0) {
-		fprintf(stderr, "can't register flush timer\n");
+		log_error("can't register flush timer");
 		return 1;
 	}
 
 	AL_CALLBACK(&cb, (void *)listen_sock, accept_callback);
 	if (alEvent_registerFd(listen_sock, ALFD_READ, cb, &listen_ev) != 0) {
-		fprintf(stderr, "Unable to register listen socket\n");
+		log_error("Unable to register listen socket");
 		return 1;
 	}
 
 	AL_CALLBACK(&cb, NULL, bbsd_activity_callback);
 	if (alEvent_registerFd(bbsd_sock, ALFD_READ, cb, &bbsd_ev) != 0) {
-		fprintf(stderr, "Unable to register bbsd socket\n");
+		log_error("Unable to register bbsd socket");
 		return 1;
 	}
 
@@ -292,7 +295,6 @@ main(int argc, char *argv[])
 
 	while (!shutdown_daemon && alEvent_pending()) {
 		alEvent_poll();
-		error_print();
 	}
 
 	if(bid_image == DIRTY)
@@ -315,7 +317,7 @@ flush_callback(void *ctx, void *arg0, int arg1)
 	AL_CALLBACK(&cb, ctx, flush_callback);
 	res = alEvent_addTimer(Log_Clear_Interval_s * 1000, 0, cb);
 	if (res < 0) {
-		fprintf(stderr, "can't register flush timer\n");
+		log_error("can't register flush timer");
 		shutdown_daemon = TRUE;
 	}
 }
@@ -331,7 +333,7 @@ log_clear_callback(void *ctx, void *arg0, int arg1)
 	AL_CALLBACK(&cb, ctx, log_clear_callback);
 	res = alEvent_addTimer(Log_Clear_Interval_s * 1000, 0, cb);
 	if (res < 0) {
-		fprintf(stderr, "can't register log clear timer\n");
+		log_error("can't register log clear timer");
 		shutdown_daemon = TRUE;
 	}
 }

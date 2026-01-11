@@ -77,7 +77,6 @@ struct ConfigurationList ConfigList[] = {
 	{ NULL, 0, NULL}};
 
 static int get_message_type(const char *varname, const char *str, int def);
-static void log_wpd(char *str);
 
 int
 service_port(struct active_processes *ap)
@@ -86,7 +85,7 @@ service_port(struct active_processes *ap)
 
 	if(socket_read_line(ap->fd, buf, 256, 10) == ERROR)
 		return ERROR;
-	log_f("wpd", "R:", buf);
+	log_debug("R:%s", buf);
 
 	s = buf;
 	NextChar(s);
@@ -96,7 +95,7 @@ service_port(struct active_processes *ap)
 	} else
 		c = Error("call");
 
-	log_f("wpd", "S:", c);
+	log_debug("S:%s", c);
 	if(socket_raw_write(ap->fd, c) == ERROR)
 		return ERROR;
 
@@ -206,16 +205,20 @@ main(int argc, char *argv[])
 	struct active_processes *ap;
 	time_t flush_time;
 	time_t wp_update_time;
+
+	bbs_log_init("b_wpd", 1 /* Also log to stderr */);
+
 	parse_options(argc, argv, ConfigList, "WPD - White Pages Daemon");
 
+	if(dbug_level & dbgVERBOSE)
+		bbs_log_level(BBS_LOG_DEBUG);
 	if(dbug_level & dbgTESTHOST)
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(0, 0);
 
 	if(bbsd_open(Bbs_Host, Bbsd_Port, "wpd", "DAEMON") == ERROR)
-		error_print_exit(0);
-	error_clear();
+		exit(1);
 	bbsd_get_configuration(ConfigList);
 	bbsd_sock = bbsd_socket();
 
@@ -223,7 +226,6 @@ main(int argc, char *argv[])
 		Wpd_Global_Type_Str, sendPRIVATE);
 	Wpd_Local_Type = get_message_type("WPD_LOCAL_TYPE",
 		Wpd_Local_Type_Str, sendPRIVATE);
-	error_report(log_wpd, TRUE);
 
 	flush_time = Time(NULL) + Wpd_Flush;
 	wp_update_time = calc_wp_time(0);
@@ -233,7 +235,7 @@ main(int argc, char *argv[])
 	listen_port = Wpd_Port;
 	listen_addr = Wpd_Bind_Addr;
 	if((listen_sock = socket_listen(listen_addr, &listen_port)) == ERROR)
-		error_print_exit(1);
+		exit(1);
 
 	bbsd_port(Wpd_Port);
 	signal(SIGPIPE, SIG_IGN);
@@ -243,10 +245,8 @@ main(int argc, char *argv[])
 		fd_set ready;
 		int fdlimit;
 
-		error_print();
-
 		if(shutdown_daemon) {
-			log_f("wpd", "S", "Shutdown requested");
+			log_info("SShutdown requested");
 			if(user_image == DIRTY)
 				write_user_file();
 			if(bbs_image == DIRTY)
@@ -296,20 +296,15 @@ main(int argc, char *argv[])
 
 				{
 					time_t t0;
-					if(dbug_level & dbgVERBOSE)
-						t0 = time(NULL);
+					t0 = time(NULL);
 					if(!(dbug_level & dbgNODAEMONS))
 						bbsd_msg("Aging in progress");
 
 					if(time_now == 0)
 						generate_wp_update(NULL);
 
-					if(dbug_level & dbgVERBOSE) {
-						char out[80];
-						sprintf(out, "Aging took %"PRTMd" seconds\n", time(NULL) - t0);
-						puts(out);
-						log_f("wpd", "S:", out);
-					}
+					log_debug("Aging took %"PRTMd" seconds",
+							time(NULL) - t0);
 				}
 
 				wp_update_time = calc_wp_time(wp_update_time);
@@ -362,12 +357,6 @@ Time(time_t *t)
 	return now;
 }
 
-static void
-log_wpd(char *str)
-{
-	log_f("wpd", "%s", str);
-}
-
 static int
 get_message_type(const char *varname, const char *str, int def)
 {
@@ -382,7 +371,7 @@ get_message_type(const char *varname, const char *str, int def)
 	case 'B':
 		return sendBULLETIN;
 	default:
-		error_log("%s: invalid message type '%c'.\n", varname, str[0]);
+		log_error("%s: invalid message type '%c'.", varname, str[0]);
 		break;
 	}
 

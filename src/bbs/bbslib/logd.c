@@ -26,7 +26,7 @@ logd_read(void)
 		break;
 	case sockTIMEOUT:
 	case sockERROR:
-		error_log("bbsd_read: error reading from socket");
+		log_error("logd_read: error reading from socket");
 		return NULL;
 	}
 	return buf;

@@ -386,7 +386,6 @@ exec_listen(char *s)
 
 	if (socket_parse_bindspec(spec, host_buf, sizeof(host_buf), &port,
 		&host) != 0) {
-		error_print();
 		return ERROR;
 	}
 
@@ -401,14 +400,12 @@ exec_listen(char *s)
 
 
 	if((Socket[num].sock = socket_listen(host, &port)) == ERROR) {
-		error_print();
 		return ERROR;
 	}
 
 	fork_exec(s);
 
 	if((Socket[num].fd = socket_accept(Socket[num].sock)) == ERROR) {
-		error_print();
 		return ERROR;
 	}
 #if TRACE_FDS

@@ -141,16 +141,19 @@ main(int argc, char *argv[])
 	int bbsd_sock;
 	struct processes *ap;
 
+	bbs_log_init("b_logd", 1 /* Also log to stderr */);
+
 	parse_options(argc, argv, ConfigList, "LOGD - Log Daemon");
 
+	if(dbug_level & dbgVERBOSE)
+		bbs_log_level(BBS_LOG_DEBUG);
 	if(dbug_level & dbgTESTHOST)
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);
 
 	if(bbsd_open(Bbs_Host, Bbsd_Port, "logd", "DAEMON") == ERROR)
-		error_print_exit(0);
-	error_clear();
+		exit(1);
 
 	bbsd_get_configuration(ConfigList);
 	bbsd_sock = bbsd_socket();

@@ -209,7 +209,7 @@ echo(int cond)
 
 #ifdef HAVE_TERMIOS
 	if (tcgetattr(0, &tt))
-		return error_log("echo.tcgetattr: %s", sys_errlist[errno]);
+		return log_error("echo.tcgetattr: %m");
 #else
 #error "Need termios"
 #endif
@@ -225,7 +225,7 @@ echo(int cond)
 
 #ifdef HAVE_TERMIOS
 	if(tcsetattr(0, TCSANOW, &tt))
-		return error_log("echo.tcsetattr: %s", sys_errlist[errno]);
+		return log_error("echo.tcsetattr: %m");
 #else
 #error "Need termios"
 #endif

@@ -117,7 +117,7 @@ socket_listen(const char *bind_addr, int *port)
 		/* Bind to a specific address, in dotted quad form */
 		if (inet_aton(bind_addr, &server.sin_addr) != 1) {
 			/* Badly formatted address */
-			return error_log(
+			return log_error(
 				"socket_listen.inet_aton(%s)): "
 				"Bad IP address", bind_addr);
 		}
@@ -126,21 +126,17 @@ socket_listen(const char *bind_addr, int *port)
 	server.sin_port = htons(*port);
 
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-		return error_log("socket_listen.socket: %s",
-			sys_errlist[errno]);
+		return log_error("socket_listen.socket: %m");
 
 	opt = 1;
 	if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0)
-		return  error_log("socket_listen.setsockopt(REUSEADDR): %s",
-			sys_errlist[errno]);
+		return log_error("socket_listen.setsockopt(REUSEADDR): %m");
 
 	if(bind(sock, (struct sockaddr *)&server, length) < 0)
-		return  error_log("socket_listen.bind: %s",
-			sys_errlist[errno]);
+		return log_error("socket_listen.bind: %m");
 
 	if(getsockname(sock, (struct sockaddr *)&server, &length) < 0)
-		return error_log("socket_listen.getsockname: %s",
-			sys_errlist[errno]);
+		return log_error("socket_listen.getsockname: %m");
 
 	listen(sock, 5);
 
@@ -161,8 +157,7 @@ socket_accept(int sock)
 #endif
 
 	if((fd = accept(sock, 0, 0)) < 0)
-		return error_log("socket_accept.accept: %s",
-			sys_errlist[errno]);
+		return log_error("socket_accept.accept: %m");
 
 	setsockopt(fd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger));
 	fcntl(fd, F_SETFL, O_NDELAY);
@@ -185,21 +180,21 @@ socket_accept_nonblock_unmanaged(int sock)
 #endif
 
 	if((fd = accept(sock, 0, 0)) < 0)
-		return error_log(_SAN ": %s", sys_errlist[errno]);
+		return log_error(_SAN ": %m");
 
 	res = setsockopt(fd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger));
 	if (res < 0) {
-		error_log(_SAN ": can't set linger");
+		log_error(_SAN ": can't set linger: %m");
 		goto CantSockOpt;
 	}
 
 	if ((flags = fcntl(fd, F_GETFL, 0)) < 0) {
-		error_log(_SAN ": couldn't get socket flags.");
+		log_error(_SAN ": couldn't get socket flags: %m");
 		goto GetFlagsFailed;
 	}
 
 	if (fcntl(fd, F_SETFL, flags|O_NONBLOCK|O_NDELAY) < 0) {
-		error_log(_SAN ": couldn't make socket non-blocking.");
+		log_error(_SAN ": couldn't make socket non-blocking: %m");
 		goto SetFlagsFailed;
 	}
 
@@ -223,7 +218,7 @@ socket_open(char *host, int port)
 	int linger = 0;
 
 	if((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
-		return error_log("socket_open.socket: %s", sys_errlist[errno]);
+		return log_error("socket_open.socket: %m");
 
 	server.sin_family = AF_INET;
 
@@ -231,8 +226,8 @@ socket_open(char *host, int port)
 		server.sin_addr.s_addr =  htonl(INADDR_LOOPBACK);
 	} else {
 		if((hp = gethostbyname(host)) == NULL) {
-			error_log("socket_open.gethostbyname:");
-			return error_log(
+			return log_error(
+				"socket_open.gethostbyname: "
 				"could not find \"%s\" in the hosts "
 				"database\n", host);
 		}
@@ -244,8 +239,7 @@ socket_open(char *host, int port)
 	server.sin_port = htons(port);
 
 	if(connect(sock, (struct sockaddr*)&server, sizeof server) < 0)
-		return error_log("socket_open.connect: %s",
-			sys_errlist[errno]);
+		return log_error("socket_open.connect: %m");
 
 	fcntl(sock, F_SETFL, O_NDELAY);
 	link_fd(sock);
@@ -258,7 +252,7 @@ socket_read_pending(int fd)
 	struct fd_list *fdl = find_fd(fd);
 
 	if(fd == ERROR) {
-		error_log("socket_read_line: closed fd supplied");
+		log_error("socket_read_line: closed fd supplied");
 		return sockERROR;
 	}
 
@@ -294,7 +288,7 @@ socket_read_raw_line(int fd, char *line, int len, int timeout)
 	struct fd_list *fdl = find_fd(fd);
 
 	if(fd == ERROR) {
-		error_log("socket_read_line: closed fd supplied");
+		log_error("socket_read_line: closed fd supplied");
 		return sockERROR;
 	}
 
@@ -354,13 +348,9 @@ socket_read_raw_line(int fd, char *line, int len, int timeout)
 
 		switch(select(fdlimit, &ready, NULL, NULL, &t)) {
 		case ERROR:
-			error_log("socket_read_line: select(): %s",
-				sys_errlist[errno]);
+			log_error("socket_read_line: select(): %m");
 			return sockERROR;
 		case 0:
-#if 0
-			error_log("socket_read_line: select(): TIMEOUT");
-#endif
 			return sockTIMEOUT;
 
 		default:
@@ -415,7 +405,7 @@ socket_write(int fd, char *buf)
 {
 #ifdef _DEBUG
 	if(fd == ERROR)
-		return error_log("socket_write: closed fd supplied");
+		return log_error("socket_write: closed fd supplied");
 #endif
 
 	socket_raw_write(fd, buf);
@@ -438,7 +428,7 @@ socket_raw_write_n(int fd, const char *buf, size_t len)
 
 #ifdef _DEBUG
 	if(fd == ERROR)
-		return error_log("socket_raw_write_n: closed fd supplied");
+		return log_error("socket_raw_write_n: closed fd supplied");
 #endif
 	if(socket_watch == fd)
 		socket_print('W', buf);
@@ -455,8 +445,7 @@ socket_raw_write_n(int fd, const char *buf, size_t len)
 			case EPIPE:
 				return ERROR;
 			default:
-				return error_log("socket_raw_write_n: %s",
-					sys_errlist[errno]);
+				return log_error("socket_raw_write_n: %m");
 			}
 		}
 		nleft -= nwritten;
@@ -470,7 +459,7 @@ socket_close(int fd)
 {
 #ifdef _DEBUG
 	if(fd == ERROR)
-		return error_log("socket_close: closed fd supplied");
+		return log_error("socket_close: closed fd supplied");
 #endif
 	if(socket_watch == fd)
 		socket_watch = ERROR;
@@ -507,7 +496,7 @@ socket_parse_bindspec(const char *spec, char *host_buf, size_t host_buf_sz,
 		 */
 		cnt = colon - spec;
 		if (cnt > host_buf_sz - 1) {
-				return error_log("socket_parse_bindspec: "
+				return log_error("socket_parse_bindspec: "
 					"Host address too big '%s'", spec);
 		}
 		strncpy(host_buf, spec, cnt);

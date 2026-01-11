@@ -41,12 +41,8 @@ age_users(struct active_processes *ap)
 	int suspect_cnt = 0;
 	int user_cnt = 0;
 	int nonham_cnt = 0;
-	FILE *dfp;
 	char reason[80];
 	
-	if(dbug_level)
-		dfp = fopen("aging.out", "w");
-
 	dir = UsrDir;
 	wpd_open();
 	gated_open();
@@ -68,11 +64,9 @@ age_users(struct active_processes *ap)
 					sprintf(reason, "%s, suspect [%"PRTMd" days]",
 						call, (now - dir->lastseen)/tDay);
 
-				if(dbug_level) {
-					fprintf(dfp, "age user %s, suspect call [%"PRTMd" days]\n",
-						call, (now - dir->lastseen)/tDay);
-					suspect_cnt++;
-				}
+				log_debug("age user %s, suspect call [%"PRTMd" days]",
+					call, (now - dir->lastseen)/tDay);
+				suspect_cnt++;
 			}
 		} else
 			if(dir->class == CALLisNAME) {
@@ -83,11 +77,9 @@ age_users(struct active_processes *ap)
 						sprintf(reason, "%s, non-ham [%"PRTMd" days]",
 							call, (now - dir->lastseen)/tDay);
 
-					if(dbug_level) {
-						fprintf(dfp, "age user %s, non-ham [%"PRTMd" days]\n",
-							call, (now - dir->lastseen)/tDay);
-						nonham_cnt++;
-					}
+					log_debug("age user %s, non-ham [%"PRTMd" days]",
+						call, (now - dir->lastseen)/tDay);
+					nonham_cnt++;
 				}
 			} else
 				if(dir->lastseen < nonhome_t) {
@@ -101,11 +93,9 @@ age_users(struct active_processes *ap)
 								call, home_here?"@HERE":"",
 								(now - dir->lastseen)/tDay);
 
-						if(dbug_level) {
-							fprintf(dfp, "age user %s [%"PRTMd" days]\n",
-								call, (now - dir->lastseen)/tDay);
-							user_cnt++;
-						}
+						log_debug("age user %s [%"PRTMd" days]",
+							call, (now - dir->lastseen)/tDay);
+						user_cnt++;
 					}
 				}
 
@@ -124,11 +114,8 @@ age_users(struct active_processes *ap)
 			}
 		}
 	}
-	if(dbug_level) {
-		fclose(dfp);
-		printf("suspects = %d\nnon-ham = %d\nusers = %d\n", suspect_cnt,
+	log_debug("suspects = %d non-ham = %d users = %d", suspect_cnt,
 			nonham_cnt, user_cnt);
-	}
 
 	wpd_close();
 	gated_close();

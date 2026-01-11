@@ -66,11 +66,11 @@ bbsd_ping(void)
 	char buf[1024];
 
 	if(bbsd_sock == ERROR)
-		return error_log("bbsd_cmd: bbsd socket not opened");
+		return log_error("bbsd_cmd: bbsd socket not opened");
 
 	sprintf(buf, "%s\n", bbsd_xlate(bPING));
 	if(socket_raw_write(bbsd_sock, buf) != OK)
-		return error_log("bbsd_cmd: error writing to socket");
+		return log_error("bbsd_cmd: error writing to socket");
 	return OK;
 }
 
@@ -84,7 +84,7 @@ bbsd_login(char *name, char *via)
 		return ERROR;
 
 	if(!strncmp(result, "NO,", 3)) {
-		error_log("Login rejected because: %s", result);
+		log_error("bbsd login rejected because: %s", result);
 		return TRUE;
 	}
 	return OK;
@@ -96,27 +96,27 @@ bbsd_open(char *host, int port, char *name, char *via)
 	char buf[256], *result;
 
 	if((bbsd_sock = socket_open(host, port)) == ERROR)
-		return error_log("bbsd_open(%s, %d): socket open failed", host, port);
+		return log_error("bbsd_open(%s, %d): socket open failed", host, port);
 
 		/* read version number of bbsd, ignore for now */
 
 	if((result = bbsd_read()) == NULL)
-		return error_log("bbsd_open(%s, %d): error reading from socket",
+		return log_error("bbsd_open(%s, %d): error reading from socket",
 			host, port);
 
 	if(strncmp(&result[1], "bbsd", 4))
-		return error_log(
+		return log_error(
 			"bbsd_open(%s, %d): expected bbsd in version string, got %s",
 			host, port, result);
 	bbsd_ver = get_daemon_version(result);
 
 	if((result = bbsd_read()) == NULL)
-		return error_log("bbsd_open(%s, %d): error reading from socket",
+		return log_error("bbsd_open(%s, %d): error reading from socket",
 			host, port);
 
 	
 	if(*result != '#')
-		return error_log("bbsd_open(%s, %d): expected proc_num from bbsd",
+		return log_error("bbsd_open(%s, %d): expected proc_num from bbsd",
 			host, port);
 
 	proc_num = atoi(&result[2]);
@@ -127,7 +127,7 @@ bbsd_open(char *host, int port, char *name, char *via)
 		return ERROR;
 
 	if(!strncmp(result, "NO,", 3)) {
-		error_log("Login rejected because: %s", result);
+		log_error("bbsd login rejected because: %s", result);
 		return TRUE;
 	}
 	return OK;
@@ -156,7 +156,7 @@ bbsd_read(void)
 		break;
 	case sockTIMEOUT:
 	case sockERROR:
-		error_log("bbsd_read: error reading from socket");
+		log_error("bbsd_read: error reading from socket");
 		return NULL;
 	}
 	return buf;
@@ -178,11 +178,11 @@ bbsd_cmd(char *cmd)
 	char *c, buf[1024];
 
 	if(bbsd_sock == ERROR)
-		return error_log("bbsd_cmd: bbsd socket not opened");
+		return log_error("bbsd_cmd: bbsd socket not opened");
 
 	sprintf(buf, "%s\n", cmd);
 	if(socket_raw_write(bbsd_sock, buf) != OK)
-		return error_log("bbsd_cmd: error writing to socket");
+		return log_error("bbsd_cmd: error writing to socket");
 
 	if((c = bbsd_read()) == NULL)
 		return ERROR;
@@ -216,13 +216,13 @@ bbsd_fetch(char *cmd)
 	char *c, buf[1024];
 
 	if(bbsd_sock == ERROR) {
-		error_log("bbsd_fetch: bbsd socket not opened");
+		log_error("bbsd_fetch: bbsd socket not opened");
 		return NULL;
 	}
 
 	sprintf(buf, "%s\n", cmd);
 	if(socket_raw_write(bbsd_sock, buf) != OK) {
-		error_log("bbsd_fetch: error writing to socket");
+		log_error("bbsd_fetch: error writing to socket");
 		return NULL;
 	}
 
@@ -236,7 +236,7 @@ bbsd_fetch_multi(char *cmd, void (*callback)(char *s))
 	char *c, buf[1024];
 
 	if(bbsd_sock == ERROR)
-		return error_log("bbsd_fetch_multi: bbsd socket not opened");
+		return log_error("bbsd_fetch_multi: bbsd socket not opened");
 
 	sprintf(buf, "%s\n", cmd);
 	socket_raw_write(bbsd_sock, buf);
@@ -263,7 +263,7 @@ bbsd_fetch_textline(char *cmd, struct text_line **tl)
 	char *c, buf[1024];
 
 	if(bbsd_sock == ERROR)
-		return error_log("bbsd_fetch_textline: bbsd socket not opened");
+		return log_error("bbsd_fetch_textline: bbsd socket not opened");
 
 	sprintf(buf, "%s\n", cmd);
 	socket_raw_write(bbsd_sock, buf);
@@ -394,7 +394,7 @@ int
 bbsd_notify_on(void)
 {
 	if(bbsd_sock == ERROR) {
-		error_log("bbsd_notify_on: bbsd socket not opened");
+		log_error("bbsd_notify_on: bbsd socket not opened");
 		return ERROR;
 	}
 
@@ -406,7 +406,7 @@ int
 bbsd_notify_off(void)
 {
 	if(bbsd_sock == ERROR) {
-		error_log("bbsd_notify_on: bbsd socket not opened");
+		log_error("bbsd_notify_on: bbsd socket not opened");
 		return ERROR;
 	}
 
@@ -439,7 +439,7 @@ bbsd_get_configuration(struct ConfigurationList *cl)
 				p = result;
 				if (get_time_interval(&p,1,1,&interval)!=OK)
 				{
-					error_log("bbsd_get_configuration: "
+					log_error("bbsd_get_configuration: "
 					          "invalid time interval");
 					return ERROR;
 				}
@@ -464,7 +464,7 @@ bbsd_get_configuration(struct ConfigurationList *cl)
 				break;
 
 			default:
-				error_log("bbsd_get_configuration: invalid type field");
+				log_error("bbsd_get_configuration: invalid type field");
 				return ERROR;
 			}
 		}

@@ -22,11 +22,11 @@ bidd_read(char *buf, int len)
 	case sockOK:
 		break;
 	case sockMAXLEN:
-		error_log("bidd_read: line longer than expected");
+		log_error("bidd_read: line longer than expected");
 		return ERROR;
 	case sockERROR:
 	case sockTIMEOUT:
-		error_log("bidd_read: error reading from socket");
+		log_error("bidd_read: error reading from socket");
 	default:
 		return ERROR;
 	}

@@ -79,7 +79,7 @@ service_port(struct active_processes *ap)
 	if(socket_read_line(ap->fd, buf, 256, 10) == ERROR)
 		return ERROR;
 
-	log_f("msgd", "R:", buf);
+	log_debug("R:%s", buf);
 	s = buf;
 	NextChar(s);
 	if(*s) {
@@ -91,7 +91,7 @@ service_port(struct active_processes *ap)
 	if(socket_raw_write(ap->fd, c) == ERROR)
 		return ERROR;
 
-	log_f("msgd", "S:", c);
+	log_debug("S:%s", c);
 	return OK;
 }
 
@@ -170,15 +170,17 @@ main(int argc, char *argv[])
 	struct active_processes *ap;
 	time_t age_time;
 
+	bbs_log_init("b_msgd", 1 /* Also log to stderr */);
+
 	parse_options(argc, argv, ConfigList, "MSGD - Message Daemon");
 
-	if(bbsd_open(Bbs_Host, Bbsd_Port, "MSGD", "DAEMON") == ERROR)
-		error_print_exit(0);
-	error_clear();
+	if (dbug_level & dbgVERBOSE)
+		bbs_log_level(BBS_LOG_DEBUG);
 
-	Logging = logON;
-	log_f("msgd", "******", "Coming UP");
-	Logging = logOFF;
+	if(bbsd_open(Bbs_Host, Bbsd_Port, "MSGD", "DAEMON") == ERROR)
+		exit(1);
+
+	log_info("****** Coming UP");
 
 	bbsd_get_configuration(ConfigList);
 	bbsd_msg("Startup");
@@ -192,14 +194,12 @@ main(int argc, char *argv[])
 		daemon(1, 1);
 
 	if (build_msgdir()) {
-		Logging = logON;
-		log_f("msgd", "Can't build_msgdir()", "");
+		log_error("Can't build_msgdir()");
 		exit(1);
 	}
 
 	if (initialize_bids(Msgd_Global_Bid_File, get_max_message_id()) != 0) {
-		Logging = logON;
-		log_f("msgd", "Can't initialize_bids()", "");
+		log_error("Can't initialize_bids()");
 		exit(1);
 	}
 
@@ -209,9 +209,9 @@ main(int argc, char *argv[])
 		exit(1);
 
 	if(bbsd_port(Msgd_Port))
-		error_print_exit(0);
-	if(dbug_level & dbgVERBOSE)
-		printf("UP\n");
+		exit(1);
+
+	log_debug("UP");
 
 	if(!(dbug_level & dbgNODAEMONS))
 		bbsd_msg("");
@@ -225,8 +225,6 @@ main(int argc, char *argv[])
 
 		if(shutdown_daemon)
 			exit(0);
-
-		error_print();
 
 		ap = procs;
 		FD_ZERO(&ready);

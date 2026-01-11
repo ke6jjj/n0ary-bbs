@@ -91,7 +91,7 @@ msgd_read(void)
 		break;
 	case sockTIMEOUT:
 	case sockERROR:
-		error_log("msgd_read: error reading from socket");
+		log_error("msgd_read: error reading from socket");
 		return NULL;
 	}
 

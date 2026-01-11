@@ -127,26 +127,26 @@ smtp_send_message(struct smtp_message *msg)
 		mailhost = buf;
 
 	if((fd = socket_open(mailhost, smtp_port_number)) == ERROR) {
-		error_log("smtp_send_message: error opening smtp socket");
+		log_error("smtp_send_message: error opening smtp socket");
 		return ERROR;
 	}
 
 	if(smtp_recv_ack(fd) != OK) {
-		error_log("smtp_send_message: target did not id properly");
+		log_error("smtp_send_message: target did not id properly");
 		fd = smtp_disconnect(fd);
 		return ERROR;
 	}
 	
 	sprintf(buffer, "HELO %s", bbs_domain);
 	if(smtp_request(fd, buffer) != OK) {
-		error_log("smtp_send_message: HELO exchange failed");
+		log_error("smtp_send_message: HELO exchange failed");
 		fd = smtp_disconnect(fd);
 		return ERROR;
 	}
 
 	sprintf(buffer, "MAIL FROM:<%s@%s>", msg->from->s, bbs_domain);
 	if(smtp_request(fd, buffer) != OK) {
-		error_log("smtp_send_message: \"%s\" failed", buffer);
+		log_error("smtp_send_message: \"%s\" failed", buffer);
 		fd = smtp_disconnect(fd);
 		return ERROR;
 	}
@@ -156,7 +156,7 @@ smtp_send_message(struct smtp_message *msg)
 		sprintf(buffer, "RCPT TO:<postmaster>");
 		if(smtp_request(fd, buffer) != OK) {
 			smtp_set_subject(msg, "BBS: No RCPT specified");
-			error_log("smtp_send_message: \"%s\" failed", buffer);
+			log_error("smtp_send_message: \"%s\" failed", buffer);
 			fd = smtp_disconnect(fd);
 			return ERROR;
 		}
@@ -164,7 +164,7 @@ smtp_send_message(struct smtp_message *msg)
 	while(tl != NULL) {
 		sprintf(buffer, "RCPT TO:<%s>", tl->s);
 		if(smtp_request(fd, buffer) != OK) {
-			error_log("smtp_send_message: \"%s\" failed", buffer);
+			log_error("smtp_send_message: \"%s\" failed", buffer);
 			fd = smtp_disconnect(fd);
 			return ERROR;
 		}
@@ -172,7 +172,7 @@ smtp_send_message(struct smtp_message *msg)
 	}
 
 	if(smtp_request(fd, "DATA") != OK) {
-		error_log("smtp_send_message: DATA failed");
+		log_error("smtp_send_message: DATA failed");
 		fd = smtp_disconnect(fd);
 		return ERROR;
 	}
@@ -218,13 +218,13 @@ smtp_send_message(struct smtp_message *msg)
 	}
 
 	if(smtp_request(fd, ".") != OK) {
-		error_log("smtp_send_message: DATA END failed");
+		log_error("smtp_send_message: DATA END failed");
 		fd = smtp_disconnect(fd);
 		return ERROR;
 	}
 
 	if(smtp_request(fd, "QUIT") != OK) {
-		error_log("smtp_send_message: QUIT failed");
+		log_error("smtp_send_message: QUIT failed");
 		fd = smtp_disconnect(fd);
 		return ERROR;
 	}

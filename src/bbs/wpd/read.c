@@ -54,8 +54,7 @@ read_user_file(char *filename, int depth)
 	int version = ERROR;
 	time_t now = Time(NULL);
 	time_t t0;
-	if(dbug_level & dbgVERBOSE)
-		t0 = time(NULL);
+	t0 = time(NULL);
 
 	if(fp == NULL) {
 		if (depth == 0) {
@@ -103,20 +102,18 @@ read_user_file(char *filename, int depth)
 		/* at this point we will either have a number or a homebbs */
 		char *call = get_string(&p);
 		if(call != NULL && iscall(call)) {
-			if(dbug_level & dbgVERBOSE)
-				printf("Old database detected\n");
+			log_info("Old database detected");
 			version = 0;
 		} else {
-			if(dbug_level & dbgVERBOSE)
-				printf("New database with no version number detected\n");
+			log_info("New database with no version number detected");
 			version = 1;
 		}
 		rewind(fp);
 	}
 
 	if (version > 1) {
-		fprintf(stderr,
-			"User database version %d is newer than I am!\n",
+		log_error(
+			"User database version %d is newer than I am!",
 			version
 		);
 		fclose(fp);
@@ -167,8 +164,7 @@ read_user_file(char *filename, int depth)
 		cnt++;
 	}
 
-	if(dbug_level & dbgVERBOSE)
-		printf("Loaded %d users in %"PRTMd" seconds\n", cnt, time(NULL) - t0);
+	log_debug("Loaded %d users in %"PRTMd" seconds", cnt, time(NULL) - t0);
 	fclose(fp);
 	return OK;
 }
@@ -266,8 +262,7 @@ read_bbs_file(char *filename)
 	int cnt = 0;
 	FILE *fp = fopen(filename, "r");
 	time_t t0;
-	if(dbug_level & dbgVERBOSE)
-		t0 = time(NULL);
+	t0 = time(NULL);
 
 	if(fp == NULL)
 		return ERROR;
@@ -307,8 +302,7 @@ read_bbs_file(char *filename)
 		cnt++;
 	}
 
-	if(dbug_level & dbgVERBOSE)
-		printf("Loaded %d bbss in %"PRTMd" seconds\n", cnt, time(NULL) - t0);
+	log_debug("Loaded %d bbss in %"PRTMd" seconds", cnt, time(NULL) - t0);
 	fclose(fp);
 	return OK;
 }
@@ -326,14 +320,14 @@ startup(void)
 	if(!(dbug_level & dbgNODAEMONS))
 		bbsd_msg("Startup users");
 	if(read_new_user_file(Wpd_User_File) == ERROR) {
-		printf("Error opening USERFILE %s\n", Wpd_User_File);
+		log_error("Error opening USERFILE %s", Wpd_User_File);
 		exit(1);
 	}
 
 	if(!(dbug_level & dbgNODAEMONS))
 		bbsd_msg("Startup bbss");
 	if(read_new_bbs_file(Wpd_Bbs_File) == ERROR) {
-		printf("Error opening %s\n", Wpd_Bbs_File);
+		log_error("Error opening %s", Wpd_Bbs_File);
 		exit(1);
 	}
 	if(!(dbug_level & dbgNODAEMONS))

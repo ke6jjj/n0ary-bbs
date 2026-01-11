@@ -7,6 +7,7 @@
 #include "ax25.h"
 #include "beacon.h"
 #include "c_cmmn.h"
+#include "tools.h"
 
 struct beacon_task {
 	struct	  ax25_cb axcb; /* Pre-built packet header */
@@ -60,7 +61,7 @@ beacon_task_start(beacon_task *task, int jitter_s)
 	/* Queue a small jitter timer before really starting */
 	task->timer = alEvent_addTimer(jitter_s*1000, 0, task->jitter_cb);
 	if (task->timer == -1) {
-		fprintf(stderr, "beacon jitter arm failed\n");
+		log_error("beacon jitter arm failed");
 		goto ArmTimerFailed;
 	}
 
@@ -82,7 +83,7 @@ beacon_jitter_done(void *obj, void *arg0, int arg1)
 	task->timer = alEvent_addTimer(task->repeat_time_ms,
 		ALTIMER_REPEAT, task->beacon_cb);
 	if (task->timer == -1) {
-		fprintf(stderr, "beacon arm failed\n");
+		log_error("beacon arm failed");
 	}
 }
 
@@ -98,7 +99,7 @@ beacon_now(void *obj, void *arg0, int arg1)
 	/* Allocate an mbuf to hold the beacon text plus protocol id */
 	bp = alloc_mbuf(task->textlen + 1);
 	if (bp == NULL) {
-		fprintf(stderr, "beacon alloc mbuf failed\n");
+		log_error("beacon alloc mbuf failed");
 		goto MBufAllocFailed;
 	}
 
@@ -107,7 +108,7 @@ beacon_now(void *obj, void *arg0, int arg1)
 	memcpy(&bp->data[1], task->text, task->textlen);
 
 	if (sendframe(&task->axcb, UNKNOWN, UI, bp) == ERROR)
-		fprintf(stderr, "beacon send failed\n");
+		log_error("beacon send failed");
 
 MBufAllocFailed:
 	return;

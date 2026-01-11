@@ -563,10 +563,14 @@ main(int argc, char *argv[])
 	if(argc > 1)
 		use_my_call = TRUE;
 
+	bbs_log_init("gateway", 0 /* Don't log to stderr */);
+
 	parse_options(argc, argv, ConfigList, "SMTPmailer");
 
-	if(dbug_level & dbgVERBOSE)
+	if(dbug_level & dbgVERBOSE) {
+		bbs_log_level(BBS_LOG_DEBUG);
 		use_my_call = TRUE;
+	}
 
 	while(bbsd_open(Bbs_Host, Bbsd_Port, "SMTPmail", "SMTP")) {
 		bbsd_close();

@@ -67,7 +67,7 @@ fd_gets(int fd, char *p, int cnt)
 
 	if(socket_read_pending(fd) == TRUE) {
 		if(socket_read_line(fd, str, cnt, 30) == sockERROR) {
-			error_log("fd_gets.read(): %s", sys_errlist[errno]);
+			log_error("fd_gets.read(): %m");
 			return NULL;
 		}
 
@@ -167,7 +167,7 @@ fd_gets(int fd, char *p, int cnt)
 
 		if(FD_ISSET(fd, &ready)) {
 			if(socket_read_line(fd, str, cnt, 30) == sockERROR) {
-				error_log("fd_gets.read(): %s", sys_errlist[errno]);
+				log_error("fd_gets.read(): %m");
 				return NULL;
 			}
 			done = TRUE;
@@ -286,7 +286,7 @@ fd_write(int fd, const char *buf, size_t len)
 		err = socket_raw_write_n(fd, buf, len);
 
 	if (err == ERROR)
-		error_log("write_socket.write(): %s", sys_errlist[errno]);
+		log_error("write_socket.write(): %m");
 }
 
 static void

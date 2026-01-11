@@ -28,19 +28,19 @@ spool_fopen(char *fn)
 	struct OpenFile *f = malloc_struct(OpenFile);
 
 	if (f == NULL) {
-		error_log("spool_fopen: out of mem");
+		log_error("spool_fopen: out of mem");
 		goto MallocFailed;
 	}
 	if ((f->name = strdup(fn)) == NULL) {
-		error_log("spool_fopen: out of mem in f->name");
+		log_error("spool_fopen: out of mem in f->name");
 		goto NameDupFailed;
 	}
 	if (asprintf(&f->tmpname, "%s.%d.%d", fn, getpid(), number++) == -1) {
-		error_log("spool_fopen: out of mem in f->tmpname");
+		log_error("spool_fopen: out of mem in f->tmpname");
 		goto TmpNameFailed;
 	}
 	if((f->fp = fopen(f->tmpname, "w")) == NULL) {
-		error_log("spool_fopen: Unable to open %s for writing: %s",
+		log_error("spool_fopen: Unable to open %s for writing: %s",
 			f->tmpname, sys_errlist[errno]);
 		goto FopenFailed;
 	}
@@ -65,18 +65,18 @@ spool_fclose(FILE *fp)
 	struct OpenFile *tmp = spool_find_and_dequeue(fp);
 
 	if (tmp == NULL) {
-		error_log("spool_fclose: No open file found for supplied FILE*");
+		log_error("spool_fclose: No open file found for supplied FILE*");
 		goto NotFound;
 	}
 
 	if (fclose(tmp->fp) != 0) {
-		error_log("spool_fclose: fclose of %s failed", tmp->name);
+		log_error("spool_fclose: fclose of %s failed", tmp->name);
 		goto CloseFailed;
 	}
 
 	if (rename(tmp->tmpname, tmp->name) < 0) {
-		error_log("spool_fclose: Unable to rename %s -> %s: %s",
-			tmp->tmpname, tmp->name, sys_errlist[errno]);
+		log_error("spool_fclose: Unable to rename %s -> %s: %m",
+			tmp->tmpname, tmp->name);
 		goto RenameFailed;
 	}
 
@@ -98,12 +98,12 @@ spool_abort(FILE *fp)
 	struct OpenFile *tmp = spool_find_and_dequeue(fp);
 
 	if (tmp == NULL) {
-		return error_log("spool_fclose: No open file found for supplied FILE*");
+		return log_error("spool_fclose: No open file found for supplied FILE*");
 	}
 
 	if(unlink(tmp->tmpname) < 0)
-		error_log("spool_fclose: Unable to unlink temp %s: %s",
-			tmp->tmpname, sys_errlist[errno]);
+		log_error("spool_fclose: Unable to unlink temp %s: %m",
+			tmp->tmpname);
 
 	free_open_file(tmp);
 

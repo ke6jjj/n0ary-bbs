@@ -101,7 +101,7 @@ userd_read(void)
 		break;
 	case sockTIMEOUT:
 	case sockERROR:
-		error_log("userd_read: error reading from socket");
+		log_error("userd_read: error reading from socket");
 		return NULL;
 	}
 	return buf;

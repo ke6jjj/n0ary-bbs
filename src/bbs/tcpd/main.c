@@ -130,11 +130,11 @@ service_port(struct active_processes *ap)
 	if(socket_read_line(ap->fd, buf, 256, 1) == sockERROR)
 		return ERROR;
 
-	log_f("tcpd", "R:", buf);
+	log_debug("R:%s", buf);
 	if((c = parse(ap, buf)) == NULL)
 		return ERROR;
 
-	log_f("tcpd", "S:", c);
+	log_debug("S:%s", c);
 	if(socket_raw_write(ap->fd, c) == ERROR)
 		return ERROR;
 
@@ -214,20 +214,21 @@ main(int argc, char *argv[])
 	struct timeval t;
 	struct active_processes *ap;
 
+	bbs_log_init("b_tcpd", 1 /* Also log to stderr */);
+
 	parse_options(argc, argv, ConfigList, "TCPD - TCP Daemon");
 
+	if(dbug_level & dbgVERBOSE)
+		bbs_log_level(BBS_LOG_DEBUG);
 	if(dbug_level & dbgTESTHOST)
 		test_host(Bbs_Host);
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);
-	if(dbug_level & dbgVERBOSE) {
-		Logging = logON;
-		log_f("tcpd", "   ", "UP");
-	}
 
-    if(bbsd_open(Bbs_Host, Bbsd_Port, "tcpd", "DAEMON") == ERROR)
-		error_print_exit(0);
-	error_clear();
+	log_debug("UP");
+
+	if(bbsd_open(Bbs_Host, Bbsd_Port, "tcpd", "DAEMON") == ERROR)
+		exit(1);
 
 	bbsd_get_configuration(ConfigList);
 	bbsd_sock = bbsd_socket();
@@ -250,8 +251,6 @@ main(int argc, char *argv[])
 		int cnt;
 		fd_set ready;
 		int fdlimit;
-
-		error_print();
 
 		if(shutdown_daemon)
 			exit(0);

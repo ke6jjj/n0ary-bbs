@@ -26,8 +26,8 @@ get_line(int fd, char *p, int cnt)
 			return ERROR;
 
 		case ERROR:
-			error_log("get_socket.read(): %s", sys_errlist[errno]);
-			error_print_exit(2);
+			log_error("get_socket.read(): %m");
+			exit(2);
 		}
 
 		if(*str == '\n') {
@@ -52,7 +52,7 @@ void
 putchar_socket(int fd, char *str)
 {
 	if(write(fd, str, strlen(str)) != strlen(str))
-		error_log("putchar_socket.write(): %s", sys_errlist[errno]);
+		log_error("putchar_socket.write(): %m");
 }
 
 void
@@ -107,11 +107,11 @@ main(int argc, char *argv[])
 	}
 
 	if((listen_sock = socket_listen(bind_addr, &port_number)) == ERROR)
-		error_print_exit(1);
+		exit(1);
 
 	if(socket_number) {
 		if((in = socket_open(host, socket_number)) == ERROR)
-			error_print_exit(1);
+			exit(1);
 		out = in;
 	}
 	write(out, "OK\n", 3);

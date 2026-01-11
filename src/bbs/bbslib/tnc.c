@@ -22,7 +22,7 @@ tnc_readline(char *buf, int cnt)
 		break;
 	case sockTIMEOUT:
 	case sockERROR:
-		error_log("tnc_readline: error reading from socket");
+		log_error("tnc_readline: error reading from socket");
 		return ERROR;
 	}
 	return OK;

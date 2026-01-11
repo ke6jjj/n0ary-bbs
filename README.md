@@ -214,6 +214,29 @@ the user via stdout/stdin and to reflect that you're logging in via the
 
   `sudo su -m bbs -c '<BBS_DIR>/bin/b_bbs -u -v CONSOLE <SYSOP-CALLSIGN>`
 
+# Logging
+
+(This feature is new and still in progress)
+
+The BBS and its components use syslog to report errors and other information
+that can be useful when diagnosing things that go wrong.
+
+All components of the system report to syslog via the `LOG_USER` facility
+and further identify themselves by program name. Knowing these two items
+can help you set up your syslog to send bbs-specific log messages to
+specific places, if so desired.
+
+|Program name|Program|
+|-|-|
+|`b_bbsd` |The core configuration and supervisor daemon.|
+|`b_bbs`  |The interactive BBS process.|
+|`b_bidd` |The bulletin management daemon.|
+|`b_gated`|The gateway daemon.|
+|`b_userd`|The user management daemon.|
+|`b_tcpd` |The TCP call-in daemon.|
+|`b_tncd` |The TNC management daemons (one per TNC).|
+|`b_wpd`  |The White Pages (world-wide user database) daemon.|
+
 # Periodic Tasks
 
 Congratulations! The BBS should now be running. Your next steps are to

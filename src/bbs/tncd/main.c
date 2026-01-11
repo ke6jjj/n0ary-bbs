@@ -218,19 +218,24 @@ main(int argc, char *argv[])
 	slip *master_slip;
 	kiss *master_kiss;
 	FILE *pcap;
+	char name[32];
 
 	parse_options(argc, argv, ConfigList,
 		"TNCD - Terminal Node Controller (KISS) Daemon");
 
 	tnc_name = argv[optind];
 
+	snprintf(name, sizeof(name), "b_tncd-%s", tnc_name);
+	bbs_log_init(name, 1 /* Also log to stderr */);
+
+	if (dbug_level & dbgVERBOSE)
+		bbs_log_level(BBS_LOG_DEBUG);
+
 	if(bbsd_open(Bbs_Host, Bbsd_Port, tnc_name, "DAEMON") == ERROR)
-		error_print_exit(0);
+		exit(1);
 
 	bbsd_sock = bbsd_socket();
 	srandomdev();
-
-	error_clear();
 
 	/* Make it possible to detect if beaconing has been set */
 	Tncd_Beacon_Interval = -1;
@@ -249,7 +254,7 @@ main(int argc, char *argv[])
 		daemon(1, 1);
 
 	if(bbsd_port(Tncd_Monitor_Port))
-		error_print_exit(0);
+		exit(1);
 
 	build_bbscall();
 
@@ -258,7 +263,7 @@ main(int argc, char *argv[])
 	AL_CALLBACK(&cb, NULL, chk_bbsd_callback);
 	int res = alEvent_registerFd(bbsd_sock, ALFD_READ, cb, &bbsd_ev);
 	if (res != 0)
-		error_print_exit(0);
+		exit(1);
 
 	if ((Master_ASY = asy_init(Tncd_Device)) == NULL)
 		return 1;

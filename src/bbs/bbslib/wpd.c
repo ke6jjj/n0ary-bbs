@@ -96,7 +96,7 @@ wpd_read(void)
 		break;
 	case sockTIMEOUT:
 	case sockERROR:
-		error_log("wpd_read: error reading from socket");
+		log_error("wpd_read: error reading from socket");
 		return NULL;
 	}
 	return buf;

@@ -15,7 +15,7 @@ scan_users(FILE *fp, time_t seen, time_t changed)
 	struct tm *tm = localtime(&t);
 
 	if(wpd_open() != OK) {
-		printf("userd: couldn't open wpd socket\n");
+		log_error("couldn't open wpd socket");
 		return ERROR;
 	}
 
@@ -26,7 +26,7 @@ scan_users(FILE *fp, time_t seen, time_t changed)
 		p = wpd_fetch(buf);
 
 		if(p == NULL) {
-			printf("userd: result of wpd_fetch(%s) is NULL\n", buf);
+			log_error("result of wpd_fetch(%s) is NULL", buf);
 			wpd_close();
 			return ERROR;
 		}
