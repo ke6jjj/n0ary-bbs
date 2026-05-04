@@ -280,6 +280,9 @@ main(int argc, char *argv[])
 	if(!(dbug_level & dbgFOREGROUND))
 		daemon(1, 1);
 
+	if (bbsd_pid() == ERROR)
+		exit(1);
+
 	if(bbsd_port(Tncd_Monitor_Port))
 		exit(1);
 
