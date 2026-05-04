@@ -4,7 +4,8 @@
 SCRIPTS_SRCDIR := $(abspath $(dir $(lastword $(MAKEFILE_LIST))))
 
 STARTUP_SCRIPTS_SRCS := n0ary_bbs.sh
-AUTOMATED_SCRIPTS_SRCS := callbook-update-uls.sh bbs-inetd.sh bbs-init.sh
+AUTOMATED_SCRIPTS_SRCS := \
+	callbook-update-uls.sh bbs-inetd.sh bbs-init.sh pcap-rotate.sh
 
 BSD_STARTUP_DIR ?= /usr/local/etc/rc.d
 BSD_AUTOMATED_DIR ?= /usr/local/libexec
