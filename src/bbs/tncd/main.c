@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -55,7 +54,8 @@ int
     Tncd_Pthresh,
     Tncd_Beacon_Interval,
     Tncd_SLIP_Flags,
-    Default_Beacon_Interval;
+    Default_Beacon_Interval,
+    Pcap_Rotate_Now;
 
 int
     bbsd_sock,
@@ -188,6 +188,13 @@ preload(char *name)
 		Tncd_Beacon_Message = Default_Beacon_Message;
 }
 
+static void
+sighup_handler(int signo, siginfo_t *_info, void *_uap)
+{
+	if (Tncd_Pcap_Dump_Path != NULL)
+		Pcap_Rotate_Now = 1;
+}
+
 void
 chk_bbsd_callback(void *obj, void *arg0, int arg1)
 {
@@ -207,11 +214,31 @@ build_version_strings(char *me)
 	strcpy(versionc, daemon_version(buf, Bbs_Call));
 }
 
+static int
+restart_pcap_logging(const char *path, kiss *k)
+{
+	FILE *pcap;
+
+	pcap = fopen(path, "ab");
+	if (pcap == NULL) {
+		log_error("Unable to open pcap dump file '%s'", path);
+		return 1;
+	}
+	if (kiss_set_pcap_dump(k, pcap) != 0) {
+		fclose(pcap);
+		log_error("KISS device refused to start pcap logging");
+		return 1;
+	}
+
+	return 0;
+}
+
 int
 main(int argc, char *argv[])
 {
 	extern int optind;
 	struct timeval now, nextexpire, waittime, *pwaittime;
+	struct sigaction sighup_setup;
 	alCallback cb;
 	beacon_task *beacon;
 	char *tnc_name;
@@ -295,13 +322,21 @@ main(int argc, char *argv[])
 
 	/* Setup PCAP dumping, if configured */
 	if (Tncd_Pcap_Dump_Path != NULL) {
-		pcap = fopen(Tncd_Pcap_Dump_Path, "ab");
-		if (pcap == NULL)
-			return 1;
-		if (kiss_set_pcap_dump(master_kiss, pcap) != 0)
+		if (restart_pcap_logging(Tncd_Pcap_Dump_Path, master_kiss) != 0)
 			return 1;
 	}
 
+	/*
+	 * Catch SIGHUP.
+	 * If PCAP logging is enabled, will be used to signal log rotation.
+	 */
+	sighup_setup.sa_sigaction = sighup_handler;
+	sighup_setup.sa_flags = SA_SIGINFO;
+	if (sigaction(SIGHUP, &sighup_setup, NULL) != 0) {
+		log_error("unable to catch SIGHUP");
+		return 1;
+	}
+	Pcap_Rotate_Now = 0;
 
 	asy_enable(Master_ASY, 1);
 	asy_start(Master_ASY);
@@ -319,8 +354,16 @@ main(int argc, char *argv[])
 
 	bbsd_msg("");
 
-	while (alEvent_pending())
+	while (alEvent_pending()) {
+		if (Pcap_Rotate_Now != 0) {
+			if (restart_pcap_logging(Tncd_Pcap_Dump_Path,
+				master_kiss) != 0) {
+				return 1;
+			}
+			Pcap_Rotate_Now = 0;
+		}
 		alEvent_poll();
+	}
 
 	if (beacon != NULL) {
 		beacon_task_stop(beacon);
