@@ -292,7 +292,7 @@ If you run it as a different user (or as root), you may find that the BBS is
 unable to use the database at runtime, or that it is impossible to update
 later (due to permission errors).
 
-## Update details
+### Callbook Update details
 
 The update script will download the most recent US FCC _AND_ Canadian ISEDC
 Amateur Radio licensing data, uncompress it, compile and index it in the
@@ -310,7 +310,7 @@ An example crontab entry which completes this task once a week looks like this:
 (Again, this works best when installing this entry in the _bbs_ user's
 crontab).
 
-## Dependence on bbsd
+### Callbook Dependence on bbsd
 
 The script is coded to be quite robust in obeying your particular local setup.
 This means that it does its best to discover where the BBS is installed and
@@ -318,3 +318,16 @@ even further, whether you have customized the location of the callsign database
 via the `Bbs_Callbk_Path` variable. For this reason, the BBS's `bbsd` process
 must be running when the update is attempted. If `bbsd` is not running, the
 script will complain and refuse to run.
+
+## PCAP Log Rotation
+
+TB fully described. Received and transmitted traffic on each TNC can be logged
+to a PCAP file for later inspection using Wireshark. It can be helpful to
+have these logs rotated and archived daily to make searching for specific
+events easier.
+
+To that end, a PCAP log rotation script can be found in:
+
+`/usr/local/libexec/pcap-rotate`
+
+TBD.
