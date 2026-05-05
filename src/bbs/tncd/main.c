@@ -18,6 +18,7 @@
 #include "bsd.h"
 #include "beacon.h"
 #include "kiss_mux.h"
+#include "pcap.h"
 
 #include "ax_mbx.h"
 
@@ -54,8 +55,7 @@ int
     Tncd_Pthresh,
     Tncd_Beacon_Interval,
     Tncd_SLIP_Flags,
-    Default_Beacon_Interval,
-    Pcap_Rotate_Now;
+    Default_Beacon_Interval;
 
 int
     bbsd_sock,
@@ -188,13 +188,6 @@ preload(char *name)
 		Tncd_Beacon_Message = Default_Beacon_Message;
 }
 
-static void
-sighup_handler(int signo, siginfo_t *_info, void *_uap)
-{
-	if (Tncd_Pcap_Dump_Path != NULL)
-		Pcap_Rotate_Now = 1;
-}
-
 void
 chk_bbsd_callback(void *obj, void *arg0, int arg1)
 {
@@ -214,25 +207,6 @@ build_version_strings(char *me)
 	strcpy(versionc, daemon_version(buf, Bbs_Call));
 }
 
-static int
-restart_pcap_logging(const char *path, kiss *k)
-{
-	FILE *pcap;
-
-	pcap = fopen(path, "ab");
-	if (pcap == NULL) {
-		log_error("Unable to open pcap dump file '%s'", path);
-		return 1;
-	}
-	if (kiss_set_pcap_dump(k, pcap) != 0) {
-		fclose(pcap);
-		log_error("KISS device refused to start pcap logging");
-		return 1;
-	}
-
-	return 0;
-}
-
 int
 main(int argc, char *argv[])
 {
@@ -244,7 +218,7 @@ main(int argc, char *argv[])
 	char *tnc_name;
 	slip *master_slip;
 	kiss *master_kiss;
-	FILE *pcap;
+	pcap_logging *pcap;
 	char name[32];
 
 	parse_options(argc, argv, ConfigList,
@@ -325,21 +299,15 @@ main(int argc, char *argv[])
 
 	/* Setup PCAP dumping, if configured */
 	if (Tncd_Pcap_Dump_Path != NULL) {
-		if (restart_pcap_logging(Tncd_Pcap_Dump_Path, master_kiss) != 0)
+		pcap = pcap_logging_new(SIGHUP, Tncd_Pcap_Dump_Path,
+			master_kiss);
+		if (pcap == NULL) {
+			log_error("unable to allocate pcap log manager");
+			return 1;
+		}
+		if (pcap_logging_start(pcap) != 0)
 			return 1;
 	}
-
-	/*
-	 * Catch SIGHUP.
-	 * If PCAP logging is enabled, will be used to signal log rotation.
-	 */
-	sighup_setup.sa_sigaction = sighup_handler;
-	sighup_setup.sa_flags = SA_SIGINFO;
-	if (sigaction(SIGHUP, &sighup_setup, NULL) != 0) {
-		log_error("unable to catch SIGHUP");
-		return 1;
-	}
-	Pcap_Rotate_Now = 0;
 
 	asy_enable(Master_ASY, 1);
 	asy_start(Master_ASY);
@@ -358,13 +326,6 @@ main(int argc, char *argv[])
 	bbsd_msg("");
 
 	while (alEvent_pending()) {
-		if (Pcap_Rotate_Now != 0) {
-			if (restart_pcap_logging(Tncd_Pcap_Dump_Path,
-				master_kiss) != 0) {
-				return 1;
-			}
-			Pcap_Rotate_Now = 0;
-		}
 		alEvent_poll();
 	}
 
@@ -372,6 +333,12 @@ main(int argc, char *argv[])
 		beacon_task_stop(beacon);
 		beacon_task_free(beacon);
 		beacon = NULL;
+	}
+
+	if (pcap != NULL) {
+		pcap_logging_stop(pcap);
+		pcap_logging_free(pcap);
+		pcap = NULL;
 	}
 
 	asy_stop(Master_ASY);

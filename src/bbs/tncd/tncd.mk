@@ -9,7 +9,7 @@ TNCD_APP_SRCS := ax25.c ax25dump.c ax25subr.c ax25user.c ax_mbx.c\
 		bsd_io.c\
 		kiss.c kiss_mux.c\
 		lapb.c lapbtime.c\
-		main.c mbuf.c monitor.c\
+		main.c mbuf.c monitor.c pcap.c\
 		slip.c socket.c\
 		timer.c
 
