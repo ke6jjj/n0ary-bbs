@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Jeremy Cooper. All rights reserved.
+ * Copyright 2017, 2026 Jeremy Cooper. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -78,6 +78,7 @@ typedef enum alSubjectType {
   AL_INVALID = 0,
   AL_FILE_DESCRIPTOR = 1,
   AL_PROCESS,
+  AL_SIGNAL,
 } alSubjectType;
 
 /*
@@ -101,6 +102,7 @@ typedef struct alEventDescriptorEntry {
   union {
     int fd;
     pid_t pid;
+    int signo;
   } subject;
   alCallback cb;
   int active;
@@ -369,6 +371,65 @@ failed_set_proc_flags:
 }
 
 /*
+ * alEvent_registerSignal
+ *
+ * Registers a signal to monitor with the event system and a callback to
+ * call when the signal is received.
+ *
+ * This co-exists with the signal()/sigaction() system and will mirror any
+ * signals received there, (if any); it does not eclipse them. Conversely,
+ * a signal does not have to be enabled by signal()/sigaction() for it to be
+ * usable here.
+ */
+int
+alEvent_registerSignal(int signo, int flags, alCallback cb, alEventHandle *r)
+{
+  alEventDescriptorEntry *entry;
+
+  /*
+   * Do we already have an entry for this signal?
+   */
+  LIST_FOREACH(entry, &alEventDescriptors, listEntry) {
+    if (entry->subjectType == AL_SIGNAL && entry->subject.signo == signo)
+      return -1;  /* Already registered */
+  }
+
+  /*
+   * Make a new entry.
+   */
+  entry = alMallocFatal(alEventDescriptorEntry, 1);
+  entry->subjectType = AL_SIGNAL;
+  entry->subject.signo = signo;
+  entry->cb = cb;
+  entry->active = 1;
+  entry->pendingEventFlags = 0;
+  entry->enabledFlags = 0;
+  LIST_INSERT_HEAD(&alEventDescriptors, entry, listEntry);
+
+  /*
+   * Tell the kernel to create a read and/or write filter for this
+   * descriptor.
+   */
+  if (alEvent_setSignalEvents(entry, flags) != 0)
+    goto failed_set_signal_flags;
+
+  /*
+   * Grow the kevent list to accomodate the kernel returning a signal delivery
+   * event when safely possible to reallocate it.
+   */
+  alKeventListSizeChanges += 1;
+
+  *r = entry;
+
+  return 0;
+
+failed_set_signal_flags:
+  LIST_REMOVE(entry, listEntry);
+  free(entry);
+  return -1;
+}
+
+/*
  * alEvent_setFdEvents
  *
  * Change the events enabled for a previously registered file descriptor.
@@ -488,6 +549,64 @@ failed_kqueue_add_proc:
 }
 
 /*
+ * alEvent_setSignalEvents
+ *
+ * Change the events enabled for a previously registered signal.
+ */
+int
+alEvent_setSignalEvents(alEventHandle evp, int newflags)
+{
+  alEventDescriptorEntry *evh = (alEventDescriptorEntry *) evp;
+  struct kevent filter;
+  int kflags;
+  size_t i;
+  int signo;
+
+  if (evh->subjectType != AL_SIGNAL || !evh->active)
+    return -1;
+
+  if (evh->enabledFlags == newflags)
+    /* No change */
+    return 0;
+
+  /*
+   * We only support one type of event for signals at the moment.
+   */
+  if ((~newflags & ALSIG_SIGNALED) != 0)
+    return -1;
+
+  signo = evh->subject.signo;
+  i = 0;
+
+  if ((evh->enabledFlags ^ newflags) & ALSIG_SIGNALED) {
+    kflags = EV_ADD;
+    if (newflags & ALSIG_SIGNALED)
+      kflags |= EV_ENABLE;
+    else
+      kflags |= EV_DISABLE;
+
+    EV_SET(&filter, signo, EVFILT_SIGNAL, kflags, 0, 0, evh);
+    i++;
+  }
+
+  assert(i != 0);
+
+  do {
+    if (kevent(alKQFd, &filter, i, NULL, 0, NULL) == 0)
+      break;
+    if (errno != EINTR)
+      goto failed_kqueue_add_signal;
+  } while (1);
+
+  evh->enabledFlags = newflags;
+
+  return 0;
+
+failed_kqueue_add_signal:
+  return -1;
+}
+
+/*
  * alEvent_pending
  *
  * Returns true if the event system is still charged with monitoring a
@@ -593,13 +712,20 @@ alEvent_poll(void)
     evEntry = (alEventDescriptorEntry *) alKeventList[i].udata;
     if (!evEntry->active)
       continue;
-    if (alKeventList[i].filter == EVFILT_READ)
+    switch (alKeventList[i].filter) {
+    case EVFILT_READ:
       evEntry->pendingEventFlags |= ALFD_READ;
-    else if (alKeventList[i].filter == EVFILT_WRITE)
+      break;
+    case EVFILT_WRITE:
       evEntry->pendingEventFlags |= ALFD_WRITE;
-    else if (alKeventList[i].filter == EVFILT_PROC) {
+      break;
+    case EVFILT_PROC:
       if (alKeventList[i].fflags & NOTE_EXIT)
         evEntry->pendingEventFlags |= ALPROC_EXIT;
+      break;
+    case EVFILT_SIGNAL:
+      evEntry->pendingEventFlags |= ALSIG_SIGNALED;
+      break;
     }
   }
   
@@ -741,6 +867,11 @@ alEvent_deregister(alEventHandle handle)
       inspect_failure = 0; /* Process may have exited */
       sizechanges = 1;
       break;
+    case AL_SIGNAL:
+      if (entry->enabledFlags & ALSIG_SIGNALED)
+        EV_SET(&ev[i++], entry->subject.signo,EVFILT_SIGNAL,EV_DELETE,0,0,NULL);
+      inspect_failure = 1;
+      sizechanges = 1;
     }
 
     if (i > 0)

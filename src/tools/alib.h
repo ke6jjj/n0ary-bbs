@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Jeremy Cooper. All rights reserved.
+ * Copyright 2017, 2026 Jeremy Cooper. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -84,12 +84,19 @@ enum alProcEvent_flags {
 };
 
 /*
+ * Signal notification flags.
+ */
+enum AlSigEvent_flags {
+  ALSIG_SIGNALED = 1,
+};
+
+/*
  * Timer flags.
  */
 enum alTimer_flags {
   ALTIMER_REPEAT = 1
 };
-  
+
 /*
  * alEvent_init
  *
@@ -153,6 +160,27 @@ int alEvent_registerProc(pid_t pid, int flags, alCallback cb,
  * Change the events enabled for a previously registered process id.
  */
 int alEvent_setProcEvents(alEventHandle evh, int newflags);
+
+/*
+ * alEvent_registerSignal
+ *
+ * Registers a signal to monitor with the event system and a callback to
+ * call when the signal is received.
+ *
+ * This co-exists with the signal()/sigaction() system and will mirror any
+ * signals received there, (if any); it does not eclipse them. Conversely,
+ * a signal does not have to be enabled by signal()/sigaction() for it to be
+ * usable here.
+ */
+int alEvent_registerSignal(int signo, int flags, alCallback cb,
+	alEventHandle *rhandle);
+
+/*
+ * alEvent_setSignalEvents
+ *
+ * Change the events enabled for a previously registered signal.
+ */
+int alEvent_setSignalEvents(alEventHandle evh, int newFlags);
 
 /*
  * alEvent_deregister
