@@ -19,6 +19,10 @@ HELPMSG_IDX := $(HELPMSG_APP_OBJDIR)/helpmsg.idx
 HELPMSG_CORE := $(HELPMSG_APP_SRCDIR)/helpmsg.txt
 HELPMSG_LOCAL := $(BBS_LOCALDIR)/local-helpmsg.txt
 
+$(HELPMSG_LOCAL):
+	@echo "No" $(HELPMSG_LOCAL) "found. Did you make one?"
+	@! :
+
 $(HELPMSG_DAT) $(HELPMSG_IDX): $(HELPMSG_APP) $(HELPMSG_CORE) $(HELPMSG_LOCAL)
 	$(HELPMSG_APP) \
 		$(HELPMSG_CORE) \
