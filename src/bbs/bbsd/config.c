@@ -7,30 +7,26 @@
 #include "bbslib.h"
 #include "bbsd.h"
 
-struct configuration_list {
-	struct configuration_list *next;
-	struct configuration_list *parent;
+struct configuration_item {
+	SLIST_ENTRY(configuration_item) entries;
 	char *token;
 	char *value;
 	char *newvalue;
-} 
-	*CList = NULL,
-	*CLend = NULL;
+};
+
+SLIST_HEAD(configuration_list, configuration_item);
+
+struct configuration_list ConfigurationList = SLIST_HEAD_INITIALIZER(ConfigurationList);
 
 static void
 append(char *t, char *v)
 {
-	struct configuration_list *cl = malloc_struct(configuration_list);
+	struct configuration_item *cl = malloc_struct(configuration_item);
 
 	cl->token = strdup(t);
 	cl->value = strdup(v);
 
-	if(CLend == NULL)
-		CList = cl;
-	else
-		CLend->next = cl;
-
-	CLend = cl;
+	SLIST_INSERT_HEAD(&ConfigurationList, cl, entries);
 }
 
 static void
@@ -84,12 +80,12 @@ read_config_file(char *fn)
 int
 config_fetch_multi(char *token, struct text_line **tl)
 {
-	struct configuration_list *cl = CList;
+	struct configuration_item *cl;
 	int cnt = 0;
 
 	uppercase(token);
 
-	while(cl) {
+	SLIST_FOREACH(cl, &ConfigurationList, entries) {
 		if(!strcmp(cl->token, token)) {
 			cnt++;
 			if(cl->newvalue != NULL)
@@ -97,7 +93,6 @@ config_fetch_multi(char *token, struct text_line **tl)
 			else
 				textline_append(tl, cl->value);
 		}
-		NEXT(cl);
 	}
 	return cnt;
 }
@@ -105,18 +100,17 @@ config_fetch_multi(char *token, struct text_line **tl)
 int
 config_fetch_list(char *token)
 {
-	struct configuration_list *cl = CList;
+	struct configuration_item *cl;
 	int found = FALSE;
 
 	uppercase(token);
 	output[0] = 0;
 
-	while(cl) {
+	SLIST_FOREACH(cl, &ConfigurationList, entries) {
 		if(!strcmp(cl->token, token)) {
 			sprintf(output, "%s%s\n", output, cl->value);
 			found++;
 		}
-		NEXT(cl);
 	}
 	strcat(output, ".\n");
 	return found;
@@ -125,17 +119,16 @@ config_fetch_list(char *token)
 char *
 config_fetch(char *token)
 {
-	struct configuration_list *cl = CList;
+	struct configuration_item *cl;
 
 	uppercase(token);
 
-	while(cl) {
+	SLIST_FOREACH(cl, &ConfigurationList, entries) {
 		if(!strcmp(cl->token, token)) {
 			if(cl->newvalue != NULL)
 				return cl->newvalue;
 			return cl->value;
 		}
-		NEXT(cl);
 	}
 	return NULL;
 }
@@ -143,14 +136,13 @@ config_fetch(char *token)
 char *
 config_fetch_orig(char *token)
 {
-	struct configuration_list *cl = CList;
+	struct configuration_item *cl;
 
 	uppercase(token);
 
-	while(cl) {
+	SLIST_FOREACH(cl, &ConfigurationList, entries) {
 		if(!strcmp(cl->token, token))
 			return cl->value;
-		NEXT(cl);
 	}
 	return NULL;
 }
@@ -158,18 +150,17 @@ config_fetch_orig(char *token)
 int
 config_override(char *token, char *value)
 {
-	struct configuration_list *cl = CList;
+	struct configuration_item *cl;
 
 	uppercase(token);
 
-	while(cl) {
+	SLIST_FOREACH(cl, &ConfigurationList, entries) {
 		if(!strcmp(cl->token, token)) {
 			if(cl->newvalue != NULL)
 				free(cl->newvalue);
 			cl->newvalue = strdup(value);
 			return OK;
 		}
-		NEXT(cl);
 	}
 	return ERROR;
 }
