@@ -14,8 +14,8 @@
 #define dmnATTACH	2
 #define dmnONLINE	3
 
-struct Daemons {
-	struct Daemons *next;
+struct Daemon {
+	SLIST_ENTRY(Daemon) entries;
 	char *name;
 	char *cmd;
 	int state;
@@ -24,12 +24,14 @@ struct Daemons {
 	time_t timeout;
 };
 
-static struct Daemons
-	*DmnList = NULL,
-	*DmnListEnd = NULL;
+SLIST_HEAD(daemon_list, Daemon);
+
+static struct daemon_list DaemonList = SLIST_HEAD_INITIALIZER(DaemonList);
+
+static struct Daemon *initialize_daemon(struct text_line *tl);
 
 static void
-daemon_display(struct Daemons *dl)
+daemon_display(struct Daemon *dl)
 {
 	char *p = "HUH?"; 
 	switch(dl->state) {
@@ -45,6 +47,62 @@ daemon_display(struct Daemons *dl)
 		dl->timeout, dl->cmd);
 }
 
+static struct Daemon *
+initialize_daemon(struct text_line *tl)
+{
+	struct Daemon *dmn;
+	FILE *fp;
+	char *value, *s, *name, *cmd;
+
+	s = tl->s;
+	value = get_string(&s);
+	if (s == NULL) {
+		log_warning("DAEMON %s no command found\n", value);
+		goto NoName;
+	}
+
+	if ((name = strdup(value)) == NULL) {
+		log_error("Unable to allocate daemon name.");
+		goto NameAlloc;
+	}
+	if ((cmd = strdup(s)) == NULL) {
+		log_error("Unable to allocate daemon cmd.");
+		goto CmdAlloc;
+	}
+
+	value = get_string(&s);
+	/* check for existance of program */
+	if((fp = fopen(value, "r")) == NULL) {
+		log_debug("DAEMON %s program not found %s", name, value);
+		goto NoExe;
+	}
+	fclose(fp);
+
+	if ((dmn = malloc_struct(Daemon)) == NULL) {
+		log_error("Unable to allocate daemon.");
+		goto DmnAlloc;
+	}
+
+	dmn->name = name;
+	dmn->cmd = cmd;
+	if(!strcmp(dmn->name, "IGNORE"))
+		dmn->respawn = FALSE;
+	else
+		dmn->respawn = TRUE;
+	dmn->state = dmnDOWN;
+
+	return dmn;
+
+DmnAlloc:
+NoExe:
+	free(cmd);
+CmdAlloc:
+	free(name);
+NameAlloc:
+NoName:
+	return NULL;
+}
+
 int
 build_daemon_list(void)
 {
@@ -56,59 +114,21 @@ build_daemon_list(void)
 
 	tl = dtl;
 	while(tl) {
-		char *value, *s = tl->s;
-		struct Daemons *dmn = malloc_struct(Daemons);
-		int bad = FALSE;
-
-		value = get_string(&s);
-		if(*s) {
-			FILE *fp;
-			dmn->name = strdup(value);
-			dmn->cmd = strdup(s);
-			strcpy(dmn->cmd, s);
-
-			if(!strcmp(dmn->name, "IGNORE"))
-				dmn->respawn = FALSE;
-			else
-				dmn->respawn = TRUE;
-			dmn->state = dmnDOWN;
-
-			value = get_string(&s);
-					/* check for existance of program */
-			if((fp = fopen(value, "r")) == NULL) {
-				if(VERBOSE)
-					printf("DAEMON %s program not found %s\n", dmn->name, value);
-				free(dmn->name);
-				free(dmn->cmd);
-				bad = TRUE;
-			} else {
-				fclose(fp);
-				if(DmnListEnd == NULL)
-					DmnList = dmn;
-				else
-					DmnListEnd->next = dmn;
-				DmnListEnd = dmn;
-				cnt++;
-			}
-		} else {
-			if(VERBOSE)
-				printf("DAEMON %s no command found\n", value);
-			bad = TRUE;
+		struct Daemon *dmn = initialize_daemon(tl);
+		if (dmn != NULL) {
+			SLIST_INSERT_HEAD(&DaemonList, dmn, entries);
+			cnt++;
 		}
-
-		if(bad)
-			free(dmn);
 
 		NEXT(tl);
 	}
 	textline_free(dtl);
 
 	if(dbug_level & 0x10) {
-		struct Daemons *dl = DmnList;
+		struct Daemon *dl;
 		printf("Daemon List:\n");
-		while(dl) {
+		SLIST_FOREACH(dl, &DaemonList, entries) {
 			daemon_display(dl);
-			NEXT(dl);
 		}
 		printf(".\n");
 		fflush(stdout);
@@ -134,33 +154,32 @@ start_daemon(char *cmd)
 int
 daemons_start(void)
 {
-	struct Daemons *dl = DmnList;
+	struct Daemon *dl;
 
-if(dbug_level & 0x20) {
-printf("."); fflush(stdout);
-}
+	if(dbug_level & 0x20) {
+		printf("."); fflush(stdout);
+	}
 
-	while(dl) {
+	SLIST_FOREACH(dl, &DaemonList, entries) {
 		if(dl->state == dmnDOWN) {
 			start_daemon(dl->cmd);
 			dl->state = dmnSTART;
 			dl->timeout = bbs_time(NULL) + 30;
 			return TRUE;
 		}
-		NEXT(dl);
 	}
 	return FALSE;
 }
+
 int
 daemons_check(void)
 {
-	struct Daemons *dl = DmnList;
+	struct Daemon *dl;
 	time_t now = bbs_time(NULL);
 
-	while(dl) {
+	SLIST_FOREACH(dl, &DaemonList, entries) {
 		struct active_process *ap;
 		if(!strcmp(dl->name, "IGNORE")) {
-			NEXT(dl);
 			continue;
 		}
 
@@ -176,8 +195,6 @@ daemons_check(void)
 				dl->state = dmnDOWN;
 			}
 		}
-
-		NEXT(dl);
 	}
 	return OK;
 }
@@ -186,9 +203,9 @@ int
 daemon_up(struct active_process *ap)
 {
 	int down_cnt = 0;
-	struct Daemons *dl = DmnList;
+	struct Daemon *dl;
 
-	while(dl) {
+	SLIST_FOREACH(dl, &DaemonList, entries) {
 		if(!strcmp(ap->call, dl->name)) {
 			dl->state = dmnONLINE;
 			dl->proc_num = ap->proc_num;
@@ -202,8 +219,6 @@ daemon_up(struct active_process *ap)
 
 		if((dl->state != dmnONLINE) && dl->respawn)
 			down_cnt++;
-
-		NEXT(dl);
 	}
 
 	if(down_cnt == 0)
@@ -214,9 +229,9 @@ daemon_up(struct active_process *ap)
 int
 daemon_check_in(struct active_process *ap)
 {
-	struct Daemons *dl = DmnList;
+	struct Daemon *dl;
 
-	while(dl) {
+	SLIST_FOREACH(dl, &DaemonList, entries) {
 		if(!strcmp(ap->call, dl->name)) {
 			dl->state = dmnATTACH;
 			dl->proc_num = ap->proc_num;
@@ -227,7 +242,6 @@ daemon_check_in(struct active_process *ap)
 				fflush(stdout);
 			}
 		}
-		NEXT(dl);
 	}
 	return OK;
 }
@@ -235,9 +249,9 @@ daemon_check_in(struct active_process *ap)
 int
 daemon_check_out(struct active_process *ap)
 {
-	struct Daemons *dl = DmnList;
+	struct Daemon *dl;
 
-	while(dl) {
+	SLIST_FOREACH(dl, &DaemonList, entries) {
 		if(ap->proc_num == dl->proc_num) {
 			long now = bbs_time(NULL);
 			dl->state = dmnDOWN;
@@ -253,7 +267,6 @@ daemon_check_out(struct active_process *ap)
 				start_daemon(dl->cmd);
 			break;
 		}
-		NEXT(dl);
 	}
 	return OK;
 }
@@ -261,13 +274,12 @@ daemon_check_out(struct active_process *ap)
 void
 daemon_respawn(char *name, int state)
 {
-	struct Daemons *dl = DmnList;
+	struct Daemon *dl;
 
-	while(dl) {
+	SLIST_FOREACH(dl, &DaemonList, entries) {
 		if(!strcmp(name, dl->name)) {
 			dl->respawn = state;
 			break;
 		}
-		NEXT(dl);
 	}
 }
